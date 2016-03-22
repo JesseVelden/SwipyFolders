@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSStaticTextCell</string>
+			<key>height</key>
+			<string>133</string>
+			<key>icon</key>
+			<string>banner.png</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>enabled</string>
+			<key>label</key>
+			<string>Enabled</string>
+			<key>sublabel</key>
+			<string>Needs a respring</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>respring</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>respring.png</string>
+			<key>label</key>
+			<string>Respring</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>APPEARANCE</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>enableFolderPreview</string>
+			<key>label</key>
+			<string>Set first icon as Folder Preview</string>
+			<key>sublabel</key>
+			<string>Needs a respring</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>FUNCTIONALITY</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>2</integer>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>singleTapMethod</string>
+			<key>label</key>
+			<string>Single Tap</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>0</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>1</integer>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>swipeUpMethod</string>
+			<key>label</key>
+			<string>Swipe Up</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>0</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>0</integer>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>doubleTapMethod</string>
+			<key>label</key>
+			<string>Double Tap</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>0</integer>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>0</integer>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>shortHoldMethod</string>
+			<key>label</key>
+			<string>Short hold</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>0</integer>
+			</array>
+		</dict>
+		
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<integer>4</integer>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>PSListItemsController</string>
+			<key>key</key>
+			<string>forceTouchMethod</string>
+			<key>label</key>
+			<string>3D Touch</string>
+			<key>validTitles</key>
+			<array>
+				<string>Quick action on first app</string>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>4</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>0</integer>
+			</array>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>CREDITS</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>contact</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>email.png</string>
+			<key>label</key>
+			<string>Email me</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>github</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>Github.png</string>
+			<key>label</key>
+			<string>View Source on GitHub</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>paypal</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>paypal.png</string>
+			<key>label</key>
+			<string>Donate &lt;3</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>© 2016 - Jesse van der Velden - Made in Holland</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>SwipyFolders</string>
+</dict>
+</plist>
