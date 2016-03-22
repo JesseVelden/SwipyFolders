@@ -1,0 +1,10 @@
+Package: nl.jessevandervelden.swipyfolders
+Name: SwipyFolders
+Depends: mobilesubstrate
+Architecture: iphoneos-arm
+Description: An awesome MobileSubstrate tweak!
+Maintainer: Jesse van der Velden <mail@jessevandervelden.nl>
+Author: Jesse van der Velden <mail@jessevandervelden.nl>
+Section: Tweaks
+Version: 0.0.1-54+debug
+Installed-Size: 624

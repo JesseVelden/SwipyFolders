@@ -1,7 +1,7 @@
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = SwipyFolders
-SwipyFolders_FILES = Tweak.xm
+SwipyFolders_FILES = SwipyFolders.xm
 SwipyFolders_FRAMEWORKS = UIKit Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
