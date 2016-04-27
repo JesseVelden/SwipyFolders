@@ -5,8 +5,12 @@
 Sick of the ugly folders stairing at you? Ever wanted to swipe your folders open? Double tap actions? Short hold, or even 3D touch on a folder?  
 **Now you can!** With **SwipyFolders** you can customize your folder experience.  
 
-Basically one screenshot of the settings page is worth a thousand words:  
-![Settings](/screenshots/settings.PNG)  
+Basically two screenshots are worth two thousand words:  
+
+Settings                                | Interface (first icon as folder preview)
+:--------------------------------------:|:-----------------------------:
+![Settings](/screenshots/settings.PNG)  | ![Interface](/screenshots/interface.PNG)
+
 
 Available actions:
 * Single Tap
