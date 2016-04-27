@@ -24,7 +24,7 @@ static void loadPreferences() {
 		@"forceTouchMethod": [NSNumber numberWithInteger:4],
 	}];
 	
-	enabled 			= [preferences boolForKey:@"enabled"];
+	enabled 		= [preferences boolForKey:@"enabled"];
 	enableFolderPreview	= [preferences boolForKey:@"enableFolderPreview"];
 	singleTapMethod 	= [preferences integerForKey:@"singleTapMethod"];
 	swipeUpMethod 		= [preferences integerForKey:@"swipeUpMethod"];
@@ -39,20 +39,20 @@ static void loadPreferences() {
 
 static void respring() {
 	UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Respring - SwipyFolders"
-															message:@"In order to change the folder preview, a respring is required. Want to respring now?"
-															preferredStyle:UIAlertControllerStyleAlert];
+						message:@"In order to change the folder preview, a respring is required. Want to respring now?"
+						preferredStyle:UIAlertControllerStyleAlert];
 	UIAlertAction *cancelAction = [UIAlertAction 
-									actionWithTitle:@"Nope"
-									style:UIAlertActionStyleCancel
-									handler:nil];
+					actionWithTitle:@"Nope"
+					style:UIAlertActionStyleCancel
+					handler:nil];
 
 	UIAlertAction *okAction = [UIAlertAction 
-								actionWithTitle:@"YUP RESPRING"
-								style:UIAlertActionStyleDefault
-								handler:^(UIAlertAction *action)
-								{
-									system("killall -9 SpringBoard");
-								}];
+					actionWithTitle:@"YUP RESPRING"
+					style:UIAlertActionStyleDefault
+					handler:^(UIAlertAction *action)
+					{
+						system("killall -9 SpringBoard");
+					}];
 
 	[alertController addAction:cancelAction];
 	[alertController addAction:okAction];
