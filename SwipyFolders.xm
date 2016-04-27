@@ -58,6 +58,21 @@ static SBIcon *firstIcon;
 
 %hook SBIconController
 
+// Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
+- (void)closeFolderAnimated:(_Bool)arg1 {
+	
+}
+
+//In order to still being able to close the app with the home button:
+- (void)handleHomeButtonTap {
+	if ([self hasOpenFolder]) {
+		SBFolder* folder = [self openFolder];
+		[[%c(SBIconController) sharedInstance] _closeFolderController:folder animated:YES withCompletion:nil]; 
+	} else {
+		%orig;
+	}
+}
+
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
