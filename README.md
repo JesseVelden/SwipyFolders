@@ -26,6 +26,6 @@ Every action can be customized to:
 
 You can even set the first icon as the folder preview. Bye bye ugly looking folders!
 
-Suggestions can improvements/ pull requests are welcome!
+Suggestions and improvements/ pull requests are welcome!
 
 License: MIT
