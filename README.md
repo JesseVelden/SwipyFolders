@@ -1,7 +1,7 @@
 # SwipyFolders
 *The way folders on iOS meant to be*  
 
-Sick of the ugly folders stairing at you? Ever wanted to swipe your folders open? Double tap actions? Short hold, or even 3D touch on a folder?  
+Sick of the ugly folders staring at you? Ever wanted to swipe your folders open? Double tap actions? Short hold, or even 3D touch on a folder?  
 **Now you can!** With **SwipyFolders** you can customize your folder experience.  
 
 Basically two screenshots are worth two thousand words:  

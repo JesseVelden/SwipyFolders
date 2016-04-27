@@ -37,6 +37,27 @@ static void loadPreferences() {
 
 }
 
+static void respring() {
+	UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Respring - SwipyFolders"
+															message:@"In order to change the folder preview, a respring is required. Want to respring now?"
+															preferredStyle:UIAlertControllerStyleAlert];
+	UIAlertAction *cancelAction = [UIAlertAction 
+									actionWithTitle:@"Nope"
+									style:UIAlertActionStyleCancel
+									handler:nil];
+
+	UIAlertAction *okAction = [UIAlertAction 
+								actionWithTitle:@"YUP RESPRING"
+								style:UIAlertActionStyleDefault
+								handler:^(UIAlertAction *action)
+								{
+									system("killall -9 SpringBoard");
+								}];
+
+	[alertController addAction:cancelAction];
+	[alertController addAction:okAction];
+	[[%c(SBIconController) sharedInstance] presentViewController:alertController animated:YES completion:nil];
+}
 
 %hook SBIconGridImage
 + (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count{
@@ -63,7 +84,7 @@ static SBIcon *firstIcon;
 	
 }
 
-//In order to still being able to close the app with the home button:
+//In order to still being able to close the folder with the home button:
 - (void)handleHomeButtonTap {
 	if ([self hasOpenFolder]) {
 		SBFolder* folder = [self openFolder];
@@ -308,4 +329,11 @@ UILongPressGestureRecognizer *shortHold;
 		NULL,
 		CFNotificationSuspensionBehaviorDeliverImmediately);
 	loadPreferences();
+
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+		NULL,
+		(CFNotificationCallback)respring,
+		CFSTR("nl.jessevandervelden.swipyfoldersprefs/respring"),
+		NULL,
+		CFNotificationSuspensionBehaviorDeliverImmediately);
 }

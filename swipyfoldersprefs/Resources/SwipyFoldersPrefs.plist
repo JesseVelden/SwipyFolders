@@ -29,16 +29,6 @@
 			<string>Needs a respring</string>
 		</dict>
 		<dict>
-			<key>action</key>
-			<string>respring</string>
-			<key>cell</key>
-			<string>PSButtonCell</string>
-			<key>icon</key>
-			<string>respring.png</string>
-			<key>label</key>
-			<string>Respring</string>
-		</dict>
-		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
@@ -46,7 +36,7 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
