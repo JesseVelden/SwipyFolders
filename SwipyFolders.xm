@@ -56,8 +56,8 @@ static void loadPreferences() {
 
 static SBIcon *firstIcon;
 
-
 %hook SBIconController
+
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
@@ -104,7 +104,6 @@ static SBIcon *firstIcon;
 				if (forceTouchMethod == 4) {
 					[self.presentedShortcutMenu updateFromPressGestureRecognizer:recognizer];
 				}
-				iconView.highlighted = NO;
 			}break;
 
 			case UIGestureRecognizerStateEnded: {
@@ -118,7 +117,6 @@ static SBIcon *firstIcon;
 						}
 					}
 				}
-				iconView.highlighted = NO;
 
 			}break;
 			default:
@@ -163,12 +161,11 @@ UITapGestureRecognizer *singleTap;
 UITapGestureRecognizer *doubleTap;
 UILongPressGestureRecognizer *shortHold;
 
-- (void)setLocation:(id)arg1 {
-	if (self.isFolderIconView && enabled) {
-		[self removeGestureRecognizer:swipeUp];
-		[self removeGestureRecognizer:singleTap];
-		[self removeGestureRecognizer:doubleTap];
-		[self removeGestureRecognizer:shortHold];
+- (void)setIcon:(SBIcon*)icon {
+	
+	%orig;
+	
+	if (self.isFolderIconView && enabled) { 
 
 		if (swipeUpMethod != 0) {
 			swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipe:)];
@@ -200,9 +197,7 @@ UILongPressGestureRecognizer *shortHold;
 			[self addGestureRecognizer:shortHold];
 
 		}
-		
 	}
-	%orig;
 }
 
 
@@ -223,37 +218,39 @@ UILongPressGestureRecognizer *shortHold;
 }
 
 %new - (void)sf_method:(NSInteger)method {
-	
-	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	if (!iconController.isEditing && !iconController.hasOpenFolder) { 
-		[self cancelLongPressTimer];
 
-		if ([self respondsToSelector:@selector(setHighlighted:)]) {
-			self.highlighted = NO;
-		}
-		SBFolder* folder = ((SBFolderIconView *)self).folderIcon.folder;
+	SBFolder * folder = ((SBIconView *)self).icon.folder;
 
-		switch (method) {
-			case 1: {
-				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES];
-			}break;
-
-			case 2: {
-				[folder openFirstApp];
-			}break;
-
-			case 3: {
-				[folder openSecondApp];
-			}break;
-
-			default:
-			break;
-		}
-		
+	//Check if it is called with an open 3D touch shortcut menu , which has an class of a 'plain' SBIconView
+	if(![self isKindOfClass:%c(SBFolderIconView)]) {
+		SBApplicationShortcutMenu *shortcutView = [[%c(SBIconController) sharedInstance] presentedShortcutMenu];
+		[shortcutView removeFromSuperview];
+		[folder openFirstApp]; //TODO: fix weird bug. Now we need to open the app once tapped even if the singleTapMethod is set to open the folder in order to prevent 'lock' springboard
+		return;
 	}
+
+	switch (method) {
+		case 1: {
+			[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //open folder
+		}break;
+
+		case 2: {
+			[folder openFirstApp];
+		}break;
+
+		case 3: {
+			[folder openSecondApp];
+		}break;
+
+		default:
+		break;
+	}
+	
+		
 }
 
 %end
+
 
 %hook SBIcon
 %new - (void)openApp {
@@ -286,7 +283,6 @@ UILongPressGestureRecognizer *shortHold;
 	}
 }
 %end
- //Springboardhooks
 
 
 %ctor{

@@ -7,6 +7,7 @@
 @end
 
 @interface UIInteractionProgress : NSObject
+@property (assign, nonatomic, readonly) CGFloat percentComplete;
 @end
 @interface UIPreviewForceInteractionProgress : UIInteractionProgress
 - (id)initWithGestureRecognizer:(id)arg1;
@@ -20,6 +21,7 @@
 - (NSString*)displayName;
 @end;
 
+
 @interface SBIcon : NSObject
 - (_Bool)isFolderIcon;
 - (_Bool)isNewsstandIcon;
@@ -27,9 +29,15 @@
 - (void)launchFromLocation:(NSInteger)location; 
 - (void)launchFromLocation:(NSInteger)location context:(id)context; 
 - (SBApplication*)application;
-
+- (id)folder;
 - (void)openApp;
 
+@end
+
+@interface SBFolder : NSObject
+- (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
+- (void)openFirstApp;
+- (void)openSecondApp; 
 @end
 
 @interface SBIconView : UIView
@@ -108,18 +116,15 @@
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer ;
 - (void)iconTapped:(SBIconView *)iconView;
 - (_Bool)hasOpenFolder;
+- (id)openFolder;
 - (void)scrollToIconListContainingIcon:(SBIcon *)icon animate:(_Bool)arg2;
 -(void)openFolder:(id)folder animated:(BOOL)animated;
+- (void)closeFolderAnimated:(_Bool)arg1;
+- (void)_closeFolderController:(id)arg1 animated:(_Bool)arg2 withCompletion:(id)arg3;
+
 
 - (BOOL)isFolderIconView:(SBIconView *)view;
 - (void)launchFirstApp:(SBIconView *)iconView;
-@end
-
-
-@interface SBFolder : NSObject
-- (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
-- (void)openFirstApp;
-- (void)openSecondApp; 
 @end
 
 @interface SBFolderIcon : SBIcon
