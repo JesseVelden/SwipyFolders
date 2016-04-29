@@ -2,8 +2,9 @@ Package: nl.jessevandervelden.swipyfolders
 Name: SwipyFolders
 Depends: mobilesubstrate
 Version: 1.0
+Icon: file:///Library/PreferenceBundles/SwipyFoldersPrefs.bundle/swipe@2x.png
 Architecture: iphoneos-arm
-Description: The way iOS folders meant to be
+Description: Gestures for your folders
 Maintainer: Jesse van der Velden <mail@jessevandervelden.nl>
 Author: Jesse van der Velden <mail@jessevandervelden.nl>
 Section: Tweaks

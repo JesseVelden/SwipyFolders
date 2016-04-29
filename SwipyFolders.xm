@@ -38,6 +38,7 @@ static void loadPreferences() {
 }
 
 static void respring() {
+	/* For iOS 10 when old alertview will be deprecated:
 	UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Respring - SwipyFolders"
 						message:@"In order to change the folder preview, a respring is required. Want to respring now?"
 						preferredStyle:UIAlertControllerStyleAlert];
@@ -57,6 +58,14 @@ static void respring() {
 	[alertController addAction:cancelAction];
 	[alertController addAction:okAction];
 	[[%c(SBIconController) sharedInstance] presentViewController:alertController animated:YES completion:nil];
+	*/
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Respring - SwipyFolders" 
+                          message:@"In order to change the folder preview, a respring is required. Want to respring now?" 
+                          delegate:[%c(SBIconController) sharedInstance]
+                          cancelButtonTitle:@"Nope" 
+                          otherButtonTitles:@"YUP RESPRING", nil];
+
+	[alert show];
 }
 
 %hook SBIconGridImage
@@ -79,6 +88,12 @@ static SBIcon *firstIcon;
 
 %hook SBIconController
 
+%new - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == [alertView firstOtherButtonIndex]) {
+        system("killall -9 SpringBoard");
+    }
+}
+
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
 - (void)closeFolderAnimated:(_Bool)arg1 {
 	
@@ -97,7 +112,7 @@ static SBIcon *firstIcon;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
-	if (iconView.isFolderIconView && enabled) {
+	if (iconView.isFolderIconView && forceTouchMethod != 0 && enabled) {
 		SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 		firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
 		switch (recognizer.state) {

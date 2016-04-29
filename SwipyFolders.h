@@ -121,6 +121,7 @@
 -(void)openFolder:(id)folder animated:(BOOL)animated;
 - (void)closeFolderAnimated:(_Bool)arg1;
 - (void)_closeFolderController:(id)arg1 animated:(_Bool)arg2 withCompletion:(id)arg3;
+-(void)alertView:(id)arg1 clickedButtonAtIndex:(int)arg2;
 
 
 - (BOOL)isFolderIconView:(SBIconView *)view;
