@@ -76,6 +76,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on first app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -83,6 +84,7 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>4</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -106,6 +108,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on first app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -113,6 +116,7 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>4</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -136,6 +140,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on first app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -143,6 +148,7 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>4</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -166,6 +172,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on first app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -173,6 +180,7 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>4</integer>
 				<integer>0</integer>
 			</array>
 		</dict>

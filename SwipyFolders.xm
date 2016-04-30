@@ -83,7 +83,6 @@ static void respring() {
 }
 %end
 
-
 static SBIcon *firstIcon;
 
 %hook SBIconController
@@ -127,12 +126,12 @@ static SBIcon *firstIcon;
 
 					case 2: {
 						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[((SBFolderIconView *)iconView).folderIcon.folder openFirstApp];
+						[folder openFirstApp];
 					}break;
 
 					case 3: {
 						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[((SBFolderIconView *)iconView).folderIcon.folder openSecondApp];
+						[folder openSecondApp];
 					}break;
 
 					case 4: {
@@ -187,7 +186,7 @@ static SBIcon *firstIcon;
 - (id)_shortcutItemsToDisplay {
 	
 	//If it is a folder:
-	if (self.application == nil && forceTouchMethod == 4 && enabled) {
+	if (self.application == nil && enabled) { //&& (forceTouchMethod == 4 || swipeUpMethod == 4 || singleTapMethod == 4 || doubleTapMethod == 4 ||shortHoldMethod == 4)
 		NSMutableArray *objects = [NSMutableArray new];
 		[objects addObjectsFromArray:firstIcon.application.staticShortcutItems];
 		[objects addObjectsFromArray:[[%c(SBApplicationShortcutStoreManager) sharedManager] shortcutItemsForBundleIdentifier:firstIcon.application.staticShortcutItems]];
@@ -216,7 +215,15 @@ UILongPressGestureRecognizer *shortHold;
 	
 	%orig;
 	
-	if (self.isFolderIconView && enabled) { 
+	if (self.isFolderIconView && enabled) {
+
+		/*[self removeGestureRecognizer:swipeUp];
+		[self removeGestureRecognizer:singleTap];
+		[self removeGestureRecognizer:doubleTap];
+		[self removeGestureRecognizer:shortHold];
+		*/
+
+		//SBIconController* iconController = [%c(SBIconController) sharedInstance];
 
 		if (swipeUpMethod != 0) {
 			swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipe:)];
@@ -261,7 +268,9 @@ UILongPressGestureRecognizer *shortHold;
 }
 
 %new - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture {
-	[self sf_method:shortHoldMethod];
+	if (gesture.state == UIGestureRecognizerStateBegan) {
+		[self sf_method:shortHoldMethod];
+	}
 }
 
 %new - (void)sf_swipe:(UISwipeGestureRecognizer *)gesture {
@@ -271,37 +280,59 @@ UILongPressGestureRecognizer *shortHold;
 %new - (void)sf_method:(NSInteger)method {
 
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
+	SBIconController* iconController = [%c(SBIconController) sharedInstance];
 
 	//Check if it is called with an open 3D touch shortcut menu , which has an class of a 'plain' SBIconView
 	if(![self isKindOfClass:%c(SBFolderIconView)]) {
-		SBApplicationShortcutMenu *shortcutView = [[%c(SBIconController) sharedInstance] presentedShortcutMenu];
+		SBApplicationShortcutMenu *shortcutView = iconController.presentedShortcutMenu;
 		[shortcutView removeFromSuperview];
 		[folder openFirstApp]; //TODO: fix weird bug. Now we need to open the app once tapped even if the singleTapMethod is set to open the folder in order to prevent 'lock' springboard
 		return;
 	}
 
-	switch (method) {
-		case 1: {
-			[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //open folder
-		}break;
+	if(enabled) {
 
-		case 2: {
-			[folder openFirstApp];
-		}break;
+		switch (method) {
+			case 1: {
+				[iconController openFolder:folder animated:YES]; //open folder
+			}break;
 
-		case 3: {
-			[folder openSecondApp];
-		}break;
+			case 2: {
+				if(!iconController.isEditing) {
+					[folder openFirstApp];
+				} else {
+					[iconController openFolder:folder animated:YES];
+				}
+			}break;
 
-		default:
-		break;
+			case 3: {
+				if(!iconController.isEditing) {
+					[folder openSecondApp];
+				} else {
+					[iconController openFolder:folder animated:YES];
+				}
+			}break;
+
+			case 4: {
+				firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+				iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
+				iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+				UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+				[rootView.view addSubview:iconController.presentedShortcutMenu];
+				[iconController.presentedShortcutMenu presentAnimated:YES];
+				[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+			}
+
+			default:
+			break;
+		}
 	}
 	
 		
 }
 
 %end
-
+ 
 
 %hook SBIcon
 %new - (void)openApp {

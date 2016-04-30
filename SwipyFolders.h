@@ -38,6 +38,7 @@
 - (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 - (void)openFirstApp;
 - (void)openSecondApp; 
+- (void)quickActionOnFirstApp; 
 @end
 
 @interface SBIconView : UIView
