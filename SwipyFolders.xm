@@ -3,11 +3,13 @@
 static NSUserDefaults *preferences;
 static bool enabled;
 static bool enableFolderPreview;
+static bool hideGreyFolderBackground;
 static NSInteger singleTapMethod;
 static NSInteger swipeUpMethod;
 static NSInteger doubleTapMethod;
 static NSInteger shortHoldMethod;
 static CGFloat shortHoldTime;
+static CGFloat doubleTapTime;
 static NSInteger forceTouchMethod;
 
 static void loadPreferences() {
@@ -16,9 +18,11 @@ static void loadPreferences() {
 	[preferences registerDefaults:@{
 		@"enabled": @YES,
 		@"enableFolderPreview": @YES,
+		@"hideGreyFolderBackground": @NO,
 		@"singleTapMethod": [NSNumber numberWithInteger:2],
 		@"swipeUpMethod": 	[NSNumber numberWithInteger:1],
 		@"doubleTapMethod": [NSNumber numberWithInteger:0],
+		@"doubleTapTime": [NSNumber numberWithFloat:0.2],
 		@"shortHoldMethod": [NSNumber numberWithInteger:0],
 		@"shortHoldTime": 	[NSNumber numberWithFloat:0.325],
 		@"forceTouchMethod": [NSNumber numberWithInteger:4],
@@ -26,9 +30,11 @@ static void loadPreferences() {
 	
 	enabled 		= [preferences boolForKey:@"enabled"];
 	enableFolderPreview	= [preferences boolForKey:@"enableFolderPreview"];
+	hideGreyFolderBackground = [preferences boolForKey:@"hideGreyFolderBackground"];
 	singleTapMethod 	= [preferences integerForKey:@"singleTapMethod"];
 	swipeUpMethod 		= [preferences integerForKey:@"swipeUpMethod"];
 	doubleTapMethod 	= [preferences integerForKey:@"doubleTapMethod"];
+	doubleTapTime	 	= [preferences floatForKey:@"doubleTapTime"];
 	shortHoldMethod 	= [preferences integerForKey:@"shortHoldMethod"];
 	shortHoldTime 		= [preferences floatForKey:@"shortHoldTime"];
 	forceTouchMethod 	= [preferences integerForKey:@"forceTouchMethod"];
@@ -60,37 +66,72 @@ static void respring() {
 	[[%c(SBIconController) sharedInstance] presentViewController:alertController animated:YES completion:nil];
 	*/
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Respring - SwipyFolders" 
-                          message:@"In order to change the folder preview, a respring is required. Want to respring now?" 
-                          delegate:[%c(SBIconController) sharedInstance]
-                          cancelButtonTitle:@"Nope" 
-                          otherButtonTitles:@"YUP RESPRING", nil];
+						  message:@"In order to change the folder preview, a respring is required. Want to respring now?" 
+						  delegate:[%c(SBIconController) sharedInstance]
+						  cancelButtonTitle:@"Nope" 
+						  otherButtonTitles:@"YUP RESPRING", nil];
 
 	[alert show];
 }
 
+
 %hook SBIconGridImage
 + (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count{
 	if (enableFolderPreview && enabled) {
-		CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54;
-		CGFloat iconMargin = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 3 : 6;
+		
+		CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
+		//Full size is 60.
+		if(hideGreyFolderBackground) {
+			iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 60 : 69; //TEST ON IPAD!!!
+		}
 		if (index == 0) {
 			return CGRectMake(0, 0, iconSize, iconSize);
 		} else {
-			return CGRectMake(iconSize / 2, iconSize + iconMargin, 0, 0);
+			return CGRectMake(0, 0, 0, 0); //CGRectMake(iconSize / 2, iconSize + iconMargin, 0, 0);
 		}
 	}
 	return %orig;
 }
++ (struct CGSize)cellSize{
+	//NSLog(@"SwipyFolders: %@", NSStringFromCGSize(%orig)); See log files with 'onDeviceConsole'
+	if(hideGreyFolderBackground && enabled) {
+		return CGSizeMake(18, 18);
+	}
+	return %orig;
+
+}
+/*+ (struct CGSize)cellSpacing {
+	//NSLog(@"SwipyFolders: %@", NSStringFromCGSize(%orig));  //3x3
+	return %orig;
+}*/
+%end
+
+%hook SBFolderIconView
+
+- (void)setIcon:(SBIcon *)icon {
+	%orig;
+	if(hideGreyFolderBackground && enabled) {
+		MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
+	}
+}
+
+- (void)setBadge:(id)badge { 
+
+}
+
 %end
 
 static SBIcon *firstIcon;
+static SBIconView *tappedIcon;
+static NSDate *lastTappedTime;
+static BOOL doubleTapRecognized;
 
 %hook SBIconController
 
 %new - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == [alertView firstOtherButtonIndex]) {
-        system("killall -9 SpringBoard");
-    }
+	if (buttonIndex == [alertView firstOtherButtonIndex]) {
+		system("killall -9 SpringBoard");
+	}
 }
 
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
@@ -114,6 +155,9 @@ static SBIcon *firstIcon;
 	if (iconView.isFolderIconView && forceTouchMethod != 0 && enabled) {
 		SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 		firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+		if(!firstIcon) {
+			%orig; //QuickCenter fix, because they are using fake folders without icons
+		}
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
 
@@ -173,11 +217,49 @@ static SBIcon *firstIcon;
 			break;
 
 		}
+
+		iconView.highlighted = NO;
 	} else {
 		%orig;
 	}
 	
 }
+
+- (void)iconTapped:(SBIconView *)iconView {
+	
+	if (!self.isEditing && !self.hasOpenFolder && iconView.isFolderIconView && enabled) {
+		if(doubleTapMethod == 0) {
+			[iconView sf_method:singleTapMethod];
+			iconView.highlighted = NO;
+		} else {
+			NSDate *nowTime = [[NSDate date] retain];
+			if (iconView == tappedIcon) {
+				if ([nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
+					doubleTapRecognized = YES;
+					[iconView sf_method:doubleTapMethod];
+					lastTappedTime = 0;
+					iconView.highlighted = NO;
+					return;
+				}
+			}
+			tappedIcon = iconView;
+			lastTappedTime = nowTime;
+			doubleTapRecognized = NO;
+			iconView.highlighted = NO;
+
+			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(doubleTapTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+				if (!doubleTapRecognized && iconView == tappedIcon) {
+					[iconView sf_method:singleTapMethod];
+				}
+			});
+			
+			
+		}
+	} else {
+		%orig;
+	}
+}
+
 %end
 
 
@@ -207,8 +289,6 @@ static SBIcon *firstIcon;
 }
 
 UISwipeGestureRecognizer *swipeUp;
-UITapGestureRecognizer *singleTap;
-UITapGestureRecognizer *doubleTap;
 UILongPressGestureRecognizer *shortHold;
 
 - (void)setIcon:(SBIcon*)icon {
@@ -217,35 +297,13 @@ UILongPressGestureRecognizer *shortHold;
 	
 	if (self.isFolderIconView && enabled) {
 
-		/*[self removeGestureRecognizer:swipeUp];
-		[self removeGestureRecognizer:singleTap];
-		[self removeGestureRecognizer:doubleTap];
-		[self removeGestureRecognizer:shortHold];
-		*/
-
-		//SBIconController* iconController = [%c(SBIconController) sharedInstance];
-
 		if (swipeUpMethod != 0) {
 			swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipe:)];
 			swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
 			swipeUp.delegate = (id <UIGestureRecognizerDelegate>)self;
 			[self addGestureRecognizer:swipeUp];
 			[swipeUp release];
-		}
-
-		if (singleTapMethod != 0) {
-			singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(sf_singleTap:)];
-			singleTap.numberOfTapsRequired = 1; 
-			[self addGestureRecognizer:singleTap];
-			[singleTap release];
-		}
-
-		if (doubleTapMethod != 0) {
-			doubleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(sf_doubleTap:)];
-			doubleTap.numberOfTapsRequired = 2;
-			[self addGestureRecognizer:doubleTap];
-			[singleTap requireGestureRecognizerToFail:doubleTap];
-			[doubleTap release];
+			[[%c(SBSearchGesture) sharedInstance] setDisabled:YES forReason:nil];
 
 		}
 
@@ -256,15 +314,6 @@ UILongPressGestureRecognizer *shortHold;
 
 		}
 	}
-}
-
-
-%new - (void)sf_singleTap:(UITapGestureRecognizer *)gesture {
-	[self sf_method:singleTapMethod];
-}
-
-%new - (void)sf_doubleTap:(UITapGestureRecognizer *)gesture {
-	[self sf_method:doubleTapMethod];
 }
 
 %new - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture {
@@ -291,44 +340,36 @@ UILongPressGestureRecognizer *shortHold;
 	}
 
 	if(enabled) {
-
-		switch (method) {
-			case 1: {
-				[iconController openFolder:folder animated:YES]; //open folder
-			}break;
-
-			case 2: {
-				if(!iconController.isEditing) {
+		if(!iconController.isEditing) {
+			switch (method) {
+				case 1: {
+					[iconController openFolder:folder animated:YES]; //open folder
+				}break;
+				case 2: {
 					[folder openFirstApp];
-				} else {
-					[iconController openFolder:folder animated:YES];
-				}
-			}break;
+				}break;
 
-			case 3: {
-				if(!iconController.isEditing) {
+				case 3: {
 					[folder openSecondApp];
-				} else {
-					[iconController openFolder:folder animated:YES];
+				}break;
+
+				case 4: {
+					firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+					iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
+					iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+					UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+					[rootView.view addSubview:iconController.presentedShortcutMenu];
+					[iconController.presentedShortcutMenu presentAnimated:YES];
+					[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
 				}
-			}break;
 
-			case 4: {
-				firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-				iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
-				iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
-				UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-				[rootView.view addSubview:iconController.presentedShortcutMenu];
-				[iconController.presentedShortcutMenu presentAnimated:YES];
-				[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+				default:
+				break;
 			}
-
-			default:
-			break;
+		} else {
+			[iconController openFolder:folder animated:YES]; //open folder
 		}
-	}
-	
-		
+	}		
 }
 
 %end

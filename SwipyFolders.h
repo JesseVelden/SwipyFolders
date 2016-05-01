@@ -49,6 +49,11 @@
 + (id)sharedInstance;
 - (void)_handleSecondHalfLongPressTimer:(id)arg1;
 - (void)cancelLongPressTimer;
++ (struct CGSize)defaultIconImageSize;
+- (UIImageView *)_currentImageView;
+- (void)setWallpaperRelativeCenter:(struct CGPoint)arg1;
+- (void)setIsEditing:(_Bool)arg1 animated:(_Bool)arg2;
+
 //New:
 - (void)sf_method:(NSInteger)method;
 - (void)sf_swipe:(UISwipeGestureRecognizer *)gesture;
@@ -56,6 +61,7 @@
 - (void)sf_doubleTap:(UITapGestureRecognizer *)gesture;
 - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture;
 - (BOOL)isFolderIconView;
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)swipeUp shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)ges;
 @end
 
 @class SBSApplicationShortcutIcon;
@@ -105,6 +111,20 @@
 - (void)updateFromPressGestureRecognizer:(id)arg1;
 @end
 
+@interface SBIconListView : UIView
+-(void)setIconsNeedLayout;
+-(void)layoutIconsIfNeeded:(double)needed domino:(BOOL)domino;
+-(CGPoint)centerForIcon:(id)icon;
+-(CGPoint)originForIcon:(id)icon;
+-(CGPoint)originForIconAtIndex:(unsigned)index;
+-(CGSize)defaultIconSize;
+@end
+
+@interface SBRootIconListView : SBIconListView
+- (SBFolder*)folder;
+- (NSArray *)icons;
+- (unsigned long long)indexOfIcon:(id)icon;
+@end
 
 @interface SBIconController : UIViewController <SBApplicationShortcutMenuDelegate>
 @property(retain, nonatomic) SBApplicationShortcutMenu *presentedShortcutMenu;
@@ -113,7 +133,7 @@
 - (BOOL)_canRevealShortcutMenu;
 - (BOOL)isEditing;
 - (void)iconHandleLongPress:(id)arg1;
-- (void)setIsEditing:(_Bool)arg1;
+- (void)setIsEditing:(BOOL)arg1;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer ;
 - (void)iconTapped:(SBIconView *)iconView;
 - (_Bool)hasOpenFolder;
@@ -123,7 +143,22 @@
 - (void)closeFolderAnimated:(_Bool)arg1;
 - (void)_closeFolderController:(id)arg1 animated:(_Bool)arg2 withCompletion:(id)arg3;
 -(void)alertView:(id)arg1 clickedButtonAtIndex:(int)arg2;
+- (_Bool)_dismissRightEdgeSpotlight:(_Bool)arg1;
+- (_Bool)_presentRightEdgeSpotlight:(_Bool)arg1;
+- (void)_activateShortcutItem:(id)arg1 fromApplication:(id)arg2;
+- (_Bool)_dismissTopEdgeSpotlight:(_Bool)arg1;
+- (_Bool)_presentTopEdgeSpotlight:(_Bool)arg1;
+- (void)_searchViewControllerIsPresented:(_Bool)arg1 fromBreadcrumb:(_Bool)arg2;
+- (_Bool)dismissSpotlightIfNecessary;
+- (_Bool)dismissSpotlightAnimated:(_Bool)arg1;
+- (_Bool)presentSpotlightFromEdge:(unsigned long long)arg1 fromBreadcrumb:(_Bool)arg2 animated:(_Bool)arg3;
 
+-(int)currentFolderIconListIndex;
+-(int)currentIconListIndex;
+
+- (SBRootIconListView*)currentFolderIconList;
+- (SBRootIconListView*)dockListView;
+- (SBRootIconListView*)currentRootIconList;
 
 - (BOOL)isFolderIconView:(SBIconView *)view;
 - (void)launchFirstApp:(SBIconView *)iconView;
@@ -135,6 +170,11 @@
 
 @interface SBFolderIconView : SBIconView
 - (SBFolderIcon*)folderIcon;
+- (UIImageView *)_folderIconImageView;
+
+- (UIImageView *)customImageView;
+- (void)setCustomIconImage:(UIImage *)image;
+- (void)setCustomImageView:(UIImageView *)imageView;
 @end
 
 
@@ -160,4 +200,10 @@
 
 @interface SBIconGridImage
 + (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count;
++ (struct CGSize)cellSpacing;
++ (struct CGSize)cellSize;
+@end
+
+@interface SBSearchGesture
+- (void)setDisabled:(_Bool)arg1 forReason:(id)arg2;
 @end
