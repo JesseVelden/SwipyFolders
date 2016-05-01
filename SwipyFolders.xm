@@ -152,6 +152,11 @@ static BOOL doubleTapRecognized;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
+	if(!iconView.isFolderIconView) {
+		%orig;
+		return;
+	}
+
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
 	if (iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
@@ -219,7 +224,6 @@ static BOOL doubleTapRecognized;
 	} else {
 		%orig;
 	}
-	
 }
 
 - (void)iconTapped:(SBIconView *)iconView {
