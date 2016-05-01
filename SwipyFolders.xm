@@ -152,12 +152,9 @@ static BOOL doubleTapRecognized;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
-	if (iconView.isFolderIconView && forceTouchMethod != 0 && enabled) {
-		SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
-		firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-		if(!firstIcon) {
-			%orig; //QuickCenter fix, because they are using fake folders without icons
-		}
+	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
+	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+	if (iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
 
@@ -251,9 +248,7 @@ static BOOL doubleTapRecognized;
 				if (!doubleTapRecognized && iconView == tappedIcon) {
 					[iconView sf_method:singleTapMethod];
 				}
-			});
-			
-			
+			});			
 		}
 	} else {
 		%orig;
