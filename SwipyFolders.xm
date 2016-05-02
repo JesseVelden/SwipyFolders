@@ -302,7 +302,7 @@ UILongPressGestureRecognizer *shortHold;
 			swipeUp.delegate = (id <UIGestureRecognizerDelegate>)self;
 			[self addGestureRecognizer:swipeUp];
 			[swipeUp release];
-			[[%c(SBSearchGesture) sharedInstance] setDisabled:YES forReason:nil];
+			//[[%c(SBSearchGesture) sharedInstance] setDisabled:YES forReason:nil];
 
 		}
 
