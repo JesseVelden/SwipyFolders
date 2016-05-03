@@ -310,7 +310,7 @@ UILongPressGestureRecognizer *shortHold;
 
 		if (swipeDownMethod != 0) {
 			swipeDown = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeDown:)];
-			swipeDown.direction = UISwipeGestureRecognizerDirectionRight;
+			swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
 			swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
 			[self addGestureRecognizer:swipeDown];
 			[swipeDown release];
