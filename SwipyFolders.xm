@@ -155,47 +155,13 @@ static BOOL doubleTapRecognized;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
-	if(!iconView.isFolderIconView) {
-		%orig;
-		return;
-	}
-
-	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
-	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-	if (iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
+	if (iconView.isFolderIconView && forceTouchMethod != 0 && enabled) {
+		SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
+		firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
-
-				[iconView cancelLongPressTimer];
-				switch (forceTouchMethod) {
-					case 1: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
-					}break;
-
-					case 2: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openFirstApp];
-					}break;
-
-					case 3: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openSecondApp];
-					}break;
-
-					case 4: {
-						self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:recognizer.view interactionProgress:nil orientation:1];
-						self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
-						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-						[rootView.view addSubview:self.presentedShortcutMenu];
-						[self.presentedShortcutMenu presentAnimated:YES];
-						[self applicationShortcutMenuDidPresent:self.presentedShortcutMenu];
-					}break;
-
-					default: 
-					break;
-
-				}
+				[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+				
 
 			}break;
 
@@ -222,8 +188,6 @@ static BOOL doubleTapRecognized;
 			break;
 
 		}
-
-		iconView.highlighted = NO;
 	} else {
 		%orig;
 	}
@@ -387,8 +351,17 @@ UILongPressGestureRecognizer *shortHold;
 }
 
 //To disable Spotlight view from showing up, if user swipe down on the icon:
-%new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
-	otherGestureRecognizer.enabled = NO;
+%new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIScrollViewPanGestureRecognizer *)otherGestureRecognizer {
+ 
+	
+	if([otherGestureRecognizer isKindOfClass:%c(UIScrollViewPanGestureRecognizer)]) {
+		CGPoint velocity = [otherGestureRecognizer velocityInView:self];
+	 	if(velocity.y > 0) { 
+			otherGestureRecognizer.enabled = NO; 
+		}
+	}
+
+
 	return YES; 
 }
 
