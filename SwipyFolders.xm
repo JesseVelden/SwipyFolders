@@ -6,6 +6,7 @@ static bool enableFolderPreview;
 static bool hideGreyFolderBackground;
 static NSInteger singleTapMethod;
 static NSInteger swipeUpMethod;
+static NSInteger swipeDownMethod;
 static NSInteger doubleTapMethod;
 static NSInteger shortHoldMethod;
 static CGFloat shortHoldTime;
@@ -21,6 +22,7 @@ static void loadPreferences() {
 		@"hideGreyFolderBackground": @NO,
 		@"singleTapMethod": [NSNumber numberWithInteger:2],
 		@"swipeUpMethod": 	[NSNumber numberWithInteger:1],
+		@"swipeDownMethod": [NSNumber numberWithInteger:0],
 		@"doubleTapMethod": [NSNumber numberWithInteger:0],
 		@"doubleTapTime": [NSNumber numberWithFloat:0.2],
 		@"shortHoldMethod": [NSNumber numberWithInteger:0],
@@ -33,6 +35,7 @@ static void loadPreferences() {
 	hideGreyFolderBackground = [preferences boolForKey:@"hideGreyFolderBackground"];
 	singleTapMethod 	= [preferences integerForKey:@"singleTapMethod"];
 	swipeUpMethod 		= [preferences integerForKey:@"swipeUpMethod"];
+	swipeDownMethod		= [preferences integerForKey:@"swipeDownMethod"];
 	doubleTapMethod 	= [preferences integerForKey:@"doubleTapMethod"];
 	doubleTapTime	 	= [preferences floatForKey:@"doubleTapTime"];
 	shortHoldMethod 	= [preferences integerForKey:@"shortHoldMethod"];
@@ -288,6 +291,7 @@ static BOOL doubleTapRecognized;
 }
 
 UISwipeGestureRecognizer *swipeUp;
+UISwipeGestureRecognizer *swipeDown;
 UILongPressGestureRecognizer *shortHold;
 
 - (void)setIcon:(SBIcon*)icon {
@@ -297,13 +301,19 @@ UILongPressGestureRecognizer *shortHold;
 	if (self.isFolderIconView && enabled) {
 
 		if (swipeUpMethod != 0) {
-			swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipe:)];
+			swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeUp:)];
 			swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
 			swipeUp.delegate = (id <UIGestureRecognizerDelegate>)self;
 			[self addGestureRecognizer:swipeUp];
 			[swipeUp release];
-			//[[%c(SBSearchGesture) sharedInstance] setDisabled:YES forReason:nil];
+		}
 
+		if (swipeDownMethod != 0) {
+			swipeDown = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeDown:)];
+			swipeDown.direction = UISwipeGestureRecognizerDirectionRight;
+			swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
+			[self addGestureRecognizer:swipeDown];
+			[swipeDown release];
 		}
 
 		if (shortHoldMethod != 0) {
@@ -321,9 +331,14 @@ UILongPressGestureRecognizer *shortHold;
 	}
 }
 
-%new - (void)sf_swipe:(UISwipeGestureRecognizer *)gesture {
+%new - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture {
 	[self sf_method:swipeUpMethod];
 }
+
+%new - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture {
+	[self sf_method:swipeDownMethod];
+}
+
 
 %new - (void)sf_method:(NSInteger)method {
 
@@ -369,6 +384,12 @@ UILongPressGestureRecognizer *shortHold;
 			[iconController openFolder:folder animated:YES]; //open folder
 		}
 	}		
+}
+
+//To disable Spotlight view from showing up, if user swipe down on the icon:
+%new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+	otherGestureRecognizer.enabled = NO;
+	return YES; 
 }
 
 %end

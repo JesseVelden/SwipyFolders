@@ -56,9 +56,8 @@
 
 //New:
 - (void)sf_method:(NSInteger)method;
-- (void)sf_swipe:(UISwipeGestureRecognizer *)gesture;
-- (void)sf_singleTap:(UITapGestureRecognizer *)gesture;
-- (void)sf_doubleTap:(UITapGestureRecognizer *)gesture;
+- (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture;
+- (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture;
 - (BOOL)isFolderIconView;
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)swipeUp shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)ges;
@@ -143,16 +142,6 @@
 - (void)closeFolderAnimated:(_Bool)arg1;
 - (void)_closeFolderController:(id)arg1 animated:(_Bool)arg2 withCompletion:(id)arg3;
 -(void)alertView:(id)arg1 clickedButtonAtIndex:(int)arg2;
-- (_Bool)_dismissRightEdgeSpotlight:(_Bool)arg1;
-- (_Bool)_presentRightEdgeSpotlight:(_Bool)arg1;
-- (void)_activateShortcutItem:(id)arg1 fromApplication:(id)arg2;
-- (_Bool)_dismissTopEdgeSpotlight:(_Bool)arg1;
-- (_Bool)_presentTopEdgeSpotlight:(_Bool)arg1;
-- (void)_searchViewControllerIsPresented:(_Bool)arg1 fromBreadcrumb:(_Bool)arg2;
-- (_Bool)dismissSpotlightIfNecessary;
-- (_Bool)dismissSpotlightAnimated:(_Bool)arg1;
-- (_Bool)presentSpotlightFromEdge:(unsigned long long)arg1 fromBreadcrumb:(_Bool)arg2 animated:(_Bool)arg3;
-
 -(int)currentFolderIconListIndex;
 -(int)currentIconListIndex;
 
@@ -177,14 +166,6 @@
 - (void)setCustomImageView:(UIImageView *)imageView;
 @end
 
-
-@interface SBIconViewMap
-+ (id)homescreenMap;
-- (SBIconView *)mappedIconViewForIcon:(SBIcon *)icon;
-- (SBIconView *)iconViewForIcon:(SBIcon *)icon;
-- (SBIconView *)_iconViewForIcon:(SBIcon *)icon;
-@end
-
 @interface SBApplicationShortcutStoreManager : NSObject
 + (id)sharedManager;
 - (void)saveSynchronously;
@@ -202,8 +183,4 @@
 + (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count;
 + (struct CGSize)cellSpacing;
 + (struct CGSize)cellSize;
-@end
-
-@interface SBSearchGesture
-- (void)setDisabled:(_Bool)arg1 forReason:(id)arg2;
 @end
