@@ -184,3 +184,6 @@
 + (struct CGSize)cellSpacing;
 + (struct CGSize)cellSize;
 @end
+
+@interface UIScrollViewPanGestureRecognizer : UIPanGestureRecognizer
+@end
