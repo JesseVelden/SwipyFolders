@@ -52,7 +52,7 @@
 + (struct CGSize)defaultIconImageSize;
 - (UIImageView *)_currentImageView;
 - (void)setWallpaperRelativeCenter:(struct CGPoint)arg1;
-- (void)setIsEditing:(_Bool)arg1 animated:(_Bool)arg2;
+- (void)setIsEditing:(_Bool)arg1;
 
 //New:
 - (void)sf_method:(NSInteger)method;
@@ -186,4 +186,7 @@
 @end
 
 @interface UIScrollViewPanGestureRecognizer : UIPanGestureRecognizer
+@end
+
+@interface SBSearchGesture : UIScrollViewPanGestureRecognizer
 @end

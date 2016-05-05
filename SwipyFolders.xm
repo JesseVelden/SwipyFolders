@@ -4,6 +4,7 @@ static NSUserDefaults *preferences;
 static bool enabled;
 static bool enableFolderPreview;
 static bool hideGreyFolderBackground;
+static bool closeFolderOnOpen;
 static NSInteger singleTapMethod;
 static NSInteger swipeUpMethod;
 static NSInteger swipeDownMethod;
@@ -13,6 +14,11 @@ static CGFloat shortHoldTime;
 static CGFloat doubleTapTime;
 static NSInteger forceTouchMethod;
 
+static UISwipeGestureRecognizer *swipeUp;
+static UISwipeGestureRecognizer *swipeDown;
+static UILongPressGestureRecognizer *shortHold;
+
+
 static void loadPreferences() {
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 
@@ -20,6 +26,7 @@ static void loadPreferences() {
 		@"enabled": @YES,
 		@"enableFolderPreview": @YES,
 		@"hideGreyFolderBackground": @NO,
+		@"closeFolderOnOpen": @YES,
 		@"singleTapMethod": [NSNumber numberWithInteger:2],
 		@"swipeUpMethod": 	[NSNumber numberWithInteger:1],
 		@"swipeDownMethod": [NSNumber numberWithInteger:0],
@@ -33,6 +40,7 @@ static void loadPreferences() {
 	enabled 		= [preferences boolForKey:@"enabled"];
 	enableFolderPreview	= [preferences boolForKey:@"enableFolderPreview"];
 	hideGreyFolderBackground = [preferences boolForKey:@"hideGreyFolderBackground"];
+	closeFolderOnOpen	= [preferences boolForKey:@"closeFolderOnOpen"];
 	singleTapMethod 	= [preferences integerForKey:@"singleTapMethod"];
 	swipeUpMethod 		= [preferences integerForKey:@"swipeUpMethod"];
 	swipeDownMethod		= [preferences integerForKey:@"swipeDownMethod"];
@@ -43,6 +51,10 @@ static void loadPreferences() {
 	forceTouchMethod 	= [preferences integerForKey:@"forceTouchMethod"];
 
 	[preferences release];
+
+	swipeUp.enabled 	= (swipeUpMethod != 0) ? YES : NO;
+	swipeDown.enabled 	= (swipeDownMethod != 0) ? YES : NO;
+	shortHold.enabled 	= (shortHoldMethod != 0) ? YES : NO;
 
 }
 
@@ -90,7 +102,7 @@ static void respring() {
 		if (index == 0) {
 			return CGRectMake(0, 0, iconSize, iconSize);
 		} else {
-			return CGRectMake(0, 0, 0, 0); //CGRectMake(iconSize / 2, iconSize + iconMargin, 0, 0);
+			return CGRectMake(iconSize / 2, iconSize, 1, 1);
 		}
 	}
 	return %orig;
@@ -116,10 +128,6 @@ static void respring() {
 	if(hideGreyFolderBackground && enabled) {
 		MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
 	}
-}
-
-- (void)setBadge:(id)badge { 
-
 }
 
 %end
@@ -155,13 +163,48 @@ static BOOL doubleTapRecognized;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
-	if (iconView.isFolderIconView && forceTouchMethod != 0 && enabled) {
-		SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
-		firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+	if (!iconView.isFolderIconView) {
+		%orig;
+		return;
+	}
+	
+	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
+	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];		
+
+	if (!self.isEditing && iconView.isFolderIconView && firstIcon && forceTouchMethod != 0 && enabled) {
+
+		
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
-				[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-				
+				[iconView cancelLongPressTimer];
+				switch (forceTouchMethod) {
+					case 1: {
+						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+						[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+					}break;
+
+					case 2: {
+						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+						[folder openFirstApp];
+					}break;
+
+					case 3: {
+						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+						[folder openSecondApp];
+					}break;
+
+					case 4: {
+						self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:recognizer.view interactionProgress:nil orientation:1];
+						self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
+						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+						[rootView.view addSubview:self.presentedShortcutMenu];
+						[self.presentedShortcutMenu presentAnimated:YES];
+						[self applicationShortcutMenuDidPresent:self.presentedShortcutMenu];
+					}break;
+
+					default: 
+					break;
+				}
 
 			}break;
 
@@ -186,8 +229,8 @@ static BOOL doubleTapRecognized;
 			}break;
 			default:
 			break;
-
 		}
+		iconView.highlighted = NO;
 	} else {
 		%orig;
 	}
@@ -234,7 +277,7 @@ static BOOL doubleTapRecognized;
 - (id)_shortcutItemsToDisplay {
 	
 	//If it is a folder:
-	if (self.application == nil && enabled) { //&& (forceTouchMethod == 4 || swipeUpMethod == 4 || singleTapMethod == 4 || doubleTapMethod == 4 ||shortHoldMethod == 4)
+	if (self.application == nil && enabled && forceTouchMethod != 0) { //&& (forceTouchMethod == 4 || swipeUpMethod == 4 || singleTapMethod == 4 || doubleTapMethod == 4 ||shortHoldMethod == 4)
 		NSMutableArray *objects = [NSMutableArray new];
 		[objects addObjectsFromArray:firstIcon.application.staticShortcutItems];
 		[objects addObjectsFromArray:[[%c(SBApplicationShortcutStoreManager) sharedManager] shortcutItemsForBundleIdentifier:firstIcon.application.staticShortcutItems]];
@@ -254,38 +297,25 @@ static BOOL doubleTapRecognized;
 	return self.icon.isFolderIcon && !([self.icon respondsToSelector:@selector(isNewsstandIcon)] && self.icon.isNewsstandIcon);
 }
 
-UISwipeGestureRecognizer *swipeUp;
-UISwipeGestureRecognizer *swipeDown;
-UILongPressGestureRecognizer *shortHold;
-
 - (void)setIcon:(SBIcon*)icon {
 	
 	%orig;
 	
 	if (self.isFolderIconView && enabled) {
-
-		if (swipeUpMethod != 0) {
-			swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeUp:)];
-			swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
-			swipeUp.delegate = (id <UIGestureRecognizerDelegate>)self;
-			[self addGestureRecognizer:swipeUp];
-			[swipeUp release];
-		}
-
-		if (swipeDownMethod != 0) {
-			swipeDown = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeDown:)];
-			swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
-			swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
-			[self addGestureRecognizer:swipeDown];
-			[swipeDown release];
-		}
-
-		if (shortHoldMethod != 0) {
-			shortHold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(sf_shortHold:)];
-			shortHold.minimumPressDuration = shortHoldTime;
-			[self addGestureRecognizer:shortHold];
-
-		}
+		
+		swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeUp:)];
+		swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
+		swipeUp.delegate = (id <UIGestureRecognizerDelegate>)self;
+		[self addGestureRecognizer:swipeUp];
+		
+		swipeDown = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeDown:)];
+		swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
+		swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
+		[self addGestureRecognizer:swipeDown];
+		
+		shortHold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(sf_shortHold:)];
+		shortHold.minimumPressDuration = shortHoldTime;
+		[self addGestureRecognizer:shortHold];
 	}
 }
 
@@ -333,34 +363,40 @@ UILongPressGestureRecognizer *shortHold;
 
 				case 4: {
 					firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+					SBApplicationShortcutMenu *shortcutView = iconController.presentedShortcutMenu;
+					[shortcutView release];
+					[shortcutView removeFromSuperview];
+
 					iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
 					iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
 					UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
 					[rootView.view addSubview:iconController.presentedShortcutMenu];
 					[iconController.presentedShortcutMenu presentAnimated:YES];
 					[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+
 				}
 
 				default:
 				break;
 			}
 		} else {
-			[iconController openFolder:folder animated:YES]; //open folder
+			//[iconController openFolder:folder animated:YES]; //open folder
 		}
 	}		
 }
 
 //To disable Spotlight view from showing up, if user swipe down on the icon:
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIScrollViewPanGestureRecognizer *)otherGestureRecognizer {
- 
 	
-	if([otherGestureRecognizer isKindOfClass:%c(UIScrollViewPanGestureRecognizer)]) {
-		CGPoint velocity = [otherGestureRecognizer velocityInView:self];
-	 	if(velocity.y > 0) { 
-			otherGestureRecognizer.enabled = NO; 
+	if([otherGestureRecognizer isKindOfClass:%c(UIScrollViewPanGestureRecognizer)] && swipeDownMethod != 0 && enabled) {
+		NSMutableArray *targets = [otherGestureRecognizer valueForKeyPath:@"_targets"];
+		id targetContainer = targets[0];
+		id targetOfOtherGestureRecognizer = [targetContainer valueForKeyPath:@"_target"];
+
+		if([targetOfOtherGestureRecognizer isKindOfClass:%c(SBSearchScrollView)]) {
+			otherGestureRecognizer.enabled = NO;
 		}
 	}
-
 
 	return YES; 
 }
@@ -370,6 +406,7 @@ UILongPressGestureRecognizer *shortHold;
 
 %hook SBIcon
 %new - (void)openApp {
+
 	if([self respondsToSelector:@selector(launchFromLocation:context:)]) {
 		[self launchFromLocation:0 context:nil];
 	} else if ([self respondsToSelector:@selector(launchFromLocation:)]) {
@@ -377,6 +414,8 @@ UILongPressGestureRecognizer *shortHold;
 	} else if ([self respondsToSelector:@selector(launch)]) {
 		[self launch];
 	}
+
+	
 }
 
 %end
@@ -408,7 +447,6 @@ UILongPressGestureRecognizer *shortHold;
 		CFSTR("nl.jessevandervelden.swipyfoldersprefs/prefsChanged"),
 		NULL,
 		CFNotificationSuspensionBehaviorDeliverImmediately);
-	loadPreferences();
 
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
 		NULL,
@@ -416,4 +454,6 @@ UILongPressGestureRecognizer *shortHold;
 		CFSTR("nl.jessevandervelden.swipyfoldersprefs/respring"),
 		NULL,
 		CFNotificationSuspensionBehaviorDeliverImmediately);
+
+	loadPreferences();
 }
