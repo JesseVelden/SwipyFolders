@@ -15,6 +15,7 @@ Settings                                | Interface (first icon as folder previe
 Available gestures:
 * Single Tap
 * Swipe Up
+* Swipe Down
 * Double Tap
 * Short hold
 * 3D Touch (aka Force Touch)
