@@ -51,11 +51,11 @@ static void loadPreferences() {
 	forceTouchMethod 	= [preferences integerForKey:@"forceTouchMethod"];
 
 	[preferences release];
-
-	swipeUp.enabled 	= (swipeUpMethod != 0) ? YES : NO;
-	swipeDown.enabled 	= (swipeDownMethod != 0) ? YES : NO;
-	shortHold.enabled 	= (shortHoldMethod != 0) ? YES : NO;
-
+	if(enabled) {
+		swipeUp.enabled 	= (swipeUpMethod != 0) ? YES : NO;
+		swipeDown.enabled 	= (swipeDownMethod != 0) ? YES : NO;
+		shortHold.enabled 	= (shortHoldMethod != 0) ? YES : NO;
+	}
 }
 
 static void respring() {
@@ -163,19 +163,17 @@ static BOOL doubleTapRecognized;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
-	if (!iconView.isFolderIconView) {
+	if(!iconView.isFolderIconView) {
 		%orig;
 		return;
 	}
-	
+
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
-	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];		
-
-	if (!self.isEditing && iconView.isFolderIconView && firstIcon && forceTouchMethod != 0 && enabled) {
-
-		
+	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+	if (iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
+
 				[iconView cancelLongPressTimer];
 				switch (forceTouchMethod) {
 					case 1: {
@@ -204,6 +202,7 @@ static BOOL doubleTapRecognized;
 
 					default: 
 					break;
+
 				}
 
 			}break;
@@ -229,7 +228,9 @@ static BOOL doubleTapRecognized;
 			}break;
 			default:
 			break;
+
 		}
+
 		iconView.highlighted = NO;
 	} else {
 		%orig;
@@ -237,11 +238,11 @@ static BOOL doubleTapRecognized;
 }
 
 - (void)iconTapped:(SBIconView *)iconView {
-	
 	if (!self.isEditing && !self.hasOpenFolder && iconView.isFolderIconView && enabled) {
 		if(doubleTapMethod == 0) {
 			[iconView sf_method:singleTapMethod];
 			iconView.highlighted = NO;
+			return;
 		} else {
 			NSDate *nowTime = [[NSDate date] retain];
 			if (iconView == tappedIcon) {
@@ -262,9 +263,16 @@ static BOOL doubleTapRecognized;
 				if (!doubleTapRecognized && iconView == tappedIcon) {
 					[iconView sf_method:singleTapMethod];
 				}
-			});			
+			});	
+			return;		
 		}
 	} else {
+		if(self.hasOpenFolder && closeFolderOnOpen && enabled) {
+			SBIcon *icon = iconView.icon;
+			[icon openApp];
+			[[%c(SBIconController) sharedInstance] _closeFolderController:self.openFolder animated:NO withCompletion:nil]; 
+			
+		}
 		%orig;
 	}
 }
@@ -301,7 +309,7 @@ static BOOL doubleTapRecognized;
 	
 	%orig;
 	
-	if (self.isFolderIconView && enabled) {
+	if (self.isFolderIconView) {
 		
 		swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeUp:)];
 		swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
@@ -348,7 +356,7 @@ static BOOL doubleTapRecognized;
 	}
 
 	if(enabled) {
-		if(!iconController.isEditing) {
+		if(!iconController.isEditing && !iconController.hasOpenFolder) {
 			switch (method) {
 				case 1: {
 					[iconController openFolder:folder animated:YES]; //open folder
