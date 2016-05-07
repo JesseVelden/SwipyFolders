@@ -170,44 +170,42 @@ static BOOL doubleTapRecognized;
 
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-	if (iconView.isFolderIconView && firstIcon && enabled) {
+	if (iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
+
 				[iconView cancelLongPressTimer];
-				if(forceTouchMethod != 0) {
-					if(forceTouchMethod != 0)
-					switch (forceTouchMethod) {
-						case 1: {
-							[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-							[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
-							iconView.highlighted = NO;
-						}break;
+				switch (forceTouchMethod) {
+					case 1: {
+						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+						[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+						iconView.highlighted = NO;
+					}break;
 
-						case 2: {
-							[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-							[folder openFirstApp];
-						}break;
+					case 2: {
+						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+						[folder openFirstApp];
+					}break;
 
-						case 3: {
-							[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-							[folder openSecondApp];
-						}break;
+					case 3: {
+						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+						[folder openSecondApp];
+					}break;
 
-						case 4: {
-							self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:recognizer.view interactionProgress:nil orientation:1];
-							self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
-							UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-							[rootView.view addSubview:self.presentedShortcutMenu];
-							[self.presentedShortcutMenu presentAnimated:YES];
-							[self applicationShortcutMenuDidPresent:self.presentedShortcutMenu];
-						}break;
+					case 4: {
+						self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:recognizer.view interactionProgress:nil orientation:1];
+						self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
+						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+						[rootView.view addSubview:self.presentedShortcutMenu];
+						[self.presentedShortcutMenu presentAnimated:YES];
+						[self applicationShortcutMenuDidPresent:self.presentedShortcutMenu];
+					}break;
 
-						default: 
-						break;
+					default: 
+					break;
 
-					}
 				}
-				
+
 			}break;
 
 			case UIGestureRecognizerStateChanged: {
@@ -279,23 +277,6 @@ static BOOL doubleTapRecognized;
 		}
 		%orig;
 	}
-}
-
-%end
-
-%hook SBApplicationShortcutMenu
-- (id)_shortcutItemsToDisplay {
-	
-	//If it is a folder:
-	if (self.application == nil && enabled && forceTouchMethod != 0) { //&& (forceTouchMethod == 4 || swipeUpMethod == 4 || singleTapMethod == 4 || doubleTapMethod == 4 ||shortHoldMethod == 4)
-		NSMutableArray *objects = [NSMutableArray new];
-		[objects addObjectsFromArray:firstIcon.application.staticShortcutItems];
-		[objects addObjectsFromArray:[[%c(SBApplicationShortcutStoreManager) sharedManager] shortcutItemsForBundleIdentifier:firstIcon.application.staticShortcutItems]];
-		return objects;
-	} 
-
-	return %orig;	
-
 }
 
 %end
@@ -398,10 +379,12 @@ static BOOL doubleTapRecognized;
 //To disable Spotlight view from showing up, if user swipe down on the icon:
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIScrollViewPanGestureRecognizer *)otherGestureRecognizer {
 	
-	if([otherGestureRecognizer isKindOfClass:%c(UIScrollViewPanGestureRecognizer)] && swipeDownMethod != 0 && enabled) {
+	if([otherGestureRecognizer isKindOfClass:%c(UIScrollViewPanGestureRecognizer)] && swipeDownMethod != 0 && swipeUpMethod != 0 && enabled) {
 		NSMutableArray *targets = [otherGestureRecognizer valueForKeyPath:@"_targets"];
 		id targetContainer = targets[0];
 		id targetOfOtherGestureRecognizer = [targetContainer valueForKeyPath:@"_target"];
+
+		NSLog(@"SwipyFolders: %@", targetOfOtherGestureRecognizer);
 
 		if([targetOfOtherGestureRecognizer isKindOfClass:%c(SBSearchScrollView)]) {
 			otherGestureRecognizer.enabled = NO;
