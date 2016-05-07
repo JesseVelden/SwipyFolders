@@ -227,8 +227,6 @@ static BOOL doubleTapRecognized;
 					}
 				}
 
-				return; //Prevent twice times the folder opening animation
-
 			}break;
 			default:
 			break;
