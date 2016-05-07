@@ -170,41 +170,44 @@ static BOOL doubleTapRecognized;
 
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-	if (iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
+	if (iconView.isFolderIconView && firstIcon && enabled) {
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
-
 				[iconView cancelLongPressTimer];
-				switch (forceTouchMethod) {
-					case 1: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
-					}break;
+				if(forceTouchMethod != 0) {
+					if(forceTouchMethod != 0)
+					switch (forceTouchMethod) {
+						case 1: {
+							[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+							[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+							iconView.highlighted = NO;
+						}break;
 
-					case 2: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openFirstApp];
-					}break;
+						case 2: {
+							[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+							[folder openFirstApp];
+						}break;
 
-					case 3: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openSecondApp];
-					}break;
+						case 3: {
+							[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+							[folder openSecondApp];
+						}break;
 
-					case 4: {
-						self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:recognizer.view interactionProgress:nil orientation:1];
-						self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
-						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-						[rootView.view addSubview:self.presentedShortcutMenu];
-						[self.presentedShortcutMenu presentAnimated:YES];
-						[self applicationShortcutMenuDidPresent:self.presentedShortcutMenu];
-					}break;
+						case 4: {
+							self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:recognizer.view interactionProgress:nil orientation:1];
+							self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
+							UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+							[rootView.view addSubview:self.presentedShortcutMenu];
+							[self.presentedShortcutMenu presentAnimated:YES];
+							[self applicationShortcutMenuDidPresent:self.presentedShortcutMenu];
+						}break;
 
-					default: 
-					break;
+						default: 
+						break;
 
+					}
 				}
-
+				
 			}break;
 
 			case UIGestureRecognizerStateChanged: {
