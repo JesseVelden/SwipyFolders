@@ -378,13 +378,11 @@ static BOOL doubleTapRecognized;
 
 //To disable Spotlight view from showing up, if user swipe down on the icon:
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIScrollViewPanGestureRecognizer *)otherGestureRecognizer {
-	
+
 	if([otherGestureRecognizer isKindOfClass:%c(UIScrollViewPanGestureRecognizer)] && swipeDownMethod != 0 && swipeUpMethod != 0 && enabled) {
 		NSMutableArray *targets = [otherGestureRecognizer valueForKeyPath:@"_targets"];
 		id targetContainer = targets[0];
 		id targetOfOtherGestureRecognizer = [targetContainer valueForKeyPath:@"_target"];
-
-		NSLog(@"SwipyFolders: %@", targetOfOtherGestureRecognizer);
 
 		if([targetOfOtherGestureRecognizer isKindOfClass:%c(SBSearchScrollView)]) {
 			otherGestureRecognizer.enabled = NO;
@@ -392,6 +390,7 @@ static BOOL doubleTapRecognized;
 	}
 
 	return YES; 
+
 }
 
 %end
