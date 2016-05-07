@@ -140,6 +140,7 @@
 - (void)scrollToIconListContainingIcon:(SBIcon *)icon animate:(_Bool)arg2;
 -(void)openFolder:(id)folder animated:(BOOL)animated;
 - (void)closeFolderAnimated:(_Bool)arg1;
+- (void)closeFolderAnimated:(_Bool)arg1 withCompletion:(id)arg2;
 - (void)_closeFolderController:(id)arg1 animated:(_Bool)arg2 withCompletion:(id)arg3;
 -(void)alertView:(id)arg1 clickedButtonAtIndex:(int)arg2;
 -(int)currentFolderIconListIndex;

@@ -153,8 +153,8 @@ static BOOL doubleTapRecognized;
 //In order to still being able to close the folder with the home button:
 - (void)handleHomeButtonTap {
 	if ([self hasOpenFolder]) {
-		SBFolder* folder = [self openFolder];
-		[[%c(SBIconController) sharedInstance] _closeFolderController:folder animated:YES withCompletion:nil]; 
+		[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil]; 
+		//iconView.highlighted = NO;
 	} else {
 		%orig;
 	}
@@ -214,6 +214,7 @@ static BOOL doubleTapRecognized;
 			}break;
 
 			case UIGestureRecognizerStateEnded: {
+
 				if (forceTouchMethod == 4) {
 					SBApplicationShortcutMenuContentView *contentView = MSHookIvar<id>(self.presentedShortcutMenu,"_contentView");
 					NSMutableArray *itemViews = MSHookIvar<NSMutableArray *>(contentView,"_itemViews");
@@ -224,6 +225,8 @@ static BOOL doubleTapRecognized;
 						}
 					}
 				}
+
+				return; //Prevent twice times the folder opening animation
 
 			}break;
 			default:
@@ -267,19 +270,15 @@ static BOOL doubleTapRecognized;
 			return;		
 		}
 	} else {
-		if(self.hasOpenFolder && closeFolderOnOpen && enabled) {
-			SBIcon *icon = iconView.icon;
-			[icon openApp];
-			[[%c(SBIconController) sharedInstance] _closeFolderController:self.openFolder animated:NO withCompletion:nil]; 
-			
+		if(self.hasOpenFolder && !iconView.isFolderIconView && closeFolderOnOpen && enabled) {
+			[iconView.icon openApp];
+			[self closeFolderAnimated:NO withCompletion:nil]; 
 		}
 		%orig;
 	}
 }
 
 %end
-
-
 
 %hook SBApplicationShortcutMenu
 - (id)_shortcutItemsToDisplay {
