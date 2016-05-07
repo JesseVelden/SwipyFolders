@@ -376,20 +376,25 @@ static BOOL doubleTapRecognized;
 	}		
 }
 
-//To disable Spotlight view from showing up, if user swipe down on the icon:
+//To disable Spotlight view from showing up, if user swipe down on the icon && beter swiping up support if it is set to open Shortcutview to prevent moving SpringBoard:
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIScrollViewPanGestureRecognizer *)otherGestureRecognizer {
+	if(!enabled) return YES;
 
-	if([otherGestureRecognizer isKindOfClass:%c(UIScrollViewPanGestureRecognizer)] && swipeDownMethod != 0 && swipeUpMethod != 0 && enabled) {
-		NSMutableArray *targets = [otherGestureRecognizer valueForKeyPath:@"_targets"];
-		id targetContainer = targets[0];
-		id targetOfOtherGestureRecognizer = [targetContainer valueForKeyPath:@"_target"];
+	BOOL conflictGesture = NO;
 
-		if([targetOfOtherGestureRecognizer isKindOfClass:%c(SBSearchScrollView)]) {
+	NSArray *targets = MSHookIvar<NSMutableArray *>(otherGestureRecognizer, "_targets");
+	for(UIGestureRecognizerTarget *_target in targets) {
+		id target = MSHookIvar<id>(_target, "_target");
+		if(swipeDownMethod && [target isKindOfClass:%c(SBSearchScrollView)]) {
 			otherGestureRecognizer.enabled = NO;
+		}
+		if(swipeUpMethod == 4 && [target isKindOfClass:%c(SBIconScrollView)]) {
+			conflictGesture = YES;
+			break;
 		}
 	}
 
-	return YES; 
+	return !conflictGesture;
 
 }
 

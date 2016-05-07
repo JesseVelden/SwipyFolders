@@ -191,3 +191,8 @@
 
 @interface SBSearchGesture : UIScrollViewPanGestureRecognizer
 @end
+
+@interface UIGestureRecognizerTarget : NSObject {
+	id _target;
+}
+@end
