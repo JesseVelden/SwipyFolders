@@ -328,16 +328,8 @@ static BOOL doubleTapRecognized;
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
 
-	//Check if it is called with an open 3D touch shortcut menu , which has an class of a 'plain' SBIconView
-	if(![self isKindOfClass:%c(SBFolderIconView)]) {
-		SBApplicationShortcutMenu *shortcutView = iconController.presentedShortcutMenu;
-		[shortcutView removeFromSuperview];
-		[folder openFirstApp]; //TODO: fix weird bug. Now we need to open the app once tapped even if the singleTapMethod is set to open the folder in order to prevent 'lock' springboard
-		return;
-	}
-
 	if(enabled) {
-		if(!iconController.isEditing && !iconController.hasOpenFolder) {
+		if(!iconController.isEditing && !iconController.hasOpenFolder && (!iconController.presentedShortcutMenu || ![self isKindOfClass:%c(SBFolderIconView)])) {
 			switch (method) {
 				case 1: {
 					[iconController openFolder:folder animated:YES]; //open folder
@@ -351,17 +343,16 @@ static BOOL doubleTapRecognized;
 				}break;
 
 				case 4: {
-					firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-					SBApplicationShortcutMenu *shortcutView = iconController.presentedShortcutMenu;
-					[shortcutView release];
-					[shortcutView removeFromSuperview];
-
-					iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
-					iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
-					UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-					[rootView.view addSubview:iconController.presentedShortcutMenu];
-					[iconController.presentedShortcutMenu presentAnimated:YES];
-					[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+					if(!iconController.presentedShortcutMenu) {
+						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+					
+						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
+						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+						[rootView.view addSubview:iconController.presentedShortcutMenu];
+						[iconController.presentedShortcutMenu presentAnimated:YES];
+						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+					}
 
 				}
 
