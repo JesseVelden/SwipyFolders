@@ -65,7 +65,6 @@
 
 //New:
 - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch;
-- (void)sf_forceTouchMethod:(NSInteger)method;
 - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture;

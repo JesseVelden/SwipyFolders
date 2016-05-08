@@ -293,11 +293,11 @@ static BOOL doubleTapRecognized;
 
 	if(editing && self.isFolderIconView) {
 		for (UIGestureRecognizer *recognizer in self.gestureRecognizers) {
-	    	recognizer.enabled = NO;
+			recognizer.enabled = NO;
 		}
 	} else  if (!editing && self.isFolderIconView) {
 		for (UIGestureRecognizer *recognizer in self.gestureRecognizers) {
-	    	recognizer.enabled = YES;
+			recognizer.enabled = YES;
 		}
 	}
 
