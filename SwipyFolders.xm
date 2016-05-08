@@ -67,7 +67,6 @@ static void respring() {
 					actionWithTitle:@"Nope"
 					style:UIAlertActionStyleCancel
 					handler:nil];
-
 	UIAlertAction *okAction = [UIAlertAction 
 					actionWithTitle:@"YUP RESPRING"
 					style:UIAlertActionStyleDefault
@@ -75,7 +74,6 @@ static void respring() {
 					{
 						system("killall -9 SpringBoard");
 					}];
-
 	[alertController addAction:cancelAction];
 	[alertController addAction:okAction];
 	[[%c(SBIconController) sharedInstance] presentViewController:alertController animated:YES completion:nil];
@@ -179,36 +177,7 @@ static BOOL doubleTapRecognized;
 			case UIGestureRecognizerStateBegan: {
 
 				[iconView cancelLongPressTimer];
-				switch (forceTouchMethod) {
-					case 1: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
-						iconView.highlighted = NO;
-					}break;
-
-					case 2: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openAppAtIndex:0];
-					}break;
-
-					case 3: {
-						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openAppAtIndex:1];
-					}break;
-
-					case 4: {
-						self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:recognizer.view interactionProgress:nil orientation:1];
-						self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
-						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-						[rootView.view addSubview:self.presentedShortcutMenu];
-						[self.presentedShortcutMenu presentAnimated:YES];
-						[self applicationShortcutMenuDidPresent:self.presentedShortcutMenu];
-					}break;
-
-					default: 
-					break;
-
-				}
+				[iconView sf_method:forceTouchMethod withForceTouch:YES];
 
 			}break;
 
@@ -246,7 +215,7 @@ static BOOL doubleTapRecognized;
 - (void)iconTapped:(SBIconView *)iconView {
 	if (!self.isEditing && !self.hasOpenFolder && iconView.isFolderIconView && enabled) {
 		if(doubleTapMethod == 0) {
-			[iconView sf_method:singleTapMethod];
+			[iconView sf_method:singleTapMethod withForceTouch:NO];
 			iconView.highlighted = NO;
 			return;
 		} else {
@@ -254,7 +223,7 @@ static BOOL doubleTapRecognized;
 			if (iconView == tappedIcon) {
 				if ([nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
 					doubleTapRecognized = YES;
-					[iconView sf_method:doubleTapMethod];
+					[iconView sf_method:doubleTapMethod withForceTouch:NO];
 					lastTappedTime = 0;
 					iconView.highlighted = NO;
 					return;
@@ -267,7 +236,7 @@ static BOOL doubleTapRecognized;
 
 			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(doubleTapTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 				if (!doubleTapRecognized && iconView == tappedIcon) {
-					[iconView sf_method:singleTapMethod];
+					[iconView sf_method:singleTapMethod withForceTouch:NO];
 				}
 			});	
 
@@ -336,59 +305,58 @@ static BOOL doubleTapRecognized;
 
 %new - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture {
 	if (gesture.state == UIGestureRecognizerStateBegan) {
-		[self sf_method:shortHoldMethod];
+		[self sf_method:shortHoldMethod withForceTouch:NO];
 	}
 }
 
 %new - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture {
-	[self sf_method:swipeUpMethod];
+	[self sf_method:swipeUpMethod withForceTouch:NO];
 }
 
 %new - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture {
-	[self sf_method:swipeDownMethod];
+	[self sf_method:swipeDownMethod withForceTouch:NO];
 }
 
 
-%new - (void)sf_method:(NSInteger)method {
-
+%new - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch{
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-
-	if(enabled) {
-		if(!iconController.isEditing && !iconController.hasOpenFolder && (!iconController.presentedShortcutMenu || ![self isKindOfClass:%c(SBFolderIconView)])) {
-			switch (method) {
-				case 1: {
-					[iconController openFolder:folder animated:YES]; //open folder
-				}break;
-				case 2: {
-					[folder openAppAtIndex:0];
-				}break;
-
-				case 3: {
-					[folder openAppAtIndex:1];
-				}break;
-
-				case 4: {
-					if(!iconController.presentedShortcutMenu) {
-						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-					
-						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
-						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
-						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-						[rootView.view addSubview:iconController.presentedShortcutMenu];
-						[iconController.presentedShortcutMenu presentAnimated:YES];
-						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
-					}
-
-				}
-
-				default:
-				break;
-			}
-		} else {
-			//[iconController openFolder:folder animated:YES]; //open folder
+	if(enabled && !iconController.isEditing && !iconController.hasOpenFolder && (!iconController.presentedShortcutMenu || ![self isKindOfClass:%c(SBFolderIconView)])) {
+		if(iconController.presentedShortcutMenu) {
+			[iconController.presentedShortcutMenu removeFromSuperview];
 		}
-	}		
+		switch (method) {
+			case 1: {
+				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+				if(forceTouch) self.highlighted = NO;
+			}break;
+
+			case 2: {
+				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+				[folder openAppAtIndex:0];
+			}break;
+
+			case 3: {
+				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+				[folder openAppAtIndex:1];
+			}break;
+
+			case 4: {
+				firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+
+				iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
+				iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+				UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+				[rootView.view addSubview:iconController.presentedShortcutMenu];
+				[iconController.presentedShortcutMenu presentAnimated:YES];
+				[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+			}break;
+
+			default: 
+			break;
+		}
+	}
 }
 
 //To disable Spotlight view from showing up, if user swipe down on the icon && beter swiping up support if it is set to open Shortcutview to prevent moving SpringBoard:
@@ -480,4 +448,4 @@ static BOOL doubleTapRecognized;
 		CFNotificationSuspensionBehaviorDeliverImmediately);
 
 	loadPreferences();
-}
+} 

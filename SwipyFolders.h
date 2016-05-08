@@ -40,6 +40,8 @@
 - (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 
 - (void)openAppAtIndex:(int)index;
+- (void)openFirstApp;
+- (void)openSecondApp; 
 - (void)quickActionOnFirstApp; 
 - (int)getFirstAppIconIndex;
 @end
@@ -62,10 +64,12 @@
 - (void)setIsEditing:(_Bool)arg1;
 
 //New:
-- (void)sf_method:(NSInteger)method;
+- (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch;
+- (void)sf_forceTouchMethod:(NSInteger)method;
 - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture;
+
 - (BOOL)isFolderIconView;
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)swipeUp shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)ges;
 @end
