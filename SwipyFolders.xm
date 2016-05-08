@@ -99,7 +99,7 @@ static void respring() {
 		if(hideGreyFolderBackground) {
 			iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 60 : 69; //TEST ON IPAD!!!
 		}
-		if (index == [folder getFirstAppIconIndex]) {
+		if (index == 0) {
 			return CGRectMake(0, 0, iconSize, iconSize);
 		} else {
 			return CGRectMake(iconSize / 2, iconSize, 1, 1);
