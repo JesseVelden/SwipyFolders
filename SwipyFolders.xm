@@ -93,13 +93,13 @@ static void respring() {
 %hook SBIconGridImage
 + (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count{
 	if (enableFolderPreview && enabled) {
-		
+
 		CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
 		//Full size is 60.
 		if(hideGreyFolderBackground) {
 			iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 60 : 69; //TEST ON IPAD!!!
 		}
-		if (index == 0) {
+		if (index == [folder getFirstAppIconIndex]) {
 			return CGRectMake(0, 0, iconSize, iconSize);
 		} else {
 			return CGRectMake(iconSize / 2, iconSize, 1, 1);
@@ -147,14 +147,18 @@ static BOOL doubleTapRecognized;
 
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
 - (void)closeFolderAnimated:(_Bool)arg1 {
-	
+	if(enabled && forceTouchMethod == 1) {
+
+	} else {
+		%orig;
+	}
 }
 
 //In order to still being able to close the folder with the home button:
 - (void)handleHomeButtonTap {
-	if ([self hasOpenFolder]) {
+	if ([self hasOpenFolder] && enabled && forceTouchMethod == 1) {
+		%orig;
 		[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil]; 
-		//iconView.highlighted = NO;
 	} else {
 		%orig;
 	}
@@ -170,7 +174,7 @@ static BOOL doubleTapRecognized;
 
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-	if (iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
+	if (!self.isEditing && iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
 
@@ -184,12 +188,12 @@ static BOOL doubleTapRecognized;
 
 					case 2: {
 						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openFirstApp];
+						[folder openAppAtIndex:0];
 					}break;
 
 					case 3: {
 						[[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-						[folder openSecondApp];
+						[folder openAppAtIndex:1];
 					}break;
 
 					case 4: {
@@ -266,6 +270,7 @@ static BOOL doubleTapRecognized;
 					[iconView sf_method:singleTapMethod];
 				}
 			});	
+
 			return;		
 		}
 	} else {
@@ -290,6 +295,8 @@ static BOOL doubleTapRecognized;
 	
 	%orig;
 	
+	//SBIconController* iconController = [%c(SBIconController) sharedInstance];
+
 	if (self.isFolderIconView) {
 		
 		swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeUp:)];
@@ -305,7 +312,26 @@ static BOOL doubleTapRecognized;
 		shortHold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(sf_shortHold:)];
 		shortHold.minimumPressDuration = shortHoldTime;
 		[self addGestureRecognizer:shortHold];
+
 	}
+}
+
+- (void)setIsEditing:(_Bool)editing animated:(_Bool)arg2 {
+
+	%orig;
+
+	//Maybe a check that we're only disabeling our own gesture recognizers?
+
+	if(editing && self.isFolderIconView) {
+		for (UIGestureRecognizer *recognizer in self.gestureRecognizers) {
+	    	recognizer.enabled = NO;
+		}
+	} else  if (!editing && self.isFolderIconView) {
+		for (UIGestureRecognizer *recognizer in self.gestureRecognizers) {
+	    	recognizer.enabled = YES;
+		}
+	}
+
 }
 
 %new - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture {
@@ -335,11 +361,11 @@ static BOOL doubleTapRecognized;
 					[iconController openFolder:folder animated:YES]; //open folder
 				}break;
 				case 2: {
-					[folder openFirstApp];
+					[folder openAppAtIndex:0];
 				}break;
 
 				case 3: {
-					[folder openSecondApp];
+					[folder openAppAtIndex:1];
 				}break;
 
 				case 4: {
@@ -366,7 +392,7 @@ static BOOL doubleTapRecognized;
 }
 
 //To disable Spotlight view from showing up, if user swipe down on the icon && beter swiping up support if it is set to open Shortcutview to prevent moving SpringBoard:
-%new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIScrollViewPanGestureRecognizer *)otherGestureRecognizer {
+%new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
 	if(!enabled) return YES;
 
 	BOOL conflictGesture = NO;
@@ -408,21 +434,33 @@ static BOOL doubleTapRecognized;
 
 %hook SBFolder
 
-%new - (void)openFirstApp {
+//For the stupids who want nested folder support. I should get paid for it ;(
+%new - (int)getFirstAppIconIndex {
+	SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
+	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists");
+
+	int i = 0;
+	while(i <= (iconList.count * maxIconCountInList)) { 
+		SBIcon *icon = [self iconAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0]];
+		if(![icon isKindOfClass:%c(SBFolderIcon)]){
+			return i;
+			break;
+		}
+		i++;
+	}
+
+	return i;
+
+}
+
+%new - (void)openAppAtIndex:(int)index {
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
 	if (!iconController.isEditing && !iconController.hasOpenFolder) { 
-		SBIcon *firstIcon = [self iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
-		[firstIcon openApp];
+		SBIcon *icon = [self iconAtIndexPath:[NSIndexPath indexPathForRow:[self getFirstAppIconIndex]+index inSection:0]];
+		[icon openApp];
 	}
 }
 
-%new - (void)openSecondApp {
-	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	if (!iconController.isEditing && !iconController.hasOpenFolder) { 
-		SBIcon *secondIcon = [self iconAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0]];
-		[secondIcon openApp];
-	}
-}
 %end
 
 

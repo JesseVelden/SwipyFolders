@@ -35,10 +35,17 @@
 @end
 
 @interface SBFolder : NSObject
+@property(readonly, nonatomic) long long listCount;
+@property(readonly, nonatomic) long long _maxIconCountInLists;
 - (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
-- (void)openFirstApp;
-- (void)openSecondApp; 
+
+- (void)openAppAtIndex:(int)index;
 - (void)quickActionOnFirstApp; 
+- (int)getFirstAppIconIndex;
+@end
+
+@interface SBIconIndexMutableList : NSObject
+@property(readonly, nonatomic) long long count;
 @end
 
 @interface SBIconView : UIView
@@ -159,6 +166,7 @@
 @end
 
 @interface SBFolderIconView : SBIconView
+- (SBFolder *)folder;
 - (SBFolderIcon*)folderIcon;
 - (UIImageView *)_folderIconImageView;
 
