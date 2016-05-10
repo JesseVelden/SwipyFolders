@@ -171,7 +171,7 @@ static BOOL doubleTapRecognized;
 	}
 
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
-	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
 	if (!self.isEditing && iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
@@ -213,7 +213,7 @@ static BOOL doubleTapRecognized;
 }
 
 - (void)iconTapped:(SBIconView *)iconView {
-	if (!self.isEditing && !self.hasOpenFolder && iconView.isFolderIconView && enabled) {
+	if (!self.isEditing && iconView.isFolderIconView && enabled) {
 		if(doubleTapMethod == 0) {
 			[iconView sf_method:singleTapMethod withForceTouch:NO];
 			iconView.highlighted = NO;
@@ -321,9 +321,9 @@ static BOOL doubleTapRecognized;
 %new - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch{
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	if(enabled && !iconController.isEditing && !iconController.hasOpenFolder && (!iconController.presentedShortcutMenu || ![self isKindOfClass:%c(SBFolderIconView)])) {
-		if([iconController respondsToSelector:@selector(presentedShortcutMenu)] && iconController.presentedShortcutMenu) {
-			[iconController.presentedShortcutMenu removeFromSuperview];
+	if(enabled && !iconController.isEditing && (!iconController.presentedShortcutMenu || ![self isKindOfClass:%c(SBFolderIconView)])) {
+		if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
+			if(iconController.presentedShortcutMenu) [iconController.presentedShortcutMenu removeFromSuperview];
 		}
 		switch (method) {
 			case 1: {
@@ -344,7 +344,7 @@ static BOOL doubleTapRecognized;
 
 			case 4: {
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-					firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+					firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
 
 					iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
 					iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
