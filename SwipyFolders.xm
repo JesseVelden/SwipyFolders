@@ -322,7 +322,7 @@ static BOOL doubleTapRecognized;
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
 	if(enabled && !iconController.isEditing && !iconController.hasOpenFolder && (!iconController.presentedShortcutMenu || ![self isKindOfClass:%c(SBFolderIconView)])) {
-		if(iconController.presentedShortcutMenu) {
+		if([iconController respondsToSelector:@selector(presentedShortcutMenu)] && iconController.presentedShortcutMenu) {
 			[iconController.presentedShortcutMenu removeFromSuperview];
 		}
 		switch (method) {
@@ -343,14 +343,16 @@ static BOOL doubleTapRecognized;
 			}break;
 
 			case 4: {
-				firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
+					firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
 
-				iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
-				iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
-				UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-				[rootView.view addSubview:iconController.presentedShortcutMenu];
-				[iconController.presentedShortcutMenu presentAnimated:YES];
-				[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+					iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
+					iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+					UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+					[rootView.view addSubview:iconController.presentedShortcutMenu];
+					[iconController.presentedShortcutMenu presentAnimated:YES];
+					[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+				}
 			}break;
 
 			default: 
