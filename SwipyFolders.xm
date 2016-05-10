@@ -321,7 +321,7 @@ static BOOL doubleTapRecognized;
 %new - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch{
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	if(enabled && !iconController.isEditing && ![self isKindOfClass:%c(SBFolderIconView)])) {
+	if(enabled && !iconController.isEditing && ![self isKindOfClass:%c(SBFolderIconView)]) {
 
 		if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
 			if(iconController.presentedShortcutMenu) [iconController.presentedShortcutMenu removeFromSuperview];
