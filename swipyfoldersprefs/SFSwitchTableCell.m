@@ -1,7 +1,5 @@
 #import "SFSwitchTableCell.h"
 
-@implementation SFSwitchTableCell
-/*
 static UIColor * UIColorFromRGB(int rgb) {
   return [UIColor colorWithRed:((rgb >> 16) & 0xFF) / 255.0F
                          green:((rgb >> 8) & 0xFF) / 255.0F
@@ -9,21 +7,21 @@ static UIColor * UIColorFromRGB(int rgb) {
                          alpha:1];
 }
 
+
 @implementation SFSwitchTableCell
 
 
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(id)identifier specifier:(id)specifier {
+- (id)initWithStyle:(int)style reuseIdentifier:(id)identifier specifier:(id)specifier {
   self = [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier specifier:specifier];
   if (self) {
-    UISwitch *control = [self control];
-    UIColor *tintColor = UIColorFromRGB(0xFFCD02);
-    [control setOnTintColor:tintColor];
+    UIColor *tintColor = UIColorFromRGB(0xFF9000);
+    [((UISwitch *)[self control]) setOnTintColor:tintColor];
 
     _hidesSeparators = NO;
   }
   return self;
 }
-*/
+
 
 - (void)refreshCellContentsWithSpecifier:(PSSpecifier *)specifier {
   [super refreshCellContentsWithSpecifier:specifier];

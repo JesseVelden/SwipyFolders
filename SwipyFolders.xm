@@ -51,7 +51,7 @@ static void loadPreferences() {
 	doubleTapTime	 		= [preferences floatForKey:@"doubleTapTime"];
 	shortHoldMethod 		= [preferences integerForKey:@"shortHoldMethod"];
 	shortHoldTime 			= [preferences floatForKey:@"shortHoldTime"];
-	forceTouchMethod 	=	 [preferences integerForKey:@"forceTouchMethod"];
+	forceTouchMethod 		=	 [preferences integerForKey:@"forceTouchMethod"];
 
 	[preferences release];
 	if(enabled) {

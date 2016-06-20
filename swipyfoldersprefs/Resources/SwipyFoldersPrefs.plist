@@ -17,6 +17,8 @@
 			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
 			<key>default</key>
 			<true/>
 			<key>defaults</key>

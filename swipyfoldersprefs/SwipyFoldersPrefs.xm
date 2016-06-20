@@ -7,8 +7,13 @@
 - (NSArray *)specifiers {
 	if (!_specifiers) {
 		_specifiers = [[self loadSpecifiersFromPlistName:@"SwipyFoldersPrefs" target:self] retain];
-	}
 
+    Class DisplayController = %c(PSUIDisplayController); // Appears to be iOS 9+.
+    if (!DisplayController) { // iOS 8.
+      DisplayController = %c(DisplayController);
+    }
+  }
+  
 	return _specifiers;
 }
 

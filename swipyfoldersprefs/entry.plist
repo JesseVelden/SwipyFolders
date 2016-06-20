@@ -9,7 +9,7 @@
 		<key>cell</key>
 		<string>PSLinkCell</string>
 		<key>detail</key>
-		<string>SwipyFolders</string>
+		<string>SwipyFoldersPrefs</string>
 		<key>icon</key>
 		<string>swipe.png</string>
 		<key>isController</key>
