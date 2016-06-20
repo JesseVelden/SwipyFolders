@@ -5,6 +5,7 @@ static bool enabled;
 static bool enableFolderPreview;
 static bool hideGreyFolderBackground;
 static bool closeFolderOnOpen;
+static bool longHoldInvokesEditMode;
 static NSInteger singleTapMethod;
 static NSInteger swipeUpMethod;
 static NSInteger swipeDownMethod;
@@ -27,34 +28,36 @@ static void loadPreferences() {
 		@"enableFolderPreview": @YES,
 		@"hideGreyFolderBackground": @NO,
 		@"closeFolderOnOpen": @YES,
+		@"longHoldInvokesEditMode": @NO,
 		@"singleTapMethod": [NSNumber numberWithInteger:2],
 		@"swipeUpMethod": 	[NSNumber numberWithInteger:1],
 		@"swipeDownMethod": [NSNumber numberWithInteger:0],
 		@"doubleTapMethod": [NSNumber numberWithInteger:0],
 		@"doubleTapTime": [NSNumber numberWithFloat:0.2],
 		@"shortHoldMethod": [NSNumber numberWithInteger:0],
-		@"shortHoldTime": 	[NSNumber numberWithFloat:0.325],
+		@"shortHoldTime": 	[NSNumber numberWithFloat:0.2],
 		@"forceTouchMethod": [NSNumber numberWithInteger:4],
 	}];
 	
-	enabled 		= [preferences boolForKey:@"enabled"];
-	enableFolderPreview	= [preferences boolForKey:@"enableFolderPreview"];
+	enabled 				= [preferences boolForKey:@"enabled"];
+	enableFolderPreview		= [preferences boolForKey:@"enableFolderPreview"];
 	hideGreyFolderBackground = [preferences boolForKey:@"hideGreyFolderBackground"];
-	closeFolderOnOpen	= [preferences boolForKey:@"closeFolderOnOpen"];
-	singleTapMethod 	= [preferences integerForKey:@"singleTapMethod"];
-	swipeUpMethod 		= [preferences integerForKey:@"swipeUpMethod"];
-	swipeDownMethod		= [preferences integerForKey:@"swipeDownMethod"];
-	doubleTapMethod 	= [preferences integerForKey:@"doubleTapMethod"];
-	doubleTapTime	 	= [preferences floatForKey:@"doubleTapTime"];
-	shortHoldMethod 	= [preferences integerForKey:@"shortHoldMethod"];
-	shortHoldTime 		= [preferences floatForKey:@"shortHoldTime"];
-	forceTouchMethod 	= [preferences integerForKey:@"forceTouchMethod"];
+	closeFolderOnOpen		= [preferences boolForKey:@"closeFolderOnOpen"];
+	longHoldInvokesEditMode	= [preferences boolForKey:@"longHoldInvokesEditMode"];
+	singleTapMethod 		= [preferences integerForKey:@"singleTapMethod"];
+	swipeUpMethod 			= [preferences integerForKey:@"swipeUpMethod"];
+	swipeDownMethod			= [preferences integerForKey:@"swipeDownMethod"];
+	doubleTapMethod 		= [preferences integerForKey:@"doubleTapMethod"];
+	doubleTapTime	 		= [preferences floatForKey:@"doubleTapTime"];
+	shortHoldMethod 		= [preferences integerForKey:@"shortHoldMethod"];
+	shortHoldTime 			= [preferences floatForKey:@"shortHoldTime"];
+	forceTouchMethod 	=	 [preferences integerForKey:@"forceTouchMethod"];
 
 	[preferences release];
 	if(enabled) {
 		swipeUp.enabled 	= (swipeUpMethod != 0) ? YES : NO;
 		swipeDown.enabled 	= (swipeDownMethod != 0) ? YES : NO;
-		shortHold.enabled 	= (shortHoldMethod != 0) ? YES : NO;
+		shortHold.enabled 	= (shortHoldMethod != 0 && !longHoldInvokesEditMode) ? YES : NO;
 	}
 }
 
@@ -132,8 +135,30 @@ static void respring() {
 
 static SBIcon *firstIcon;
 static SBIconView *tappedIcon;
+static NSDate *lastTouchedTime;
 static NSDate *lastTappedTime;
 static BOOL doubleTapRecognized;
+
+
+/*
+%hook SBDeviceLockController
+- (BOOL)attemptDeviceUnlockWithPassword:(NSString *)passcode appRequested:(BOOL)requested {
+	if(%orig) {
+		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	}
+	return %orig;
+}
+%end
+*/
+
+%hook SBLockScreenManager
+
+- (void)_finishUIUnlockFromSource:(int)source withOptions:(id)options {
+	%orig;
+	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+}
+
+%end
 
 %hook SBIconController
 
@@ -152,16 +177,22 @@ static BOOL doubleTapRecognized;
 	}
 }
 
-//In order to still being able to close the folder with the home button:
-- (void)handleHomeButtonTap {
-	if ([self hasOpenFolder] && enabled && forceTouchMethod == 1) {
-		%orig;
-		[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil]; 
-	} else {
-		%orig;
-	}
+//Set the status bar back when switching back to the home screen, because it was magically removed by some higher power :P
+- (void)unscatterAnimated:(_Bool)arg1 afterDelay:(double)arg2 withCompletion:(id)arg3 {
+	%orig;
+	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 }
 
+//In order to still being able to close the folder with the home button:
+- (void)handleHomeButtonTap {
+	%orig;
+	if ([self hasOpenFolder] && enabled && forceTouchMethod == 1) {
+		[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil];
+	}
+	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+}
+
+//Finally the real deal:
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
@@ -173,6 +204,7 @@ static BOOL doubleTapRecognized;
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
 	if (!self.isEditing && iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
+
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
 
@@ -212,36 +244,49 @@ static BOOL doubleTapRecognized;
 	}
 }
 
+- (void) iconHandleLongPress:(SBIconView *)iconView {
+	lastTouchedTime = nil;
+	%orig;
+}
+
+- (void) iconTouchBegan:(SBIconView *)iconView {
+	lastTouchedTime = [[NSDate date] retain];
+	%orig;
+}
+
 - (void)iconTapped:(SBIconView *)iconView {
 	if (!self.isEditing && iconView.isFolderIconView && enabled) {
-		if(doubleTapMethod == 0) {
-			[iconView sf_method:singleTapMethod withForceTouch:NO];
-			iconView.highlighted = NO;
-			return;
-		} else {
 			NSDate *nowTime = [[NSDate date] retain];
-			if (iconView == tappedIcon) {
-				if ([nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
-					doubleTapRecognized = YES;
-					[iconView sf_method:doubleTapMethod withForceTouch:NO];
-					lastTappedTime = 0;
-					iconView.highlighted = NO;
-					return;
+			if (shortHoldMethod != 0 && longHoldInvokesEditMode && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
+				[iconView sf_method:shortHoldMethod withForceTouch:NO];
+				lastTouchedTime = nil;
+				
+				return;
+			} else if(doubleTapMethod != 0) {
+				if (iconView == tappedIcon) {
+					if (doubleTapMethod != 0 && [nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
+						doubleTapRecognized = YES;
+						[iconView sf_method:doubleTapMethod withForceTouch:NO];
+						lastTappedTime = 0;
+						iconView.highlighted = NO;
+						return;
+					}
 				}
+				tappedIcon = iconView;
+				lastTappedTime = nowTime;
+				doubleTapRecognized = NO;
+				iconView.highlighted = NO;
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(doubleTapTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+					if (!doubleTapRecognized && iconView == tappedIcon) {
+						[iconView sf_method:singleTapMethod withForceTouch:NO];
+					}
+				});	
+			} else {
+				[iconView sf_method:singleTapMethod withForceTouch:NO];
+				iconView.highlighted = NO;
+				return;
 			}
-			tappedIcon = iconView;
-			lastTappedTime = nowTime;
-			doubleTapRecognized = NO;
-			iconView.highlighted = NO;
-
-			dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(doubleTapTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
-				if (!doubleTapRecognized && iconView == tappedIcon) {
-					[iconView sf_method:singleTapMethod withForceTouch:NO];
-				}
-			});	
-
-			return;		
-		}
 	} else {
 		if(self.hasOpenFolder && !iconView.isFolderIconView && closeFolderOnOpen && enabled) {
 			[iconView.icon openApp];
@@ -278,9 +323,12 @@ static BOOL doubleTapRecognized;
 		swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
 		[self addGestureRecognizer:swipeDown];
 		
-		shortHold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(sf_shortHold:)];
-		shortHold.minimumPressDuration = shortHoldTime;
-		[self addGestureRecognizer:shortHold];
+		if(!longHoldInvokesEditMode) {
+			shortHold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(sf_shortHold:)];
+			shortHold.minimumPressDuration = shortHoldTime;
+			shortHold.enabled = NO;
+			[self addGestureRecognizer:shortHold];
+		}
 
 	}
 }
@@ -353,6 +401,7 @@ static BOOL doubleTapRecognized;
 					[rootView.view addSubview:iconController.presentedShortcutMenu];
 					[iconController.presentedShortcutMenu presentAnimated:YES];
 					[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+					[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 				}
 			}break;
 
@@ -397,7 +446,7 @@ static BOOL doubleTapRecognized;
 	} else if ([self respondsToSelector:@selector(launch)]) {
 		[self launch];
 	}
-
+	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 	
 }
 
@@ -426,7 +475,7 @@ static BOOL doubleTapRecognized;
 
 %new - (void)openAppAtIndex:(int)index {
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	if (!iconController.isEditing && !iconController.hasOpenFolder) { 
+	if (!iconController.isEditing) { 
 		SBIcon *icon = [self iconAtIndexPath:[NSIndexPath indexPathForRow:[self getFirstAppIconIndex]+index inSection:0]];
 		[icon openApp];
 	}

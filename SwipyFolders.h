@@ -71,6 +71,7 @@
 
 - (BOOL)isFolderIconView;
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)swipeUp shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)ges;
+- (BOOL)gestureRecognizer:(UILongPressGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch;
 @end
 
 @class SBSApplicationShortcutIcon;
@@ -142,6 +143,7 @@
 - (BOOL)_canRevealShortcutMenu;
 - (BOOL)isEditing;
 - (void)iconHandleLongPress:(id)arg1;
+- (void)iconTouchBegan:(id)arg1;
 - (void)setIsEditing:(BOOL)arg1;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer ;
 - (void)iconTapped:(SBIconView *)iconView;
@@ -155,6 +157,9 @@
 -(void)alertView:(id)arg1 clickedButtonAtIndex:(int)arg2;
 -(int)currentFolderIconListIndex;
 -(int)currentIconListIndex;
+- (void)noteIconStateChangedExternally;
+- (void)unscatterAnimated:(_Bool)arg1 afterDelay:(double)arg2 withCompletion:(id)arg3;
+- (void)_awayControllerUnlocked:(id)unlocked;
 
 - (SBRootIconListView*)currentFolderIconList;
 - (SBRootIconListView*)dockListView;
@@ -201,6 +206,19 @@
 @end
 
 @interface SBSearchGesture : UIScrollViewPanGestureRecognizer
+@end
+
+@interface SBAppStatusBarManager : NSObject
++ (id)sharedInstance;
+- (void)showStatusBar;
+@end
+
+@interface SBDeviceLockController : NSObject
+- (BOOL)attemptDeviceUnlockWithPassword:(NSString *)passcode appRequested:(BOOL)requested;
+@end
+
+@interface SBLockScreenManager : NSObject
+- (void)_finishUIUnlockFromSource:(int)source withOptions:(id)options;
 @end
 
 @interface UIGestureRecognizerTarget : NSObject {

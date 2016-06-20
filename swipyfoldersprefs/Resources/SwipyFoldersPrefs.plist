@@ -25,8 +25,16 @@
 			<string>enabled</string>
 			<key>label</key>
 			<string>Enabled</string>
-			<key>sublabel</key>
-			<string>Needs a respring</string>
+		</dict>
+		<dict>
+			<key>action</key>
+			<string>respring</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>respring.png</string>
+			<key>label</key>
+			<string>Respring</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -36,9 +44,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
 			<key>default</key>
 			<true/>
 			<key>defaults</key>
@@ -52,9 +62,11 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
@@ -71,6 +83,8 @@
 			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
 			<key>default</key>
 			<false/>
 			<key>defaults</key>
@@ -79,6 +93,24 @@
 			<string>closeFolderOnOpen</string>
 			<key>label</key>
 			<string>Close folder automatically</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>longHoldInvokesEditMode</string>
+			<key>label</key>
+			<string>Long hold invokes editing mode</string>
+			<key>sublabel</key>
+			<string>Needs a respring</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -246,7 +278,6 @@
 				<integer>0</integer>
 			</array>
 		</dict>
-		
 		<dict>
 			<key>PostNotification</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
@@ -279,7 +310,46 @@
 				<integer>0</integer>
 			</array>
 		</dict>
-
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>SET TIMEOUTS</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSTitleValueCell</string>
+			<key>label</key>
+			<string>Double Tap Time</string>
+			<key>id</key>
+			<string>doubleTapTimeText</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>doubleTapTime</string>
+			<key>id</key>
+			<string>doubleTapTime</string>
+			<key>min</key>
+			<real>0.1</real>
+			<key>max</key>
+			<real>1</real>
+			<key>default</key>
+			<real>0.2</real>
+			<key>isSegmented</key>
+			<true/>
+			<key>segmentCount</key>
+			<integer>18</integer>
+			<key>showValue</key>
+			<true/>
+			<key>leftImage</key>
+			<string>time.png</string>
+		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
