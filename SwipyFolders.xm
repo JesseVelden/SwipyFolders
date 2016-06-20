@@ -138,6 +138,7 @@ static SBIconView *tappedIcon;
 static NSDate *lastTouchedTime;
 static NSDate *lastTappedTime;
 static BOOL doubleTapRecognized;
+static BOOL forceTouchRecognized;
 
 
 /*
@@ -210,6 +211,7 @@ static BOOL doubleTapRecognized;
 
 				[iconView cancelLongPressTimer];
 				[iconView sf_method:forceTouchMethod withForceTouch:YES];
+				forceTouchRecognized = YES;
 
 			}break;
 
@@ -255,14 +257,14 @@ static BOOL doubleTapRecognized;
 }
 
 - (void)iconTapped:(SBIconView *)iconView {
-	if (!self.isEditing && iconView.isFolderIconView && enabled) {
+	if (!self.isEditing && iconView.isFolderIconView && !forceTouchRecognized && enabled) {
 			NSDate *nowTime = [[NSDate date] retain];
-			if (shortHoldMethod != 0 && longHoldInvokesEditMode && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
+			if (!forceTouchRecognized && shortHoldMethod != 0 && longHoldInvokesEditMode && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
 				[iconView sf_method:shortHoldMethod withForceTouch:NO];
 				lastTouchedTime = nil;
 				
 				return;
-			} else if(doubleTapMethod != 0) {
+			} else if(!forceTouchRecognized && doubleTapMethod != 0) {
 				if (iconView == tappedIcon) {
 					if (doubleTapMethod != 0 && [nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
 						doubleTapRecognized = YES;
@@ -294,6 +296,7 @@ static BOOL doubleTapRecognized;
 		}
 		%orig;
 	}
+	forceTouchRecognized = NO;
 }
 
 %end
