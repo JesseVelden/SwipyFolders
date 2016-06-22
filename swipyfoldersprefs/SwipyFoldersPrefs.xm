@@ -1,6 +1,7 @@
 #include "SwipyFoldersPrefs.h"
 
 #import "SFSwitchTableCell.h"
+#import "SFSliderTableCell.h"
 
 @implementation SwipyFoldersPrefs
 
@@ -37,7 +38,7 @@
   return cell;
 }
 
--(void)respring {
+- (void)respring {
 	system("killall -9 SpringBoard");
 }
 
@@ -58,3 +59,20 @@
 
 
 @end
+
+/*
+static void hoi() {
+  UIBarButtonItem *respringButton = [[UIBarButtonItem alloc] initWithTitle:@"Respring" style:UIBarButtonItemStylePlain target:[[%c(UIApplication) sharedApplication] keyWindow].rootViewController action:nil];          
+  [[%c(UIApplication) sharedApplication] keyWindow].rootViewController.navigationController.navigationItem.rightBarButtonItem = respringButton;
+  [respringButton release];
+}
+
+%ctor{
+    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+    NULL,
+    (CFNotificationCallback)hoi,
+    CFSTR("nl.jessevandervelden.swipyfoldersprefs/respring"),
+    NULL,
+    CFNotificationSuspensionBehaviorDeliverImmediately);
+}
+*/

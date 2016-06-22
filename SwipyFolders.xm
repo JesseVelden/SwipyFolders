@@ -60,7 +60,7 @@ static void loadPreferences() {
 		shortHold.enabled 	= (shortHoldMethod != 0 && !longHoldInvokesEditMode) ? YES : NO;
 	}
 }
-
+/*
 static void respring() {
 	/* For iOS 10 when old alertview will be deprecated:
 	UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Respring - SwipyFolders"
@@ -81,6 +81,7 @@ static void respring() {
 	[alertController addAction:okAction];
 	[[%c(SBIconController) sharedInstance] presentViewController:alertController animated:YES completion:nil];
 	*/
+	/*
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Respring - SwipyFolders" 
 						  message:@"In order to change the folder preview, a respring is required. Want to respring now?" 
 						  delegate:[%c(SBIconController) sharedInstance]
@@ -89,7 +90,7 @@ static void respring() {
 
 	[alert show];
 }
-
+*/
 
 %hook SBIconGridImage
 + (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count{
@@ -492,13 +493,6 @@ static BOOL forceTouchRecognized;
 		NULL,
 		(CFNotificationCallback)loadPreferences,
 		CFSTR("nl.jessevandervelden.swipyfoldersprefs/prefsChanged"),
-		NULL,
-		CFNotificationSuspensionBehaviorDeliverImmediately);
-
-	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
-		NULL,
-		(CFNotificationCallback)respring,
-		CFSTR("nl.jessevandervelden.swipyfoldersprefs/respring"),
 		NULL,
 		CFNotificationSuspensionBehaviorDeliverImmediately);
 

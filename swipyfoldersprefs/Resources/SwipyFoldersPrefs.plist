@@ -46,7 +46,7 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>cellClass</key>
@@ -64,7 +64,7 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>cellClass</key>
@@ -98,7 +98,7 @@
 		</dict>
 		<dict>
 			<key>PostNotification</key>
-			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>cellClass</key>
@@ -330,7 +330,7 @@
 			<key>PostNotification</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
 			<key>cell</key>
-			<string>PSSliderCell</string>
+			<string>SFSliderTableCell</string>
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>key</key>
