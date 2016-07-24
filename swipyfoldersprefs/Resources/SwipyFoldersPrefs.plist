@@ -130,7 +130,7 @@
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>detail</key>
-			<string>PSListItemsController</string>
+			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>singleTapMethod</string>
 			<key>label</key>
@@ -162,7 +162,7 @@
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>detail</key>
-			<string>PSListItemsController</string>
+			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>swipeUpMethod</string>
 			<key>label</key>
@@ -194,7 +194,7 @@
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>detail</key>
-			<string>PSListItemsController</string>
+			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>swipeDownMethod</string>
 			<key>label</key>
@@ -226,7 +226,7 @@
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>detail</key>
-			<string>PSListItemsController</string>
+			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>doubleTapMethod</string>
 			<key>label</key>
@@ -258,7 +258,7 @@
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>detail</key>
-			<string>PSListItemsController</string>
+			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>shortHoldMethod</string>
 			<key>label</key>
@@ -290,7 +290,7 @@
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>detail</key>
-			<string>PSListItemsController</string>
+			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>forceTouchMethod</string>
 			<key>label</key>
@@ -311,6 +311,8 @@
 				<integer>3</integer>
 				<integer>0</integer>
 			</array>
+			<key>staticTextMessage</key>
+			<string>If you are facing issues with Appendix, try Manila instead</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -330,7 +332,7 @@
 			<key>PostNotification</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
 			<key>cell</key>
-			<string>SFSliderTableCell</string>
+			<string>PSSliderCell</string>
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>key</key>

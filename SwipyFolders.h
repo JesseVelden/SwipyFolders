@@ -19,6 +19,10 @@
 - (void)loadStaticShortcutItemsFromInfoDictionary:(id)arg1 bundle:(id)arg2;
 - (NSString*)bundleIdentifier;
 - (NSString*)displayName;
+- (NSString*)displayIdentifier;
+- (NSString*)bundleIdentifier;
+- (_Bool)statusBarHiddenForCurrentOrientation;
+- (_Bool)isRunning;
 @end;
 
 
@@ -160,6 +164,7 @@
 - (void)noteIconStateChangedExternally;
 - (void)unscatterAnimated:(_Bool)arg1 afterDelay:(double)arg2 withCompletion:(id)arg3;
 - (void)_awayControllerUnlocked:(id)unlocked;
+- (void)_lockScreenUIWillLock:(id)arg1;
 
 - (SBRootIconListView*)currentFolderIconList;
 - (SBRootIconListView*)dockListView;
@@ -211,6 +216,11 @@
 @interface SBAppStatusBarManager : NSObject
 + (id)sharedInstance;
 - (void)showStatusBar;
+- (void)hideStatusBar;
+@end
+
+@interface SBUIController : NSObject
+- (void)restoreContentAndUnscatterIconsAnimated:(BOOL)animated withCompletion:(id)completion;
 @end
 
 @interface SBDeviceLockController : NSObject
@@ -218,7 +228,13 @@
 @end
 
 @interface SBLockScreenManager : NSObject
+- (void)_bioAuthenticated:(id)arg1;
 - (void)_finishUIUnlockFromSource:(int)source withOptions:(id)options;
+- (_Bool)biometricEventMonitorShouldRelockAfterBioUnlock:(id)arg1;
+@end
+
+@interface SpringBoard : UIApplication
+- (SBApplication *)_accessibilityFrontMostApplication;
 @end
 
 @interface UIGestureRecognizerTarget : NSObject {

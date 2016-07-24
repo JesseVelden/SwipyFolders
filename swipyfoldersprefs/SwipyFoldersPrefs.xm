@@ -57,22 +57,64 @@
 	[[UIApplication sharedApplication] openURL:url];
 }
 
+- (void)twitter {
+  NSURL *url = [NSURL URLWithString:@"https://twitter.com/JesseVelden"];
+  [[UIApplication sharedApplication] openURL:url];
+}
+
 
 @end
 
-/*
-static void hoi() {
-  UIBarButtonItem *respringButton = [[UIBarButtonItem alloc] initWithTitle:@"Respring" style:UIBarButtonItemStylePlain target:[[%c(UIApplication) sharedApplication] keyWindow].rootViewController action:nil];          
-  [[%c(UIApplication) sharedApplication] keyWindow].rootViewController.navigationController.navigationItem.rightBarButtonItem = respringButton;
-  [respringButton release];
+@implementation SFListItemsController
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+  [super tableView:tableView didSelectRowAtIndexPath:indexPath]; //Instead of %orig();
+
+  NSInteger selectedRow = indexPath.row;
+  if(selectedRow == 4) {
+    alert = [[UIAlertView alloc] initWithTitle:@"SwipyFolders"
+                          message:@"Enter an app's position in the folder. Example: the third app will be: 3"
+                          delegate:self
+                          cancelButtonTitle:@"Cancel"
+                          otherButtonTitles:@"Enter"
+                          , nil];
+    alert.alertViewStyle = UIAlertViewStylePlainTextInput;
+    
+    [alert show];
+
+    UITextField *indexPromptTextField = [alert textFieldAtIndex:0];
+    [indexPromptTextField setDelegate:self];
+    [indexPromptTextField resignFirstResponder];
+    
+    [indexPromptTextField setKeyboardType:UIKeyboardTypeNumberPad];
+    indexPromptTextField.placeholder = @"e.g. 3, 5, 99";
+
+    UIView *spacerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
+    [indexPromptTextField setLeftViewMode:UITextFieldViewModeAlways];
+    [indexPromptTextField setLeftView:spacerView];
+
+  }
 }
 
-%ctor{
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
-    NULL,
-    (CFNotificationCallback)hoi,
-    CFSTR("nl.jessevandervelden.swipyfoldersprefs/respring"),
-    NULL,
-    CFNotificationSuspensionBehaviorDeliverImmediately);
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
+  if(buttonIndex != [alertView cancelButtonIndex]) {
+    NSString *appIndexText = [alertView textFieldAtIndex:0].text;
+    NSNumber *appIndex = @([appIndexText intValue]);
+
+    if (!appIndex || appIndex.integerValue < 1) {
+      [[[UIAlertView alloc] initWithTitle:@"SwipyFolders" message:@"This index is not a valid number!" delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil] show];
+      return;
+    }
+
+    preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+    [preferences setInteger:appIndex.integerValue forKey:[NSString stringWithFormat:@"%@AppIndex", self.specifier]];
+    [preferences synchronize];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        // notify after file write
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (__bridge CFStringRef)[self.specifier propertyForKey:@"PostNotification"], NULL, NULL, YES);
+    });
+
+  }
 }
-*/
+@end

@@ -37,6 +37,11 @@ static void loadPreferences() {
 		@"shortHoldMethod": [NSNumber numberWithInteger:0],
 		@"shortHoldTime": 	[NSNumber numberWithFloat:0.2],
 		@"forceTouchMethod": [NSNumber numberWithInteger:4],
+
+		@"singleTapMethodAppIndex": [NSNumber numberWithInteger:3],
+		@"swipeUpMethodAppIndex": 	[NSNumber numberWithInteger:3],
+		@"swipeDownMethodAppIndex": [NSNumber numberWithInteger:3],
+		@"doubleTapMethodAppIndex": [NSNumber numberWithInteger:3],
 	}];
 	
 	enabled 				= [preferences boolForKey:@"enabled"];
@@ -147,20 +152,45 @@ static BOOL forceTouchRecognized;
 - (BOOL)attemptDeviceUnlockWithPassword:(NSString *)passcode appRequested:(BOOL)requested {
 	if(%orig) {
 		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+		NSLog(@"SwipyFolders: hoi");
 	}
 	return %orig;
 }
 %end
 */
 
+
+
+
 %hook SBLockScreenManager
 
-- (void)_finishUIUnlockFromSource:(int)source withOptions:(id)options {
+/*
+- (void)_bioAuthenticated:(id)arg1 {
+	//NSLog(@"********JESSE BESSE********");
+	//[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 	%orig;
-	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	
 }
+*/
+
+- (void)_finishUIUnlockFromSource:(int)source withOptions:(id)options {
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+		//[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+		SBApplication *frontApp = [(SpringBoard *)[UIApplication sharedApplication] _accessibilityFrontMostApplication];
+		if(!frontApp){
+			[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+		}
+
+	});	
+	 	
+	/*SBApplication *frontApp = [(SpringBoard*)[UIApplication sharedApplication] _accessibilityFrontMostApplication];
+	NSLog(@"SwipyFolders: %@", [frontApp displayIdentifier]);*/
+	 %orig;
+}
+	
 
 %end
+
 
 %hook SBIconController
 
@@ -181,6 +211,11 @@ static BOOL forceTouchRecognized;
 
 //Set the status bar back when switching back to the home screen, because it was magically removed by some higher power :P
 - (void)unscatterAnimated:(_Bool)arg1 afterDelay:(double)arg2 withCompletion:(id)arg3 {
+	%orig;
+	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+}
+
+-(void)_lockScreenUIWillLock:(id)arg1{
 	%orig;
 	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 }
@@ -404,7 +439,8 @@ static BOOL forceTouchRecognized;
 					UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
 					[rootView.view addSubview:iconController.presentedShortcutMenu];
 					[iconController.presentedShortcutMenu presentAnimated:YES];
-					[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+					[iconController.presentedShortcutMenu release];					
+					//[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
 					[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 				}
 			}break;
