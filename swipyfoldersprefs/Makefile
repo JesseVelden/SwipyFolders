@@ -6,6 +6,8 @@ SwipyFoldersPrefs_INSTALL_PATH = /Library/PreferenceBundles
 SwipyFoldersPrefs_FRAMEWORKS = UIKit
 SwipyFoldersPrefs_PRIVATE_FRAMEWORKS = Preferences
 
+SwipyFoldersPrefs_LDFLAGS += -Wdeprecated-declarations
+
 include $(THEOS_MAKE_PATH)/bundle.mk
 include $(THEOS_MAKE_PATH)/tweak.mk
 

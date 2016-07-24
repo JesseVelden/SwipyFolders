@@ -1,5 +1,5 @@
-#import <Preferences/PSSliderTableCell.h>
-#import <Preferences/PSControlTableCell.h>
+#import "PreferenceHeaders/PSSliderTableCell.h"
+#import "PreferenceHeaders/PSControlTableCell.h"
 
 @interface SFSliderTableCell : PSSliderTableCell
 @end

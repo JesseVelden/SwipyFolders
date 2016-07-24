@@ -1,7 +1,8 @@
-#import <Preferences/PSListController.h>
-#import <Preferences/PSSpecifier.h>
-#import <Preferences/PSListItemsController.h>
-#import <Preferences/PSTableCell.h>
+#import "PreferenceHeaders/PSListController.h"
+#import "PreferenceHeaders/PSSpecifier.h"
+#import "PreferenceHeaders/PSListItemsController.h"
+#import "PreferenceHeaders/PSTableCell.h"
+//This needs https://github.com/nst/iOS-Runtime-Headers/tree/master/PrivateFrameworks in the $THEOS/sdks/iPhoneOSXXX.sdk/System/Library/PrivateFrameworks
 
 
 @interface SwipyFoldersPrefs : PSListController
@@ -20,9 +21,6 @@
 - (id)tableView:(id)arg1 cellForRowAtIndexPath:(id)arg2;
 @end
 
-@interface SFListItemsController : PSListItemsController <UIAlertViewDelegate, UITextFieldDelegate> {
-    UIAlertView * alert;
-}
-- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex;
+@interface SFListItemsController : PSListItemsController
 @end
 

@@ -147,44 +147,20 @@ static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
 
 
-/*
-%hook SBDeviceLockController
-- (BOOL)attemptDeviceUnlockWithPassword:(NSString *)passcode appRequested:(BOOL)requested {
-	if(%orig) {
-		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
-		NSLog(@"SwipyFolders: hoi");
-	}
-	return %orig;
-}
-%end
-*/
-
-
-
 
 %hook SBLockScreenManager
-
-/*
-- (void)_bioAuthenticated:(id)arg1 {
-	//NSLog(@"********JESSE BESSE********");
-	//[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
-	%orig;
-	
-}
-*/
 
 - (void)_finishUIUnlockFromSource:(int)source withOptions:(id)options {
 	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 		//[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 		SBApplication *frontApp = [(SpringBoard *)[UIApplication sharedApplication] _accessibilityFrontMostApplication];
 		if(!frontApp){
-			[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+			if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
+				[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+			}
 		}
 
 	});	
-	 	
-	/*SBApplication *frontApp = [(SpringBoard*)[UIApplication sharedApplication] _accessibilityFrontMostApplication];
-	NSLog(@"SwipyFolders: %@", [frontApp displayIdentifier]);*/
 	 %orig;
 }
 	
@@ -200,6 +176,7 @@ static BOOL forceTouchRecognized;
 	}
 }
 
+//- (void)folderControllerShouldClose:(id)arg1; //9.3 not needed
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
 - (void)closeFolderAnimated:(_Bool)arg1 {
 	if(enabled && forceTouchMethod == 1) {
@@ -209,24 +186,32 @@ static BOOL forceTouchRecognized;
 	}
 }
 
-//Set the status bar back when switching back to the home screen, because it was magically removed by some higher power :P
+//Set the status bar back when switching back to the home screen, because it was magically removed by some higher power :P //9.0-9.1
 - (void)unscatterAnimated:(_Bool)arg1 afterDelay:(double)arg2 withCompletion:(id)arg3 {
 	%orig;
-	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
+		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	}
 }
 
 -(void)_lockScreenUIWillLock:(id)arg1{
 	%orig;
-	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
+		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	}
 }
 
 //In order to still being able to close the folder with the home button:
 - (void)handleHomeButtonTap {
 	%orig;
-	if ([self hasOpenFolder] && enabled && forceTouchMethod == 1) {
-		[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil];
+	if ([self hasOpenFolder] && enabled && forceTouchMethod == 1) { //9.0/9.1
+		if([[%c(SBIconController) sharedInstance] respondsToSelector:@selector(closeFolderAnimated:withCompletion:)]) {
+			[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil]; 
+		}
 	}
-	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
+		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	}
 }
 
 //Finally the real deal:
@@ -441,7 +426,9 @@ static BOOL forceTouchRecognized;
 					[iconController.presentedShortcutMenu presentAnimated:YES];
 					[iconController.presentedShortcutMenu release];					
 					//[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
-					[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+					if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
+						[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+					}
 				}
 			}break;
 
@@ -486,7 +473,10 @@ static BOOL forceTouchRecognized;
 	} else if ([self respondsToSelector:@selector(launch)]) {
 		[self launch];
 	}
-	[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+
+	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
+		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+	}
 	
 }
 

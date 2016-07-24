@@ -39,7 +39,10 @@
 }
 
 - (void)respring {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 	system("killall -9 SpringBoard");
+#pragma GCC diagnostic pop
 }
 
 - (void)github {
@@ -69,7 +72,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
   [super tableView:tableView didSelectRowAtIndexPath:indexPath]; //Instead of %orig();
-
+  /*
   NSInteger selectedRow = indexPath.row;
   if(selectedRow == 4) {
     alert = [[UIAlertView alloc] initWithTitle:@"SwipyFolders"
@@ -92,10 +95,11 @@
     UIView *spacerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
     [indexPromptTextField setLeftViewMode:UITextFieldViewModeAlways];
     [indexPromptTextField setLeftView:spacerView];
-
   }
+  */
 }
 
+/*
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
   if(buttonIndex != [alertView cancelButtonIndex]) {
     NSString *appIndexText = [alertView textFieldAtIndex:0].text;
@@ -106,7 +110,7 @@
       return;
     }
 
-    preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+    NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
     [preferences setInteger:appIndex.integerValue forKey:[NSString stringWithFormat:@"%@AppIndex", self.specifier]];
     [preferences synchronize];
 
@@ -117,4 +121,5 @@
 
   }
 }
+*/
 @end

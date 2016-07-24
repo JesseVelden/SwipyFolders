@@ -1,4 +1,4 @@
-#import <Preferences/PSSwitchTableCell.h>
+#import "PreferenceHeaders/PSSwitchTableCell.h"
 
 @interface SFSwitchTableCell : PSSwitchTableCell
 @property(nonatomic, assign) BOOL hidesSeparators;
