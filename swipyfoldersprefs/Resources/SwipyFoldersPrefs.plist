@@ -362,6 +362,16 @@
 		</dict>
 		<dict>
 			<key>action</key>
+			<string>twitter</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>twitter.png</string>
+			<key>label</key>
+			<string>@JesseVelden</string>
+		</dict>
+		<dict>
+			<key>action</key>
 			<string>contact</string>
 			<key>cell</key>
 			<string>PSButtonCell</string>
