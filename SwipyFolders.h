@@ -119,10 +119,15 @@
 @interface SBApplicationShortcutMenu : UIView
 @property(retain, nonatomic) SBApplication *application; 
 @property(retain ,nonatomic) id <SBApplicationShortcutMenuDelegate> applicationShortcutMenuDelegate; 
+@property(readonly, nonatomic) _Bool isPresented;
+
 - (id)initWithFrame:(CGRect)arg1 application:(id)arg2 iconView:(id)arg3 interactionProgress:(id)arg4 orientation:(long long)arg5;
 - (void)presentAnimated:(_Bool)arg1;
 - (void)menuContentView:(id)arg1 activateShortcutItem:(id)arg2 index:(long long)arg3;
 - (void)updateFromPressGestureRecognizer:(id)arg1;
+- (void)dismissAnimated:(_Bool)arg1 completionHandler:(id)arg2;
+- (void)_dismissAnimated:(_Bool)arg1 finishPeeking:(_Bool)arg2 ignorePresentState:(_Bool)arg3 completionHandler:(id)arg4;
+
 @end
 
 @interface SBIconListView : UIView
@@ -165,6 +170,9 @@
 - (void)unscatterAnimated:(_Bool)arg1 afterDelay:(double)arg2 withCompletion:(id)arg3;
 - (void)_awayControllerUnlocked:(id)unlocked;
 - (void)_lockScreenUIWillLock:(id)arg1;
+- (void)applicationShortcutMenuDidDismiss:(id)arg1;
+- (void)_dismissShortcutMenuAnimated:(_Bool)arg1 completionHandler:(id)arg2;
+- (void)dismissShortcutMenuWithCompletionHandler:(id)arg1;
 
 - (SBRootIconListView*)currentFolderIconList;
 - (SBRootIconListView*)dockListView;

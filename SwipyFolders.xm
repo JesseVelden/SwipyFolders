@@ -145,6 +145,7 @@ static NSDate *lastTouchedTime;
 static NSDate *lastTappedTime;
 static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
+static BOOL shortcutMenuOpen = NO;
 
 
 
@@ -170,11 +171,13 @@ static BOOL forceTouchRecognized;
 
 %hook SBIconController
 
+/*
 %new - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
 	if (buttonIndex == [alertView firstOtherButtonIndex]) {
 		system("killall -9 SpringBoard");
 	}
 }
+*/
 
 //- (void)folderControllerShouldClose:(id)arg1; //9.3 not needed
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
@@ -320,6 +323,12 @@ static BOOL forceTouchRecognized;
 	forceTouchRecognized = NO;
 }
 
+- (void)applicationShortcutMenuDidDismiss:(id)arg1{
+	shortcutMenuOpen = NO;
+	%orig;
+}
+
+
 %end
 
 
@@ -417,18 +426,26 @@ static BOOL forceTouchRecognized;
 
 			case 4: {
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-					firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
-
-					iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
-					iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
 					UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-					[rootView.view addSubview:iconController.presentedShortcutMenu];
-					[iconController.presentedShortcutMenu presentAnimated:YES];
-					[iconController.presentedShortcutMenu release];					
-					//[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
-					if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
-						[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+
+					if(!shortcutMenuOpen) {
+						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
+						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
+						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+
+						
+						[rootView.view addSubview:iconController.presentedShortcutMenu];
+						[iconController.presentedShortcutMenu presentAnimated:YES];
+						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+						if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
+							[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
+						}
+						shortcutMenuOpen = YES;
+					} else {
+						[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil];
+						shortcutMenuOpen = NO;
 					}
+	
 				}
 			}break;
 
@@ -461,7 +478,6 @@ static BOOL forceTouchRecognized;
 }
 
 %end
- 
 
 %hook SBIcon
 %new - (void)openApp {
