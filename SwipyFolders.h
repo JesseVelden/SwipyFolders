@@ -43,11 +43,13 @@
 @property(readonly, nonatomic) long long _maxIconCountInLists;
 - (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 
+- (NSIndexPath*)getFolderIndexPathForIndex:(int)index;
 - (void)openAppAtIndex:(int)index;
 - (void)openFirstApp;
 - (void)openSecondApp; 
 - (void)quickActionOnFirstApp; 
 - (int)getFirstAppIconIndex;
+
 @end
 
 @interface SBIconIndexMutableList : NSObject
@@ -68,7 +70,7 @@
 - (void)setIsEditing:(_Bool)arg1;
 
 //New:
-- (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch;
+- (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch customAppIndex:(NSInteger)customAppIndex;
 - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture;

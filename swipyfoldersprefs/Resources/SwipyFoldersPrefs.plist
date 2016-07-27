@@ -133,6 +133,8 @@
 			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>singleTapMethod</string>
+			<key>id</key>
+			<string>singleTapMethod</string>
 			<key>label</key>
 			<string>Single Tap</string>
 			<key>validTitles</key>
@@ -141,6 +143,7 @@
 				<string>Open first app</string>
 				<string>Open second app</string>
 				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -149,6 +152,7 @@
 				<integer>2</integer>
 				<integer>3</integer>
 				<integer>4</integer>
+				<integer>5</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -165,6 +169,8 @@
 			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>swipeUpMethod</string>
+			<key>id</key>
+			<string>swipeUpMethod</string>
 			<key>label</key>
 			<string>Swipe Up</string>
 			<key>validTitles</key>
@@ -173,6 +179,7 @@
 				<string>Open first app</string>
 				<string>Open second app</string>
 				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -181,6 +188,7 @@
 				<integer>2</integer>
 				<integer>3</integer>
 				<integer>4</integer>
+				<integer>5</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -197,6 +205,8 @@
 			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>swipeDownMethod</string>
+			<key>id</key>
+			<string>swipeDownMethod</string>
 			<key>label</key>
 			<string>Swipe Down</string>
 			<key>validTitles</key>
@@ -205,6 +215,7 @@
 				<string>Open first app</string>
 				<string>Open second app</string>
 				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -213,6 +224,7 @@
 				<integer>2</integer>
 				<integer>3</integer>
 				<integer>4</integer>
+				<integer>5</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -229,6 +241,8 @@
 			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>doubleTapMethod</string>
+			<key>id</key>
+			<string>doubleTapMethod</string>
 			<key>label</key>
 			<string>Double Tap</string>
 			<key>validTitles</key>
@@ -237,6 +251,7 @@
 				<string>Open first app</string>
 				<string>Open second app</string>
 				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -245,6 +260,7 @@
 				<integer>2</integer>
 				<integer>3</integer>
 				<integer>4</integer>
+				<integer>5</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -261,6 +277,8 @@
 			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>shortHoldMethod</string>
+			<key>id</key>
+			<string>shortHoldMethod</string>
 			<key>label</key>
 			<string>Short hold</string>
 			<key>validTitles</key>
@@ -269,6 +287,7 @@
 				<string>Open first app</string>
 				<string>Open second app</string>
 				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -277,6 +296,7 @@
 				<integer>2</integer>
 				<integer>3</integer>
 				<integer>4</integer>
+				<integer>5</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -293,6 +313,8 @@
 			<string>SFListItemsController</string>
 			<key>key</key>
 			<string>forceTouchMethod</string>
+			<key>id</key>
+			<string>forceTouchMethod</string>
 			<key>label</key>
 			<string>3D Touch</string>
 			<key>validTitles</key>
@@ -301,6 +323,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Custom: open x'th app</string>
 				<string>Nothing - (Appendix/ Manila)</string>
 			</array>
 			<key>validValues</key>
@@ -309,6 +332,7 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>5</integer>
 				<integer>0</integer>
 			</array>
 			<key>staticTextMessage</key>

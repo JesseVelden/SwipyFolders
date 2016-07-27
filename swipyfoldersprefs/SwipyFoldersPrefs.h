@@ -19,8 +19,8 @@
 - (void)tableView:(id)arg1 didSelectRowAtIndexPath:(id)arg2;
 - (void)listItemSelected:(id)arg1;
 - (id)tableView:(id)arg1 cellForRowAtIndexPath:(id)arg2;
+- (id)itemsFromParent;
 @end
 
 @interface SFListItemsController : PSListItemsController
 @end
-

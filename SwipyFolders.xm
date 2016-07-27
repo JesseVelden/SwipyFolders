@@ -15,6 +15,14 @@ static CGFloat shortHoldTime;
 static CGFloat doubleTapTime;
 static NSInteger forceTouchMethod;
 
+static NSInteger singleTapMethodCustomAppIndex;
+static NSInteger swipeUpMethodCustomAppIndex;
+static NSInteger swipeDownMethodCustomAppIndex;
+static NSInteger doubleTapMethodCustomAppIndex;
+static NSInteger shortHoldMethodCustomAppIndex;
+static NSInteger forceTouchMethodCustomAppIndex;
+
+
 static UISwipeGestureRecognizer *swipeUp;
 static UISwipeGestureRecognizer *swipeDown;
 static UILongPressGestureRecognizer *shortHold;
@@ -38,10 +46,12 @@ static void loadPreferences() {
 		@"shortHoldTime": 	[NSNumber numberWithFloat:0.2],
 		@"forceTouchMethod": [NSNumber numberWithInteger:4],
 
-		@"singleTapMethodAppIndex": [NSNumber numberWithInteger:3],
-		@"swipeUpMethodAppIndex": 	[NSNumber numberWithInteger:3],
-		@"swipeDownMethodAppIndex": [NSNumber numberWithInteger:3],
-		@"doubleTapMethodAppIndex": [NSNumber numberWithInteger:3],
+		@"singleTapMethodCustomAppIndex": [NSNumber numberWithInteger:3],
+		@"swipeUpMethodCustomAppIndex":   [NSNumber numberWithInteger:3],
+		@"swipeDownMethodCustomAppIndex": [NSNumber numberWithInteger:3],
+		@"doubleTapMethodCustomAppIndex": [NSNumber numberWithInteger:3],
+		@"shortHoldMethodCustomAppIndex": [NSNumber numberWithInteger:3],
+		@"forceTouchMethodCustomAppIndex": [NSNumber numberWithInteger:3],
 	}];
 	
 	enabled 				= [preferences boolForKey:@"enabled"];
@@ -56,7 +66,14 @@ static void loadPreferences() {
 	doubleTapTime	 		= [preferences floatForKey:@"doubleTapTime"];
 	shortHoldMethod 		= [preferences integerForKey:@"shortHoldMethod"];
 	shortHoldTime 			= [preferences floatForKey:@"shortHoldTime"];
-	forceTouchMethod 		=	 [preferences integerForKey:@"forceTouchMethod"];
+	forceTouchMethod 		= [preferences integerForKey:@"forceTouchMethod"];
+
+	singleTapMethodCustomAppIndex 	= [preferences integerForKey:@"singleTapMethodCustomAppIndex"];
+	swipeUpMethodCustomAppIndex 	= 	[preferences integerForKey:@"swipeUpMethodCustomAppIndex"];
+	swipeDownMethodCustomAppIndex 	= [preferences integerForKey:@"swipeDownMethodCustomAppIndex"];
+	doubleTapMethodCustomAppIndex 	= [preferences integerForKey:@"doubleTapMethodCustomAppIndex"];
+	shortHoldMethodCustomAppIndex 	= [preferences integerForKey:@"shortHoldMethodCustomAppIndex"];
+	forceTouchMethodCustomAppIndex 	= [preferences integerForKey:@"forceTouchMethodCustomAppIndex"];
 
 	[preferences release];
 	if(enabled) {
@@ -234,7 +251,7 @@ static BOOL shortcutMenuOpen = NO;
 			case UIGestureRecognizerStateBegan: {
 
 				[iconView cancelLongPressTimer];
-				[iconView sf_method:forceTouchMethod withForceTouch:YES];
+				[iconView sf_method:forceTouchMethod withForceTouch:YES customAppIndex:forceTouchMethodCustomAppIndex];
 				forceTouchRecognized = YES;
 
 			}break;
@@ -284,7 +301,7 @@ static BOOL shortcutMenuOpen = NO;
 	if (!self.isEditing && iconView.isFolderIconView && !forceTouchRecognized && enabled) {
 			NSDate *nowTime = [[NSDate date] retain];
 			if (!forceTouchRecognized && shortHoldMethod != 0 && longHoldInvokesEditMode && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
-				[iconView sf_method:shortHoldMethod withForceTouch:NO];
+				[iconView sf_method:shortHoldMethod withForceTouch:NO customAppIndex:shortHoldMethodCustomAppIndex];
 				lastTouchedTime = nil;
 				
 				return;
@@ -292,7 +309,7 @@ static BOOL shortcutMenuOpen = NO;
 				if (iconView == tappedIcon) {
 					if (doubleTapMethod != 0 && [nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
 						doubleTapRecognized = YES;
-						[iconView sf_method:doubleTapMethod withForceTouch:NO];
+						[iconView sf_method:doubleTapMethod withForceTouch:NO customAppIndex:doubleTapMethodCustomAppIndex];
 						lastTappedTime = 0;
 						iconView.highlighted = NO;
 						return;
@@ -305,11 +322,11 @@ static BOOL shortcutMenuOpen = NO;
 
 				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(doubleTapTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 					if (!doubleTapRecognized && iconView == tappedIcon) {
-						[iconView sf_method:singleTapMethod withForceTouch:NO];
+						[iconView sf_method:singleTapMethod withForceTouch:NO customAppIndex:singleTapMethodCustomAppIndex];
 					}
 				});	
 			} else {
-				[iconView sf_method:singleTapMethod withForceTouch:NO];
+				[iconView sf_method:singleTapMethod withForceTouch:NO customAppIndex:singleTapMethodCustomAppIndex];
 				iconView.highlighted = NO;
 				return;
 			}
@@ -386,20 +403,20 @@ static BOOL shortcutMenuOpen = NO;
 
 %new - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture {
 	if (gesture.state == UIGestureRecognizerStateBegan) {
-		[self sf_method:shortHoldMethod withForceTouch:NO];
+		[self sf_method:shortHoldMethod withForceTouch:NO customAppIndex:shortHoldMethodCustomAppIndex];
 	}
 }
 
 %new - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture {
-	[self sf_method:swipeUpMethod withForceTouch:NO];
+	[self sf_method:swipeUpMethod withForceTouch:NO customAppIndex:swipeUpMethodCustomAppIndex];
 }
 
 %new - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture {
-	[self sf_method:swipeDownMethod withForceTouch:NO];
+	[self sf_method:swipeDownMethod withForceTouch:NO customAppIndex:swipeDownMethodCustomAppIndex];
 }
 
 
-%new - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch{
+%new - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch customAppIndex:(NSInteger)customAppIndex{
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
 	if(enabled && !iconController.isEditing) {
@@ -426,14 +443,12 @@ static BOOL shortcutMenuOpen = NO;
 
 			case 4: {
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-					UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-
 					if(!shortcutMenuOpen) {
 						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
 						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
 						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
 
-						
+						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
 						[rootView.view addSubview:iconController.presentedShortcutMenu];
 						[iconController.presentedShortcutMenu presentAnimated:YES];
 						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
@@ -442,11 +457,17 @@ static BOOL shortcutMenuOpen = NO;
 						}
 						shortcutMenuOpen = YES;
 					} else {
-						[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil];
 						shortcutMenuOpen = NO;
+						[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil];
 					}
+
 	
 				}
+			}break;
+
+			case 5: {
+				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+				[folder openAppAtIndex: customAppIndex-1];
 			}break;
 
 			default: 
@@ -469,6 +490,7 @@ static BOOL shortcutMenuOpen = NO;
 		}
 		if(swipeUpMethod == 4 && [target isKindOfClass:%c(SBIconScrollView)]) {
 			conflictGesture = YES;
+			otherGestureRecognizer.enabled = NO;
 			break;
 		}
 	}
@@ -500,6 +522,13 @@ static BOOL shortcutMenuOpen = NO;
 
 %hook SBFolder
 
+%new - (NSIndexPath*)getFolderIndexPathForIndex:(int)index { //The beauty of long method names :P
+	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists");
+	int indexInList = index % maxIconCountInList;
+	int section = floor(index/maxIconCountInList);
+	return [NSIndexPath indexPathForRow:indexInList inSection:section];
+}
+
 //For the stupids who want nested folder support. I should get paid for it ;(
 %new - (int)getFirstAppIconIndex {
 	SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
@@ -507,7 +536,8 @@ static BOOL shortcutMenuOpen = NO;
 
 	int i = 0;
 	while(i <= (iconList.count * maxIconCountInList)) { 
-		SBIcon *icon = [self iconAtIndexPath:[NSIndexPath indexPathForRow:i inSection:0]];
+		NSIndexPath *ip = [self getFolderIndexPathForIndex:i];
+		SBIcon *icon = [self iconAtIndexPath:ip];
 		if(![icon isKindOfClass:%c(SBFolderIcon)]){
 			return i;
 			break;
@@ -521,8 +551,10 @@ static BOOL shortcutMenuOpen = NO;
 
 %new - (void)openAppAtIndex:(int)index {
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
+	NSIndexPath *ip = [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]+index];
+
 	if (!iconController.isEditing) { 
-		SBIcon *icon = [self iconAtIndexPath:[NSIndexPath indexPathForRow:[self getFirstAppIconIndex]+index inSection:0]];
+		SBIcon *icon = [self iconAtIndexPath:ip];
 		[icon openApp];
 	}
 }

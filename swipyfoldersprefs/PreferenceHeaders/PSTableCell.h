@@ -18,7 +18,9 @@ typedef NS_ENUM(NSInteger, PSCellType) {
 	PSEditTextViewCell
 };
 
-@interface PSTableCell : UITableViewCell
+@interface PSTableCell : UITableViewCell {
+	id value;
+}
 
 + (PSCellType)cellTypeFromString:(NSString *)cellType;
 

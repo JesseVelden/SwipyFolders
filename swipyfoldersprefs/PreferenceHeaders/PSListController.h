@@ -4,6 +4,7 @@
 
 @interface PSListController : PSViewController <UITableViewDelegate, UITableViewDataSource, UIAppearance> {
 	NSArray *_specifiers;
+	UITableView* _table; 
 }
 
 + (BOOL)displaysButtonBar;
