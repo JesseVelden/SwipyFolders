@@ -467,7 +467,12 @@ static BOOL shortcutMenuOpen = NO;
 
 			case 5: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-				[folder openAppAtIndex: customAppIndex-1];
+				[folder openAppAtIndex: customAppIndex];
+			}break;
+
+			case 6: {
+				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+				[folder openLastApp];
 			}break;
 
 			default: 
@@ -532,30 +537,63 @@ static BOOL shortcutMenuOpen = NO;
 //For the stupids who want nested folder support. I should get paid for it ;(
 %new - (int)getFirstAppIconIndex {
 	SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
-	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists");
+	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists"); //9
 
 	int i = 0;
 	while(i <= (iconList.count * maxIconCountInList)) { 
-		NSIndexPath *ip = [self getFolderIndexPathForIndex:i];
-		SBIcon *icon = [self iconAtIndexPath:ip];
-		if(![icon isKindOfClass:%c(SBFolderIcon)]){
+		NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
+		SBIcon *icon = [self iconAtIndexPath:indexPath];
+		if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
 			return i;
 			break;
 		}
 		i++;
 	}
-
 	return i;
+
+}
+
+%new - (void)openLastApp {
+	SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
+	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists"); //9
+
+	int i = (iconList.count * maxIconCountInList) - maxIconCountInList; //Begin at the last page index
+	NSIndexPath *indexPath = [self getFolderIndexPathForIndex:0];
+
+	while(i <= (maxIconCountInList * iconList.count)) { 
+		SBIcon *icon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:i]];
+
+		if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
+			indexPath = [self getFolderIndexPathForIndex:i];
+		} 
+		i++;
+	}
+
+	[[self iconAtIndexPath:indexPath] openApp];
 
 }
 
 %new - (void)openAppAtIndex:(int)index {
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	NSIndexPath *ip = [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]+index];
-
+	
 	if (!iconController.isEditing) { 
-		SBIcon *icon = [self iconAtIndexPath:ip];
-		[icon openApp];
+
+		SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
+		long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists"); //9
+		int i = [self getFirstAppIconIndex]+index;
+		NSLog(@"YOOOOOOOOOOOO**********%d", index); 
+
+		while (i <= (maxIconCountInList * iconList.count)) {
+			NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
+			NSLog(@"BEEEEEEEEEEE**********%@", indexPath);
+			SBIcon *icon = [self iconAtIndexPath:indexPath];
+			if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
+				[icon openApp];
+				break;
+			}
+			i++;
+		}
+
 	}
 }
 

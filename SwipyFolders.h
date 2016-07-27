@@ -27,6 +27,8 @@
 
 
 @interface SBIcon : NSObject
+@property(readonly, copy, nonatomic) NSString *displayName;
+
 - (_Bool)isFolderIcon;
 - (_Bool)isNewsstandIcon;
 - (void)launch; 
@@ -44,6 +46,7 @@
 - (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 
 - (NSIndexPath*)getFolderIndexPathForIndex:(int)index;
+- (void)openLastApp;
 - (void)openAppAtIndex:(int)index;
 - (void)openFirstApp;
 - (void)openSecondApp; 
