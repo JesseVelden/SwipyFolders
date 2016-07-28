@@ -138,9 +138,8 @@
 				[preferences synchronize];
 
 
-
 				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-						// notify after file write
+						// notify after file write to update
 						CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (__bridge CFStringRef)[self.specifier propertyForKey:@"PostNotification"], NULL, NULL, YES);
 				});
 
@@ -161,28 +160,6 @@
 		[alertController addAction:okAction];
 		[self presentViewController:alertController animated:YES completion:nil];
 
-		/*
-		alert = [[UIAlertView alloc] initWithTitle:@"SwipyFolders"
-													message:@"Enter an app's position in the folder. Example: the third app will be: 3"
-													delegate:self
-													cancelButtonTitle:@"Cancel"
-													otherButtonTitles:@"Enter"
-													, nil];
-		alert.alertViewStyle = UIAlertViewStylePlainTextInput;
-		
-		[alert show];
-
-		UITextField *indexPromptTextField = [alert textFieldAtIndex:0];
-		[indexPromptTextField setDelegate:self];
-		[indexPromptTextField resignFirstResponder];
-		
-		[indexPromptTextField setKeyboardType:UIKeyboardTypeNumberPad];
-		indexPromptTextField.placeholder = @"e.g. 3, 5, 99";
-
-		UIView *spacerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
-		[indexPromptTextField setLeftViewMode:UITextFieldViewModeAlways];
-		[indexPromptTextField setLeftView:spacerView];
-		*/
 	}
 	
 }
@@ -192,45 +169,28 @@
     int ones = number % 10;
     int tens = (number/10) % 10;
 
-    if (tens ==1) {
+    if (tens == 1) {
         suffix = @"th";
-    } else if (ones ==1){
-        suffix = @"st";
-    } else if (ones ==2){
-        suffix = @"nd";
-    } else if (ones ==3){
-        suffix = @"rd";
     } else {
-        suffix = @"th";
+    	switch (ones) {
+            case 1:
+                suffix = @"st";
+                break;
+            case 2:
+                suffix = @"nd";
+                break;
+            case 3:
+                suffix = @"rd";
+                break;
+            default:
+                suffix = @"th";
+                break;
+        }
     }
 
     NSString * completeAsString = [NSString stringWithFormat:@"%d%@", number, suffix];
     return completeAsString;
 }
 
-
-/*
-- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
-	if(buttonIndex != [alertView cancelButtonIndex]) {
-		NSString *appIndexText = [alertView textFieldAtIndex:0].text;
-		NSNumber *appIndex = @([appIndexText intValue]);
-
-		if (!appIndex || appIndex.integerValue < 1) {
-			[[[UIAlertView alloc] initWithTitle:@"SwipyFolders" message:@"This index is not a valid number!" delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil] show];
-			return;
-		}
-
-		NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-		[preferences setInteger:appIndex.integerValue forKey:[NSString stringWithFormat:@"%@AppIndex", self.specifier]];
-		[preferences synchronize];
-
-		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-				// notify after file write
-				CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (__bridge CFStringRef)[self.specifier propertyForKey:@"PostNotification"], NULL, NULL, YES);
-		});
-
-	}
-}
-*/
 @end
 

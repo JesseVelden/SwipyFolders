@@ -28,7 +28,7 @@
 
 @interface SBIcon : NSObject
 @property(readonly, copy, nonatomic) NSString *displayName;
-
+- (UIImage*)getIconImage:(int)arg1;
 - (_Bool)isFolderIcon;
 - (_Bool)isNewsstandIcon;
 - (void)launch; 
@@ -189,6 +189,7 @@
 
 @interface SBFolderIcon : SBIcon
 - (SBFolder *)folder;
+- (void)iconImageDidUpdate:(SBIcon *)icon;
 @end
 
 @interface SBFolderIconView : SBIconView
@@ -196,9 +197,14 @@
 - (SBFolderIcon*)folderIcon;
 - (UIImageView *)_folderIconImageView;
 
+
 - (UIImageView *)customImageView;
 - (void)setCustomIconImage:(UIImage *)image;
 - (void)setCustomImageView:(UIImageView *)imageView;
+-(UIImage*)generateIconImage:(int)image ;
+- (UIImage*)getGenericIconImage:(int)arg1;
+- (void)_applyEditingStateAnimated:(_Bool)arg1;
+- (void)setCustomFolderIcon;
 @end
 
 @interface SBApplicationShortcutStoreManager : NSObject
@@ -248,6 +254,7 @@
 
 @interface SpringBoard : UIApplication
 - (SBApplication *)_accessibilityFrontMostApplication;
+- (BOOL)addIcon:(SBIcon *)icon asDirty:(BOOL)dirty;
 @end
 
 @interface UIGestureRecognizerTarget : NSObject {
