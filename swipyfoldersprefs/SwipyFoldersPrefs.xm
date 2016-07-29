@@ -3,6 +3,9 @@
 #import "SFSwitchTableCell.h"
 #import "SFSliderTableCell.h"
 
+
+static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+
 @implementation SwipyFoldersPrefs
 
 - (NSArray *)specifiers {
@@ -33,11 +36,11 @@
 			cell.indentationWidth = -inset;
 			cell.indentationLevel = 1;
 		} else if ([identifier isEqualToString:@"singleTapMethod"] || [identifier isEqualToString:@"swipeUpMethod"] || [identifier isEqualToString:@"swipeDownMethod"] || [identifier isEqualToString:@"doubleTapMethod"] || [identifier isEqualToString:@"shortHoldMethod"] || [identifier isEqualToString:@"forceTouchMethod"]) {
-			NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+			
 			int method  = [preferences integerForKey:identifier];
 			if(method == 5) {
 				int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", identifier]];
-				cell.detailTextLabel.text = [NSString stringWithFormat:@"Custom: open app #%d", customAppIndex];
+				cell.detailTextLabel.text = [customAppText setTextForIndex:customAppIndex]; 
 			}
 		}
 
@@ -90,9 +93,8 @@
 	PSTableCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
 
 	if(indexPath.row == 4) {
-		NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 		int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", self.specifier.identifier]];
-		cell.textLabel.text = [NSString stringWithFormat:@"Custom: open app #%d", customAppIndex];
+		cell.textLabel.text = [customAppText setTextForIndex:customAppIndex];
 	}
 
 	return cell;
@@ -131,9 +133,8 @@
 				NSIndexPath *ip = [NSIndexPath indexPathForRow:4 inSection:0];
 				UITableViewCell *cell = [tableView cellForRowAtIndexPath:ip];
 
-				cell.textLabel.text = [NSString stringWithFormat:@"Custom: open app #%@", appIndexText]; 
+				cell.textLabel.text = [customAppText setTextForIndex:[appIndex intValue]];
 
-				NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 				[preferences setInteger:appIndex.integerValue forKey:[NSString stringWithFormat:@"%@CustomAppIndex", self.specifier.identifier]];
 				[preferences synchronize];
 
@@ -163,8 +164,15 @@
 	}
 	
 }
+@end
 
--(NSString *) addSuffixToNumber:(int) number {
+@implementation customAppText
+
++(NSString *) setTextForIndex: (int) number {
+	return [NSString stringWithFormat:@"Custom: open %@ app", [self addSuffixToNumber: number]]; 
+}
+
++(NSString *) addSuffixToNumber:(int) number {
     NSString *suffix;
     int ones = number % 10;
     int tens = (number/10) % 10;
@@ -188,8 +196,7 @@
         }
     }
 
-    NSString * completeAsString = [NSString stringWithFormat:@"%d%@", number, suffix];
-    return completeAsString;
+    return [NSString stringWithFormat:@"%d%@", number, suffix];
 }
 
 @end

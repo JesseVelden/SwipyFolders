@@ -22,6 +22,7 @@ static NSInteger doubleTapMethodCustomAppIndex;
 static NSInteger shortHoldMethodCustomAppIndex;
 static NSInteger forceTouchMethodCustomAppIndex;
 
+static NSInteger nestedFolderBehaviour;
 
 static UISwipeGestureRecognizer *swipeUp;
 static UISwipeGestureRecognizer *swipeDown;
@@ -52,6 +53,8 @@ static void loadPreferences() {
 		@"doubleTapMethodCustomAppIndex": [NSNumber numberWithInteger:3],
 		@"shortHoldMethodCustomAppIndex": [NSNumber numberWithInteger:3],
 		@"forceTouchMethodCustomAppIndex": [NSNumber numberWithInteger:3],
+
+		@"nestedFolderBehaviour": [NSNumber numberWithInteger:0],
 	}];
 	
 	enabled 				= [preferences boolForKey:@"enabled"];
@@ -74,6 +77,8 @@ static void loadPreferences() {
 	doubleTapMethodCustomAppIndex 	= [preferences integerForKey:@"doubleTapMethodCustomAppIndex"];
 	shortHoldMethodCustomAppIndex 	= [preferences integerForKey:@"shortHoldMethodCustomAppIndex"];
 	forceTouchMethodCustomAppIndex 	= [preferences integerForKey:@"forceTouchMethodCustomAppIndex"];
+
+	nestedFolderBehaviour 	= [preferences integerForKey:@"nestedFolderBehaviour"];
 
 	[preferences release];
 	if(enabled) {
@@ -120,7 +125,14 @@ static void respring() {
 
 		CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
 		//Full size is 60.
-		return CGRectMake(iconSize / 2, iconSize, 1, 1); //Basically hide it
+		if(hideGreyFolderBackground) {
+			iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 60 : 69; //TEST ON IPAD!!!
+		}
+		if (index == 0) {
+			return CGRectMake(0, 0, iconSize, iconSize);
+		} else {
+			return CGRectMake(iconSize / 2, iconSize, 1, 1);
+		}
 	}
 	return %orig;
 }
@@ -166,6 +178,7 @@ static UIImageView *customImageView;
 	%orig;
 
 	if(enabled && enableFolderPreview) [self setCustomFolderIcon];
+	if(enabled && hideGreyFolderBackground) MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
 }
 
 - (void)_applyEditingStateAnimated:(_Bool)arg1 { //Update folder icon when done editing
@@ -174,16 +187,15 @@ static UIImageView *customImageView;
 }
 
 %new - (void)setCustomFolderIcon {
-	SBFolder *folder = self.icon.folder;
-	SBIcon *firstIcon = [folder iconAtIndexPath:[folder getFolderIndexPathForIndex:[folder getFirstAppIconIndex]]];
+	if(nestedFolderBehaviour != 0) {
+		SBFolder *folder = self.icon.folder;
+		SBIcon *firstIcon = [folder getFirstIcon];
 
-	self.customImageView.image = [firstIcon getIconImage:2];
-	[self bringSubviewToFront:self.customImageView];
+		self.customImageView.image = [firstIcon getIconImage:2];
+		[self bringSubviewToFront:self.customImageView];
 
-	if(hideGreyFolderBackground) MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
+	}
 }
-
-
 
 %new(@@:) - (UIImageView *)customImageView {
     return objc_getAssociatedObject(self, &customImageView);
@@ -192,9 +204,8 @@ static UIImageView *customImageView;
 %new(v@:@) - (void)setCustomImageView:(UIImageView *)imageView {
     objc_setAssociatedObject(self, &customImageView, imageView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
-
-
 %end
+
 
 static SBIcon *firstIcon;
 static SBIconView *tappedIcon;
@@ -205,35 +216,7 @@ static BOOL forceTouchRecognized;
 static BOOL shortcutMenuOpen = NO;
 
 
-%hook SBLockScreenManager
-
-- (void)_finishUIUnlockFromSource:(int)source withOptions:(id)options {
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
-		//[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
-		SBApplication *frontApp = [(SpringBoard *)[UIApplication sharedApplication] _accessibilityFrontMostApplication];
-		if(!frontApp){
-			if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
-				[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
-			}
-		}
-
-	});	
-	 %orig;
-}
-	
-
-%end
-
-
 %hook SBIconController
-
-/*
-%new - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-	if (buttonIndex == [alertView firstOtherButtonIndex]) {
-		system("killall -9 SpringBoard");
-	}
-}
-*/
 
 //- (void)folderControllerShouldClose:(id)arg1; //9.3 not needed
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
@@ -242,21 +225,6 @@ static BOOL shortcutMenuOpen = NO;
 
 	} else {
 		%orig;
-	}
-}
-
-//Set the status bar back when switching back to the home screen, because it was magically removed by some higher power :P //9.0-9.1
-- (void)unscatterAnimated:(_Bool)arg1 afterDelay:(double)arg2 withCompletion:(id)arg3 {
-	%orig;
-	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
-		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
-	}
-}
-
--(void)_lockScreenUIWillLock:(id)arg1{
-	%orig;
-	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
-		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 	}
 }
 
@@ -283,9 +251,9 @@ static BOOL shortcutMenuOpen = NO;
 	}
 
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
-	firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
+	firstIcon = [folder getFirstIcon];
 	if (!self.isEditing && iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
-
+		
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
 
@@ -383,6 +351,8 @@ static BOOL shortcutMenuOpen = NO;
 - (void)applicationShortcutMenuDidDismiss:(id)arg1{
 	shortcutMenuOpen = NO;
 	%orig;
+	UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+	[[rootView.view viewWithTag:342880] removeFromSuperview];
 }
 
 %end
@@ -454,7 +424,7 @@ static BOOL shortcutMenuOpen = NO;
 	[self sf_method:swipeDownMethod withForceTouch:NO customAppIndex:swipeDownMethodCustomAppIndex];
 }
 
-
+//static UIImageView *custom3DImageView;
 %new - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch customAppIndex:(NSInteger)customAppIndex{
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
@@ -466,8 +436,8 @@ static BOOL shortcutMenuOpen = NO;
 		switch (method) {
 			case 1: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-
 				SBFolderIconView *folderIconView = (SBFolderIconView*)self;
+
 				[folderIconView sendSubviewToBack:folderIconView.customImageView];
 
 				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
@@ -482,7 +452,9 @@ static BOOL shortcutMenuOpen = NO;
 
 			case 2: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
-				[folder openAppAtIndex:0];
+				firstIcon = [folder getFirstIcon];
+				[firstIcon openApp];
+
 			}break;
 
 			case 3: {
@@ -492,25 +464,50 @@ static BOOL shortcutMenuOpen = NO;
 
 			case 4: {
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-					if(!shortcutMenuOpen) {
-						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
+					SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
+
+					if(!shortcutMenu.isPresented) {
+
+						firstIcon = [folder getFirstIcon];
+
 						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
 						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
 
 						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-						[rootView.view addSubview:iconController.presentedShortcutMenu];
+
+						[rootView.view insertSubview:iconController.presentedShortcutMenu atIndex:5];
+	
 						[iconController.presentedShortcutMenu presentAnimated:YES];
-						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu];
+						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu]; 
+
+						SBFolderIconView *folderIconView = (SBFolderIconView*)self;
+						if(nestedFolderBehaviour!= 0 && [folderIconView respondsToSelector:@selector(customImageView)]) {
+							CGRect customIconImageViewFrame = CGRectMake(self.frame.origin.x, self.frame.origin.y+20, self.frame.size.width, self.frame.size.height);
+							UIView *customIconView = [[UIImageView alloc] initWithFrame:customIconImageViewFrame];
+							
+							UIImageView *customIconImageView = [[UIImageView alloc] initWithFrame:folderIconView.customImageView.frame];
+						    customIconImageView.backgroundColor = [UIColor clearColor];
+
+						    customIconImageView.image = folderIconView.customImageView.image;
+						    [customIconView insertSubview:customIconImageView atIndex:0];
+						    customIconView.tag = 342880;
+
+						    [rootView.view insertSubview:customIconView atIndex:0];
+						    [rootView.view bringSubviewToFront:customIconView];
+						}
+							
+
 						if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
 							[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 						}
 						shortcutMenuOpen = YES;
-					} else {
-						shortcutMenuOpen = NO;
-						[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil];
-					}
 
-	
+					} else {
+						NSLog(@"CLOSED GATE&&&&&*********");
+						[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil];
+						[iconController applicationShortcutMenuDidDismiss:iconController.presentedShortcutMenu];
+						//[iconController.presentedShortcutMenu dealloc];
+					}
 				}
 			}break;
 
@@ -574,6 +571,8 @@ static BOOL shortcutMenuOpen = NO;
 
 %end
 
+
+
 %hook SBFolder
 
 %new - (NSIndexPath*)getFolderIndexPathForIndex:(int)index { //The beauty of long method names :P
@@ -600,6 +599,22 @@ static BOOL shortcutMenuOpen = NO;
 	}
 	return i;
 
+}
+
+%new - (SBIcon*)getFirstIcon { 
+	switch (nestedFolderBehaviour) {
+		case 2: {
+			SBIcon *icon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:0]];
+			if([icon isKindOfClass:%c(SBFolderIcon)]) {
+				return [icon.folder iconAtIndexPath: [icon.folder getFolderIndexPathForIndex:[icon.folder getFirstAppIconIndex]]];
+			} else {
+				return [self iconAtIndexPath: [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]]];
+			}
+		}break;
+		default: {
+			return [self iconAtIndexPath: [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]]];
+		}break;
+	}
 }
 
 %new - (void)openLastApp {

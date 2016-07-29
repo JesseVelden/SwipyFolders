@@ -52,6 +52,7 @@
 - (void)openSecondApp; 
 - (void)quickActionOnFirstApp; 
 - (int)getFirstAppIconIndex;
+- (SBIcon*)getFirstIcon;
 
 @end
 
@@ -97,6 +98,7 @@
 @property(readonly, nonatomic) long long menuPosition; 
 @property(retain, nonatomic) SBSApplicationShortcutItem *shortcutItem; 
 @property(nonatomic) _Bool highlighted; 
+
 + (id)_imageForShortcutItem:(id)arg1 application:(id)arg2 assetManagerProvider:(id)arg3 monogrammerProvider:(id)arg4 maxHeight:(double *)arg5;
 @end
 @class SBApplicationShortcutMenuContentView;
@@ -121,10 +123,12 @@
 - (void)applicationShortcutMenuDidPresent:(SBApplicationShortcutMenu *)arg1;
 - (void)applicationShortcutMenuDidDismiss:(SBApplicationShortcutMenu *)arg1;
 @end
+
 @interface SBApplicationShortcutMenu : UIView
 @property(retain, nonatomic) SBApplication *application; 
 @property(retain ,nonatomic) id <SBApplicationShortcutMenuDelegate> applicationShortcutMenuDelegate; 
 @property(readonly, nonatomic) _Bool isPresented;
+@property(retain, nonatomic) SBIconView *iconView;
 
 - (id)initWithFrame:(CGRect)arg1 application:(id)arg2 iconView:(id)arg3 interactionProgress:(id)arg4 orientation:(long long)arg5;
 - (void)presentAnimated:(_Bool)arg1;
@@ -132,6 +136,7 @@
 - (void)updateFromPressGestureRecognizer:(id)arg1;
 - (void)dismissAnimated:(_Bool)arg1 completionHandler:(id)arg2;
 - (void)_dismissAnimated:(_Bool)arg1 finishPeeking:(_Bool)arg2 ignorePresentState:(_Bool)arg3 completionHandler:(id)arg4;
+- (void)applicationShortcutMenuDidDismiss:(id)arg1;
 
 @end
 
@@ -150,8 +155,15 @@
 - (unsigned long long)indexOfIcon:(id)icon;
 @end
 
+@interface SBIconViewMap
+- (SBIconView*)iconViewForIcon:(SBIcon*)icon;
+- (SBIconView*)mappedIconViewForIcon:(SBIcon*)icon;
+
+@end
+
 @interface SBIconController : UIViewController <SBApplicationShortcutMenuDelegate>
 @property(retain, nonatomic) SBApplicationShortcutMenu *presentedShortcutMenu;
+@property(readonly, nonatomic) SBIconViewMap *homescreenIconViewMap;
 + (id)sharedInstance;
 - (void)_revealMenuForIconView:(id)arg1 presentImmediately:(BOOL)arg2;
 - (BOOL)_canRevealShortcutMenu;
@@ -178,6 +190,8 @@
 - (void)applicationShortcutMenuDidDismiss:(id)arg1;
 - (void)_dismissShortcutMenuAnimated:(_Bool)arg1 completionHandler:(id)arg2;
 - (void)dismissShortcutMenuWithCompletionHandler:(id)arg1;
+- (void)applicationShortcutMenuDidDismiss:(id)arg1;
+
 
 - (SBRootIconListView*)currentFolderIconList;
 - (SBRootIconListView*)dockListView;
@@ -186,6 +200,8 @@
 - (BOOL)isFolderIconView:(SBIconView *)view;
 - (void)launchFirstApp:(SBIconView *)iconView;
 @end
+
+
 
 @interface SBFolderIcon : SBIcon
 - (SBFolder *)folder;
@@ -256,6 +272,10 @@
 - (SBApplication *)_accessibilityFrontMostApplication;
 - (BOOL)addIcon:(SBIcon *)icon asDirty:(BOOL)dirty;
 @end
+
+@interface SBIconImageView : UIView
+@end
+
 
 @interface UIGestureRecognizerTarget : NSObject {
 	id _target;

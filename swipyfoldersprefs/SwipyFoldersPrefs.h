@@ -24,3 +24,8 @@
 
 @interface SFListItemsController : PSListItemsController
 @end
+
+@interface customAppText : NSObject
++(NSString *) setTextForIndex: (int) number;
++(NSString *) addSuffixToNumber:(int) number;
+@end
