@@ -430,7 +430,8 @@
 				<integer>2</integer>
 			</array>
 			<key>staticTextMessage</key>
-			<string>When it is set to the first app in the first folder, the folder preview will show and open up the first app in the first folder. &#xA;
+			<string>Only use this when using nested folders as it is an EXPERIMENTAL feature(!) which can cause other issues.&#xA;
+When it is set to the first app in the first folder, the folder preview will show and open up the first app in the first folder. &#xA;
 Otherwise when you got another folder at the first place in the folder, it will show and open the first app of the secondary folder instead.&#xA;
 This has influence on: The folder preview, Opening the first app &amp; 3D Touch.</string>
 		</dict>
