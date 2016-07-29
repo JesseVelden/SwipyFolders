@@ -206,6 +206,8 @@
 @interface SBFolderIcon : SBIcon
 - (SBFolder *)folder;
 - (void)iconImageDidUpdate:(SBIcon *)icon;
+- (id)miniGridCellImageForIcon:(SBIcon*)icon;
+
 @end
 
 @interface SBFolderIconView : SBIconView

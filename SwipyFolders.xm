@@ -136,16 +136,21 @@ static void respring() {
 	}
 	return %orig;
 }
-/*
-+ (struct CGSize)cellSize{
-	//NSLog(@"SwipyFolders: %@", NSStringFromCGSize(%orig)); See log files with 'onDeviceConsole'
-	if(hideGreyFolderBackground && enabled) {
-		return CGSizeMake(18, 18);
-	}
-	return %orig;
 
+%end
+
+
+%hook SBFolderIcon
+- (id)miniGridCellImageForIcon:(SBIcon*)icon {
+	NSLog(@"Hoi!***************************************");
+	if([icon isKindOfClass:%c(SBFolderIcon)]) {
+		SBIcon *firstIcon = [icon.folder getFirstIcon];
+		//[[[SBIconController sharedInstance] homescreenIconViewMap] iconViewForIcon:firstIcon];
+		return [firstIcon getIconImage:2];
+	}
+
+	return %orig;
 }
-*/
 %end
 
 %hook SBFolderIconView

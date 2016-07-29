@@ -35,6 +35,7 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 			cell.separatorInset = UIEdgeInsetsMake(0, inset, 0, 0);
 			cell.indentationWidth = -inset;
 			cell.indentationLevel = 1;
+			cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", [preferences doubleForKey:@"doubleTapTime"]];
 		} else if ([identifier isEqualToString:@"singleTapMethod"] || [identifier isEqualToString:@"swipeUpMethod"] || [identifier isEqualToString:@"swipeDownMethod"] || [identifier isEqualToString:@"doubleTapMethod"] || [identifier isEqualToString:@"shortHoldMethod"] || [identifier isEqualToString:@"forceTouchMethod"]) {
 			
 			int method  = [preferences integerForKey:identifier];
@@ -42,7 +43,7 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 				int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", identifier]];
 				cell.detailTextLabel.text = [customAppText setTextForIndex:customAppIndex]; 
 			}
-		}
+		} 
 
 	}
 	return cell;
@@ -53,6 +54,14 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 	UITableView *tableView = MSHookIvar<UITableView*>(self, "_table");
 	[tableView reloadData];
 
+	
+
+
+}
+
+-(void)sliderMoved:(UISlider *)slider {
+	UITableViewCell *doubleTapTextCell = (UITableViewCell *)[self cachedCellForSpecifierID:@"doubleTapTimeText"];
+	doubleTapTextCell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", slider.value];
 
 }
 

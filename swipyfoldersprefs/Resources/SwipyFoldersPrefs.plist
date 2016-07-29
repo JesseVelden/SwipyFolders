@@ -369,6 +369,8 @@
 			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
 			<key>cell</key>
 			<string>PSSliderCell</string>
+			<key>cellClass</key>
+			<string>SFSliderTableCell</string>
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>key</key>
@@ -386,7 +388,7 @@
 			<key>segmentCount</key>
 			<integer>18</integer>
 			<key>showValue</key>
-			<true/>
+			<false/>
 			<key>leftImage</key>
 			<string>time.png</string>
 		</dict>
@@ -428,10 +430,9 @@
 				<integer>2</integer>
 			</array>
 			<key>staticTextMessage</key>
-			<string>Only use this when using nested folders as it is an EXPERIMENTAL feature(!) which can cause other issues.&#xA;
-When it is set to the first app in the first folder, the folder preview will show and open up the first app in the first folder.&#xA;
+			<string>When it is set to the first app in the first folder, the folder preview will show and open up the first app in the first folder. &#xA;
 Otherwise when you got another folder at the first place in the folder, it will show and open the first app of the secondary folder instead.&#xA;
-This has influence on: The folder preview, Opening the first app &amp; 3D Touch. It needs a respring to change the folder previews.</string>
+This has influence on: The folder preview, Opening the first app &amp; 3D Touch.</string>
 		</dict>
 
 		<dict>
