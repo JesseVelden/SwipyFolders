@@ -28,6 +28,7 @@ static UISwipeGestureRecognizer *swipeUp;
 static UISwipeGestureRecognizer *swipeDown;
 static UILongPressGestureRecognizer *shortHold;
 
+#define HAS_BIOPROTECT (%c(BioProtectController) != nil) 
 
 static void loadPreferences() {
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
@@ -139,10 +140,9 @@ static void respring() {
 
 %end
 
-
+/*
 %hook SBFolderIcon
 - (id)miniGridCellImageForIcon:(SBIcon*)icon {
-	NSLog(@"Hoi!***************************************");
 	if([icon isKindOfClass:%c(SBFolderIcon)]) {
 		SBIcon *firstIcon = [icon.folder getFirstIcon];
 		//[[[SBIconController sharedInstance] homescreenIconViewMap] iconViewForIcon:firstIcon];
@@ -152,6 +152,7 @@ static void respring() {
 	return %orig;
 }
 %end
+*/
 
 %hook SBFolderIconView
 static UIImageView *customImageView;
@@ -220,8 +221,49 @@ static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
 static BOOL shortcutMenuOpen = NO;
 
-
+CPDistributedMessagingCenter *messagingCenter;
 %hook SBIconController
+
+- (id)init {
+	static dispatch_once_t once;
+	dispatch_once(&once, ^{
+		messagingCenter = [%c(CPDistributedMessagingCenter) centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
+		[messagingCenter runServerOnCurrentThread];
+		[messagingCenter registerForMessageName:@"foldersRepresentation" target:self selector:@selector(handleMessageNamed:withUserInfo:)];
+	});
+	return %orig;
+}
+
+%new - (NSDictionary*)handleMessageNamed:(NSString *)name withUserInfo:(NSDictionary *)userinfo { //Only going to use for sending over folders so no additional checks needed
+	NSArray *folderArray = [[[self rootFolder] folderIcons] allObjects];
+
+	NSMutableDictionary *foldersRepresentation = [NSMutableDictionary dictionary];
+
+	for (int i=0; i<[folderArray count]; i++) {
+		SBFolderIcon *folderIcon = [folderArray objectAtIndex:i];
+		SBFolder *folder = folderIcon.folder;
+
+		//NSString *defaultDisplayName = MSHookIvar<NSString*>(folder, "defaultDisplayName");
+		NSArray *folderAppIcons = [folder.orderedIcons allObjects];
+		NSMutableArray *applicationBundleIDs = [[NSMutableArray alloc] init];
+		for(int k=0; k<[folderAppIcons count]; k++ ) {
+			SBApplicationIcon *appIcon = [folderAppIcons objectAtIndex:k];
+			if(appIcon.application.bundleIdentifier != nil) [applicationBundleIDs addObject:appIcon.application.bundleIdentifier];
+			
+		}
+		//DEFAULT DISPLAY TOO!
+		NSMutableDictionary *folderDictionary = [NSMutableDictionary dictionary];
+		[folderDictionary setObject:folder.displayName forKey:@"displayName"]; // String
+		//[folderDictionary setObject:folder.orderedIcons forKey:@"icons"]; //SBApplicationIcon
+		//[folderDictionary setObject:folder.lists forKey:@"lists"]; //SBIconListModel
+		[folderDictionary setObject:applicationBundleIDs forKey:@"applicationBundleIDs"]; //NSArray with bundle id strings 
+		
+		[foldersRepresentation setObject:folderDictionary forKey:[NSString stringWithFormat:@"%d", i]]; 
+	}
+	NSLog(@"SENDING*********************");
+
+	return foldersRepresentation;
+}
 
 //- (void)folderControllerShouldClose:(id)arg1; //9.3 not needed
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
@@ -236,6 +278,7 @@ static BOOL shortcutMenuOpen = NO;
 //In order to still being able to close the folder with the home button:
 - (void)handleHomeButtonTap {
 	%orig;
+	
 	if ([self hasOpenFolder] && enabled && forceTouchMethod == 1) { //9.0/9.1
 		if([[%c(SBIconController) sharedInstance] respondsToSelector:@selector(closeFolderAnimated:withCompletion:)]) {
 			[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil]; 
@@ -362,6 +405,33 @@ static BOOL shortcutMenuOpen = NO;
 
 %end
 
+//For protecting shortcutmenu items with BioProtect
+static BOOL isProtected = NO;
+%hook SBApplicationShortcutMenu
+- (void)menuContentView:(id)arg1 activateShortcutItem:(id)arg2 index:(long long)arg3 {
+	if(HAS_BIOPROTECT){
+		if([self.iconView isFolderIconView]) {
+			SBFolder* folder = ((SBFolderIconView *)self.iconView).folderIcon.folder;
+			SBIcon *firstIcon = [folder getFirstIcon];
+			NSString *bundleIdentifier = firstIcon.application.bundleIdentifier;
+			if ([[%c(BioProtectController) sharedInstance ] requiresAuthenticationForIdentifier: bundleIdentifier ] && !isProtected){ 
+				NSArray *arguments=[NSArray arrayWithObjects:[NSValue valueWithPointer:&arg1],[NSValue valueWithPointer:&arg2],[NSValue valueWithPointer:&arg3],NULL];
+				[[%c(BioProtectController) sharedInstance] authenticateForIdentifier:bundleIdentifier object:self selector:@selector(onBioProtectSuccessWithMenuContentView:activateShortcutItem:index:) arrayOfArgumentsAsNSValuePointers:arguments];
+				return;
+			}
+		}
+	}
+	isProtected = NO;
+	%orig;
+}
+
+%new - (void) onBioProtectSuccessWithMenuContentView:(id)arg1 activateShortcutItem:(id)arg2 index:(long long)arg3 {
+	isProtected = YES;
+	[self menuContentView:arg1 activateShortcutItem:arg2 index:arg3];
+
+}
+
+%end
 
 %hook SBIconView
 
@@ -441,12 +511,17 @@ static BOOL shortcutMenuOpen = NO;
 		switch (method) {
 			case 1: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+
 				SBFolderIconView *folderIconView = (SBFolderIconView*)self;
-
 				[folderIconView sendSubviewToBack:folderIconView.customImageView];
-
-				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
-
+				if(HAS_BIOPROTECT) {
+					if ([[%c(BioProtectController) sharedInstance ] requiresAuthenticationForOpeningFolder: folder ]){ 
+						[[%c(BioProtectController) sharedInstance ] authenticateForOpeningFolder: folder ]; 
+					}
+				} else {
+					[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+				}
+				
 				if(forceTouch) self.highlighted = NO;
 
 				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
@@ -559,6 +634,12 @@ static BOOL shortcutMenuOpen = NO;
 
 %hook SBIcon
 %new - (void)openApp {
+	if(HAS_BIOPROTECT) {
+		if ([[%c(BioProtectController) sharedInstance ] requiresAuthenticationForIdentifier: self.application.bundleIdentifier ]){ 
+			[[%c(BioProtectController) sharedInstance ] launchApplicationWithIdentifier: self.application.bundleIdentifier ];
+			return;
+		}	
+	}
 
 	if([self respondsToSelector:@selector(launchFromLocation:context:)]) {
 		[self launchFromLocation:0 context:nil];
@@ -568,6 +649,7 @@ static BOOL shortcutMenuOpen = NO;
 		[self launch];
 	}
 
+
 	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
 		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 	}
@@ -575,7 +657,6 @@ static BOOL shortcutMenuOpen = NO;
 }
 
 %end
-
 
 
 %hook SBFolder
@@ -665,7 +746,6 @@ static BOOL shortcutMenuOpen = NO;
 }
 
 %end
-
 
 %ctor{
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),

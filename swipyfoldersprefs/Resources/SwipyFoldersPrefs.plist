@@ -397,6 +397,25 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
+			<string>CUSTOM FOLDER SETTINGS</string>
+		</dict>
+
+		<dict>
+		 	<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>detail</key>
+			<string>SFFoldersController</string>
+			<key>label</key>
+			<string>Set per Folder settings</string>
+			<key>id</key>
+			<string>customFolderSettings</string>
+
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
 			<string>NESTED FOLDERS</string>
 		</dict>
 

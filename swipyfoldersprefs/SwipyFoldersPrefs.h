@@ -29,3 +29,14 @@
 +(NSString *) setTextForIndex: (int) number;
 +(NSString *) addSuffixToNumber:(int) number;
 @end
+
+@interface SBFolder : NSObject
+- (id)folderIcons;
+@end
+
+@interface CPDistributedMessagingCenter : NSObject
++(CPDistributedMessagingCenter*)centerNamed:(NSString*)serverName;
+-(void)registerForMessageName:(NSString*)messageName target:(id)target selector:(SEL)selector;
+-(NSDictionary*)sendMessageAndReceiveReplyName:(NSString*)name userInfo:(NSDictionary*)info;
+-(void)runServerOnCurrentThread;
+@end

@@ -54,7 +54,14 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 	UITableView *tableView = MSHookIvar<UITableView*>(self, "_table");
 	[tableView reloadData];
 
-	
+	NSLog(@"START*********************");
+	CPDistributedMessagingCenter *messagingCenter;
+	messagingCenter = [CPDistributedMessagingCenter centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
+
+	NSDictionary *foldersRepresentation;
+	foldersRepresentation = [messagingCenter sendMessageAndReceiveReplyName:@"foldersRepresentation" userInfo:nil];
+	NSLog(@"YOOOOOOOOOOOOOOOO********************* Dictionary: %@", foldersRepresentation);
+	NSLog(@"DONE*********************");
 
 
 }

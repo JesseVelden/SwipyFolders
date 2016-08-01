@@ -43,7 +43,13 @@
 @interface SBFolder : NSObject
 @property(readonly, nonatomic) long long listCount;
 @property(readonly, nonatomic) long long _maxIconCountInLists;
+@property(copy, nonatomic) NSString *displayName;
+@property(readonly, copy, nonatomic) NSArray *lists;
 - (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
+- (id)folderIcons;
+- (id)defaultDisplayName;
+- (id)allIcons;
+- (id)orderedIcons;
 
 - (NSIndexPath*)getFolderIndexPathForIndex:(int)index;
 - (void)openLastApp;
@@ -54,6 +60,10 @@
 - (int)getFirstAppIconIndex;
 - (SBIcon*)getFirstIcon;
 
+@end
+
+@interface SBApplicationIcon : NSObject
+- (SBApplication*)application;
 @end
 
 @interface SBIconIndexMutableList : NSObject
@@ -137,6 +147,7 @@
 - (void)dismissAnimated:(_Bool)arg1 completionHandler:(id)arg2;
 - (void)_dismissAnimated:(_Bool)arg1 finishPeeking:(_Bool)arg2 ignorePresentState:(_Bool)arg3 completionHandler:(id)arg4;
 - (void)applicationShortcutMenuDidDismiss:(id)arg1;
+- (void) onBioProtectSuccessWithMenuContentView:(id)arg1 activateShortcutItem:(id)arg2 index:(long long)arg3;
 
 @end
 
@@ -160,6 +171,10 @@
 - (SBIconView*)mappedIconViewForIcon:(SBIcon*)icon;
 
 @end
+
+@interface SBRootFolder : SBFolder
+@end
+
 
 @interface SBIconController : UIViewController <SBApplicationShortcutMenuDelegate>
 @property(retain, nonatomic) SBApplicationShortcutMenu *presentedShortcutMenu;
@@ -191,6 +206,7 @@
 - (void)_dismissShortcutMenuAnimated:(_Bool)arg1 completionHandler:(id)arg2;
 - (void)dismissShortcutMenuWithCompletionHandler:(id)arg1;
 - (void)applicationShortcutMenuDidDismiss:(id)arg1;
+- (SBRootFolder *)rootFolder;
 
 
 - (SBRootIconListView*)currentFolderIconList;
@@ -282,4 +298,27 @@
 @interface UIGestureRecognizerTarget : NSObject {
 	id _target;
 }
+@end
+
+@interface SBUIBiometricEventMonitor : NSObject
+
+@end
+
+@interface BioProtectController : NSObject
+- (void)biometricEventMonitor:(SBUIBiometricEventMonitor*)arg1 handleBiometricEvent:(int)arg2;
+- (void)showAlert;
+- (void)launchApplicationWithIdentifier:(id)arg1;
+-(BOOL)requiresAuthenticationForOpeningFolder:(SBFolder *)folder;
+-(void)authenticateForOpeningFolder:(SBFolder *)folder;
+-(BOOL)requiresAuthenticationForIdentifier:(id)identifier;
+- (void)authenticateForIdentifier:(id)arg1 object:(id)arg2 selector:(SEL)arg3 arrayOfArgumentsAsNSValuePointers:(id)arg4;
+@end
+
+
+
+@interface CPDistributedMessagingCenter : NSObject
++(CPDistributedMessagingCenter*)centerNamed:(NSString*)serverName;
+-(void)registerForMessageName:(NSString*)messageName target:(id)target selector:(SEL)selector;
+-(NSDictionary*)sendMessageAndReceiveReplyName:(NSString*)name userInfo:(NSDictionary*)info;
+-(void)runServerOnCurrentThread;
 @end
