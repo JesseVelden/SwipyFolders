@@ -2,6 +2,7 @@
 
 #import "SFSwitchTableCell.h"
 #import "SFSliderTableCell.h"
+#import "SFFolderListController.h"
 
 
 static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
@@ -30,7 +31,7 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 		PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
 		NSString *identifier = specifier.identifier;
 
-		if ([identifier isEqualToString:@"shortHoldTimeText"] || [identifier isEqualToString:@"doubleTapTimeText"] ) {
+		if ([identifier isEqualToString:@"doubleTapTimeText"] ) {
 			CGFloat inset = cell.bounds.size.width * 10;
 			cell.separatorInset = UIEdgeInsetsMake(0, inset, 0, 0);
 			cell.indentationWidth = -inset;
@@ -54,15 +55,12 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 	UITableView *tableView = MSHookIvar<UITableView*>(self, "_table");
 	[tableView reloadData];
 
-	NSLog(@"START*********************");
 	CPDistributedMessagingCenter *messagingCenter;
 	messagingCenter = [CPDistributedMessagingCenter centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
 
 	NSDictionary *foldersRepresentation;
 	foldersRepresentation = [messagingCenter sendMessageAndReceiveReplyName:@"foldersRepresentation" userInfo:nil];
-	NSLog(@"YOOOOOOOOOOOOOOOO********************* Dictionary: %@", foldersRepresentation);
-	NSLog(@"DONE*********************");
-
+	//NSLog(@"YOOOOOOOOOOOOOOOO********************* Dictionary: %@", foldersRepresentation);
 
 }
 
@@ -80,8 +78,8 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 }
 
 - (void)github {
-		NSURL *githubURL = [NSURL URLWithString:@"https://github.com/megacookie/SwipyFolders"];
-		[[UIApplication sharedApplication] openURL:githubURL];
+	NSURL *githubURL = [NSURL URLWithString:@"https://github.com/megacookie/SwipyFolders"];
+	[[UIApplication sharedApplication] openURL:githubURL];
 }
 
 - (void)contact {
@@ -216,4 +214,206 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 }
 
 @end
+
+
+@interface UIImage (Private)
++ (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier format:(int)format scale:(CGFloat)scale;
++ (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier roleIdentifier:(NSString *)roleIdentifier format:(int)format scale:(CGFloat)scale;
+@end
+
+//Interface is imported
+@implementation SFFolderListController
+- (NSArray *)specifiers {
+	
+	if (!_specifiers) {
+
+		CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
+		NSDictionary *foldersDictionary = [messagingCenter sendMessageAndReceiveReplyName:@"foldersRepresentation" userInfo:nil];
+
+		NSMutableArray *specs = [[[NSMutableArray alloc] init] retain];
+
+		PSSpecifier *header = [PSSpecifier emptyGroupSpecifier];
+		[header setProperty:@"Foldersss" forKey:@"footerText"];
+		[specs addObject:header];
+
+		for(int i=0; i<[foldersDictionary count]; i++) {
+			NSDictionary *currentFolder = foldersDictionary[[NSString stringWithFormat:@"%d", i]];
+			PSSpecifier *spec = [PSSpecifier preferenceSpecifierNamed:currentFolder[@"displayName"] target:self set:NULL get:NULL detail:%c(SFCustomFolderSettingsController) cell:PSLinkCell edit:nil];
+			//UIImage *folderIcon = nil;
+			if ([UIImage respondsToSelector:@selector(_applicationIconImageForBundleIdentifier:format:scale:)]) {
+
+			}
+			NSArray *applicationBundleIDs = currentFolder[@"applicationBundleIDs"];
+
+			[spec setProperty:[self createFolderIconImageWithIdentifiers:applicationBundleIDs] forKey:@"iconImage"];
+			//[spec setProperty:[UIImage imageWithContentsOfFile:@"/var/mobile/swipyfolders/swipyfoldersprefs/Resources/paypal.png"] forKey:@"iconImage"];
+			[specs addObject:spec];
+
+		}
+
+		_specifiers = [[specs copy] retain];
+
+		Class DisplayController = %c(PSUIDisplayController); // Appears to be iOS 9+.
+		if (!DisplayController) { // iOS 8.
+			DisplayController = %c(DisplayController);
+		}
+	}
+	
+	return _specifiers;
+}
+
+- (UIImage *)createFolderIconImageWithIdentifiers:(NSArray*)bundleIdentifiers {
+	double totalSize = 44.5; // Normal = 60
+	double iconSize = 10.5; //Normal = 13 --> 13/(60/44.5) = 9.64, but I like bigger icons :P
+	UIColor *backgroundColor = [UIColor colorWithRed:171.0/255.0 green:188.0/255.0 blue:216.0/255.0 alpha:1];
+
+	UIGraphicsBeginImageContextWithOptions(CGSizeMake(totalSize, totalSize), false, 0.0);
+	UIBezierPath *backgroundPath = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0,0, totalSize, totalSize) cornerRadius:10];
+	[backgroundColor setFill];
+	[backgroundPath fill];
+
+	double margin = (totalSize-iconSize*3)/4; //You got 4 margins! <--m--APP--m--APP--m--APP--m-->
+	double width = margin;
+	double height = margin;
+	for(int i=0; i<[bundleIdentifiers count] && i<9; i++) {
+		if(i%3 == 0 && i!=0) {
+			width = margin;
+			height += iconSize+margin;
+		}
+
+		UIImage *appImage = [UIImage _applicationIconImageForBundleIdentifier:bundleIdentifiers[i] format:0 scale:[UIScreen mainScreen].scale];
+		[appImage drawInRect:CGRectMake(width, height, iconSize, iconSize)];
+		width += iconSize+margin;
+
+	}
+
+	UIImage *finalImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIGraphicsEndImageContext();
+
+	return finalImage;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 50;
+}
+
+@end
+
+
+/*
+@interface SFBetterFoldersListController: PSViewController <UITableViewDataSource, UITableViewDelegate>
+@end
+
+#define RowHeight 65.0f
+
+@implementation SFBetterFoldersListController
+NSDictionary *foldersDictionary;
+
+- (void)loadView {
+	UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
+	tableView.dataSource = self;
+	tableView.delegate = self;
+	tableView.rowHeight = RowHeight;
+	self.view = tableView;
+	[tableView release];
+	NSLog(@"HOIHOIHOIHOIHOI************");
+	CPDistributedMessagingCenter *messagingCenter;
+	messagingCenter = [CPDistributedMessagingCenter centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
+	foldersDictionary = [messagingCenter sendMessageAndReceiveReplyName:@"foldersRepresentation" userInfo:nil];
+	NSLog(@"YOOO%@", foldersDictionary);
+}
+
+- (void)setSpecifier:(PSSpecifier *)specifier {
+	[super setSpecifier:specifier];
+	self.navigationItem.title = @"SUPER COOL FOLDERS";
+	if ([self isViewLoaded]) {
+
+
+		[(UITableView *)self.view setRowHeight:RowHeight];
+		//[(UITableView *)self.view reloadData];
+
+
+	}
+}
+
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
+	return UITableViewCellEditingStyleNone;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)table {
+	return 1;
+}
+
+//TOP
+- (NSString *)tableView:(UITableView *)table titleForHeaderInSection:(NSInteger)section {
+	return @"Folders";
+}
+
+//FOOTER
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
+	if (section == [self numberOfSectionsInTableView:tableView]-1) {
+		UIView *footer2 = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 90)] autorelease];
+		footer2.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+		footer2.backgroundColor = UIColor.clearColor;
+
+		UILabel *lbl2 = [[UILabel alloc] initWithFrame:footer2.frame];
+		lbl2.backgroundColor = [UIColor clearColor];
+		lbl2.text = @"Want to have folder specific settings in your tweak? Checkout MegaCookie/libFolders";
+		lbl2.textColor = [UIColor grayColor];
+		lbl2.font = [UIFont systemFontOfSize:14.0f];
+		lbl2.textAlignment = NSTextAlignmentCenter;
+		lbl2.lineBreakMode = NSLineBreakByWordWrapping;
+		lbl2.numberOfLines = 2;
+		lbl2.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+		[footer2 addSubview:lbl2];
+		[lbl2 release];
+    	return footer2;
+    }
+    return nil;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
+    return section == [self numberOfSectionsInTableView:tableView]-1 ? 100 : 0;
+}
+//END FOOTER
+
+- (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section {
+	NSLog(@"numberOfRowsInSection");
+	return [foldersDictionary count]; //Folder count
+}
+
+- (UIImage *)createFolderIconImageWithIdentifiers:(NSArray*)bundleIdentifiers {
+	//Do shit
+
+	return nil;
+
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"info"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"info"] autorelease];
+	cell.textLabel.textAlignment = NSTextAlignmentLeft;
+	cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator; //Add the right arrow
+
+	NSDictionary *currentFolder = foldersDictionary[[NSString stringWithFormat:@"%ld", (long)indexPath.row]];
+
+	cell.textLabel.text = currentFolder[@"displayName"]; //HIER DE FOLDER NAAM
+	cell.imageView.image = [self createFolderIconImageWithIdentifiers:currentFolder[@"applicationBundleIDs"]];
+
+	return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+	[tableView deselectRowAtIndexPath:indexPath animated:YES];
+	NSInteger section = indexPath.section;
+	NSInteger value = indexPath.row;
+
+	//Push a new settings view
+}
+
+
+- (id)table {
+	return nil;
+}
+
+@end
+*/
 

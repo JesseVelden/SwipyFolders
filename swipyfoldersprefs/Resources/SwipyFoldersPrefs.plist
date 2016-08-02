@@ -350,6 +350,27 @@
 			<key>staticTextMessage</key>
 			<string>If you are facing issues with Appendix, try Manila instead</string>
 		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>CUSTOM FOLDER SETTINGS</string>
+		</dict>
+
+		<dict>
+		 	<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SFFolderListController</string>
+			<key>label</key>
+			<string>Set per Folder settings</string>
+			<key>isController</key>
+			<true/>
+			<key>id</key>
+			<string>customFolderSettings</string>
+		</dict>
+
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
@@ -391,25 +412,6 @@
 			<false/>
 			<key>leftImage</key>
 			<string>time.png</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>CUSTOM FOLDER SETTINGS</string>
-		</dict>
-
-		<dict>
-		 	<key>cell</key>
-			<string>PSLinkListCell</string>
-			<key>detail</key>
-			<string>SFFoldersController</string>
-			<key>label</key>
-			<string>Set per Folder settings</string>
-			<key>id</key>
-			<string>customFolderSettings</string>
-
 		</dict>
 
 		<dict>
