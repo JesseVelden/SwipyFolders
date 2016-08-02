@@ -141,5 +141,6 @@ __END_DECLS
 @property (nonatomic) SEL controllerLoadAction;
 
 - (void)setUserInfo:(id)arg1;
+- (NSArray *)values;
 
 @end

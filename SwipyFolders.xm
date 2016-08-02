@@ -237,10 +237,17 @@ CPDistributedMessagingCenter *messagingCenter;
 %new - (NSDictionary*)handleMessageNamed:(NSString *)name withUserInfo:(NSDictionary *)userinfo { //Only going to use for sending over folders so no additional checks needed
 	NSArray *folderArray = [[[self rootFolder] folderIcons] allObjects];
 
+	NSArray *sortedFolderArray = [NSArray new];
+	sortedFolderArray = [folderArray sortedArrayUsingComparator:^NSComparisonResult(SBFolderIcon* a, SBFolderIcon* b) {
+	    NSString *first = a.folder.displayName;
+	    NSString *second = b.folder.displayName;
+	    return [first compare:second];
+	}];
+
 	NSMutableDictionary *foldersRepresentation = [NSMutableDictionary dictionary];
 
-	for (int i=0; i<[folderArray count]; i++) {
-		SBFolderIcon *folderIcon = [folderArray objectAtIndex:i];
+	for (int i=0; i<[sortedFolderArray count]; i++) {
+		SBFolderIcon *folderIcon = [sortedFolderArray objectAtIndex:i];
 		SBFolder *folder = folderIcon.folder;
 
 		//NSString *defaultDisplayName = MSHookIvar<NSString*>(folder, "defaultDisplayName");

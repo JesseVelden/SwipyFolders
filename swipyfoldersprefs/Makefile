@@ -1,12 +1,12 @@
 include $(THEOS)/makefiles/common.mk
 
 BUNDLE_NAME = SwipyFoldersPrefs
-SwipyFoldersPrefs_FILES = SwipyFoldersPrefs.xm SFSliderTableCell.m SFSwitchTableCell.m
+SwipyFoldersPrefs_FILES = SwipyFoldersPrefs.xm SFSliderTableCell.m SFSwitchTableCell.m SFCustomFolderSettingsController.m
 SwipyFoldersPrefs_INSTALL_PATH = /Library/PreferenceBundles
 SwipyFoldersPrefs_FRAMEWORKS = UIKit CoreGraphics
 SwipyFoldersPrefs_PRIVATE_FRAMEWORKS = Preferences AppSupport
 
-SwipyFoldersPrefs_LDFLAGS += -Wdeprecated-declarations
+SwipyFoldersPrefs_LDFLAGS += 
 
 
 

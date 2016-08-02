@@ -7,6 +7,39 @@
 
 static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 
+
+static NSString * addSuffixToNumber(int number) {
+    NSString *suffix;
+    int ones = number % 10;
+    int tens = (number/10) % 10;
+
+    if (tens == 1) {
+        suffix = @"th";
+    } else {
+    	switch (ones) {
+            case 1:
+                suffix = @"st";
+                break;
+            case 2:
+                suffix = @"nd";
+                break;
+            case 3:
+                suffix = @"rd";
+                break;
+            default:
+                suffix = @"th";
+                break;
+        }
+    }
+    return [NSString stringWithFormat:@"%d%@", number, suffix];
+}
+
+static NSString * setCustomAppIndexTextForIndex(int number) {
+	return [NSString stringWithFormat:@"Custom: open %@ app", addSuffixToNumber(number)]; 
+}
+
+
+
 @implementation SwipyFoldersPrefs
 
 - (NSArray *)specifiers {
@@ -42,7 +75,7 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 			int method  = [preferences integerForKey:identifier];
 			if(method == 5) {
 				int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", identifier]];
-				cell.detailTextLabel.text = [customAppText setTextForIndex:customAppIndex]; 
+				cell.detailTextLabel.text = setCustomAppIndexTextForIndex(customAppIndex); 
 			}
 		} 
 
@@ -54,14 +87,6 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 	[super viewWillAppear:animated];
 	UITableView *tableView = MSHookIvar<UITableView*>(self, "_table");
 	[tableView reloadData];
-
-	CPDistributedMessagingCenter *messagingCenter;
-	messagingCenter = [CPDistributedMessagingCenter centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
-
-	NSDictionary *foldersRepresentation;
-	foldersRepresentation = [messagingCenter sendMessageAndReceiveReplyName:@"foldersRepresentation" userInfo:nil];
-	//NSLog(@"YOOOOOOOOOOOOOOOO********************* Dictionary: %@", foldersRepresentation);
-
 }
 
 -(void)sliderMoved:(UISlider *)slider {
@@ -108,7 +133,7 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 
 	if(indexPath.row == 4) {
 		int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", self.specifier.identifier]];
-		cell.textLabel.text = [customAppText setTextForIndex:customAppIndex];
+		cell.textLabel.text = setCustomAppIndexTextForIndex(customAppIndex);
 	}
 
 	return cell;
@@ -147,7 +172,7 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 				NSIndexPath *ip = [NSIndexPath indexPathForRow:4 inSection:0];
 				UITableViewCell *cell = [tableView cellForRowAtIndexPath:ip];
 
-				cell.textLabel.text = [customAppText setTextForIndex:[appIndex intValue]];
+				cell.textLabel.text = setCustomAppIndexTextForIndex([appIndex intValue]);
 
 				[preferences setInteger:appIndex.integerValue forKey:[NSString stringWithFormat:@"%@CustomAppIndex", self.specifier.identifier]];
 				[preferences synchronize];
@@ -180,46 +205,11 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 }
 @end
 
-@implementation customAppText
-
-+(NSString *) setTextForIndex: (int) number {
-	return [NSString stringWithFormat:@"Custom: open %@ app", [self addSuffixToNumber: number]]; 
-}
-
-+(NSString *) addSuffixToNumber:(int) number {
-    NSString *suffix;
-    int ones = number % 10;
-    int tens = (number/10) % 10;
-
-    if (tens == 1) {
-        suffix = @"th";
-    } else {
-    	switch (ones) {
-            case 1:
-                suffix = @"st";
-                break;
-            case 2:
-                suffix = @"nd";
-                break;
-            case 3:
-                suffix = @"rd";
-                break;
-            default:
-                suffix = @"th";
-                break;
-        }
-    }
-
-    return [NSString stringWithFormat:@"%d%@", number, suffix];
-}
-
-@end
 
 
-@interface UIImage (Private)
-+ (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier format:(int)format scale:(CGFloat)scale;
-+ (UIImage *)_applicationIconImageForBundleIdentifier:(NSString *)bundleIdentifier roleIdentifier:(NSString *)roleIdentifier format:(int)format scale:(CGFloat)scale;
-@end
+
+
+
 
 //Interface is imported
 @implementation SFFolderListController
@@ -233,8 +223,9 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 		NSMutableArray *specs = [[[NSMutableArray alloc] init] retain];
 
 		PSSpecifier *header = [PSSpecifier emptyGroupSpecifier];
-		[header setProperty:@"Foldersss" forKey:@"footerText"];
-		[specs addObject:header];
+		[header setProperty:@"Folders" forKey:@"label"];
+		[header setProperty:@"Folders" forKey:@"footerText"];
+		[specs insertObject:header atIndex:0];
 
 		for(int i=0; i<[foldersDictionary count]; i++) {
 			NSDictionary *currentFolder = foldersDictionary[[NSString stringWithFormat:@"%d", i]];
@@ -246,7 +237,8 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 			NSArray *applicationBundleIDs = currentFolder[@"applicationBundleIDs"];
 
 			[spec setProperty:[self createFolderIconImageWithIdentifiers:applicationBundleIDs] forKey:@"iconImage"];
-			//[spec setProperty:[UIImage imageWithContentsOfFile:@"/var/mobile/swipyfolders/swipyfoldersprefs/Resources/paypal.png"] forKey:@"iconImage"];
+			[spec setProperty:@"1" forKey:@"isController"];
+			[spec setProperty:@"IDIDIDIDID" forKey:@"id"];
 			[specs addObject:spec];
 
 		}
@@ -276,7 +268,7 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
 	double width = margin;
 	double height = margin;
 	for(int i=0; i<[bundleIdentifiers count] && i<9; i++) {
-		if(i%3 == 0 && i!=0) {
+		if(i%3 == 0 && i!=0) { //Unfortunately 0%3 == also 0, so double checking fot that!
 			width = margin;
 			height += iconSize+margin;
 		}
@@ -297,123 +289,11 @@ static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@
     return 50;
 }
 
-@end
-
-
-/*
-@interface SFBetterFoldersListController: PSViewController <UITableViewDataSource, UITableViewDelegate>
-@end
-
-#define RowHeight 65.0f
-
-@implementation SFBetterFoldersListController
-NSDictionary *foldersDictionary;
-
-- (void)loadView {
-	UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
-	tableView.dataSource = self;
-	tableView.delegate = self;
-	tableView.rowHeight = RowHeight;
-	self.view = tableView;
-	[tableView release];
-	NSLog(@"HOIHOIHOIHOIHOI************");
-	CPDistributedMessagingCenter *messagingCenter;
-	messagingCenter = [CPDistributedMessagingCenter centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
-	foldersDictionary = [messagingCenter sendMessageAndReceiveReplyName:@"foldersRepresentation" userInfo:nil];
-	NSLog(@"YOOO%@", foldersDictionary);
-}
-
-- (void)setSpecifier:(PSSpecifier *)specifier {
-	[super setSpecifier:specifier];
-	self.navigationItem.title = @"SUPER COOL FOLDERS";
-	if ([self isViewLoaded]) {
-
-
-		[(UITableView *)self.view setRowHeight:RowHeight];
-		//[(UITableView *)self.view reloadData];
-
-
-	}
-}
-
-- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
-	return UITableViewCellEditingStyleNone;
-}
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)table {
-	return 1;
-}
-
-//TOP
-- (NSString *)tableView:(UITableView *)table titleForHeaderInSection:(NSInteger)section {
-	return @"Folders";
-}
-
-//FOOTER
-- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
-	if (section == [self numberOfSectionsInTableView:tableView]-1) {
-		UIView *footer2 = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 90)] autorelease];
-		footer2.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		footer2.backgroundColor = UIColor.clearColor;
-
-		UILabel *lbl2 = [[UILabel alloc] initWithFrame:footer2.frame];
-		lbl2.backgroundColor = [UIColor clearColor];
-		lbl2.text = @"Want to have folder specific settings in your tweak? Checkout MegaCookie/libFolders";
-		lbl2.textColor = [UIColor grayColor];
-		lbl2.font = [UIFont systemFontOfSize:14.0f];
-		lbl2.textAlignment = NSTextAlignmentCenter;
-		lbl2.lineBreakMode = NSLineBreakByWordWrapping;
-		lbl2.numberOfLines = 2;
-		lbl2.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-		[footer2 addSubview:lbl2];
-		[lbl2 release];
-    	return footer2;
-    }
-    return nil;
-}
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
-    return section == [self numberOfSectionsInTableView:tableView]-1 ? 100 : 0;
-}
-//END FOOTER
-
-- (NSInteger)tableView:(UITableView *)table numberOfRowsInSection:(NSInteger)section {
-	NSLog(@"numberOfRowsInSection");
-	return [foldersDictionary count]; //Folder count
-}
-
-- (UIImage *)createFolderIconImageWithIdentifiers:(NSArray*)bundleIdentifiers {
-	//Do shit
-
-	return nil;
-
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"info"] ?: [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"info"] autorelease];
-	cell.textLabel.textAlignment = NSTextAlignmentLeft;
-	cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator; //Add the right arrow
-
-	NSDictionary *currentFolder = foldersDictionary[[NSString stringWithFormat:@"%ld", (long)indexPath.row]];
-
-	cell.textLabel.text = currentFolder[@"displayName"]; //HIER DE FOLDER NAAM
-	cell.imageView.image = [self createFolderIconImageWithIdentifiers:currentFolder[@"applicationBundleIDs"]];
-
+- (id)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
+	cell.detailTextLabel.text = @"Not enabled";
 	return cell;
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	[tableView deselectRowAtIndexPath:indexPath animated:YES];
-	NSInteger section = indexPath.section;
-	NSInteger value = indexPath.row;
-
-	//Push a new settings view
-}
-
-
-- (id)table {
-	return nil;
-}
-
 @end
-*/
 

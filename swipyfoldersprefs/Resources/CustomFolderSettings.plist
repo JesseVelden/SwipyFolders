@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Set enabled</string>
+		</dict>
+
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>customFolderEnabled</string>
+			<key>id</key>
+			<string>customFolderEnabled</string>
+			<key>label</key>
+			<string>Enabled</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>FUNCTIONALITY</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>2</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>SFCustomFolderSettingsListItemsController</string>
+			<key>key</key>
+			<string>customFolderSingleTapMethod</string>
+			<key>id</key>
+			<string>customFolderSingleTapMethod</string>
+			<key>label</key>
+			<string>Single Tap</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
+				<string>Open last app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>1</string>
+				<string>2</string>
+				<string>3</string>
+				<string>4</string>
+				<string>5</string>
+				<string>6</string>
+				<string>0</string>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>1</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>SFCustomFolderSettingsListItemsController</string>
+			<key>key</key>
+			<string>customFolderSwipeUpMethod</string>
+			<key>id</key>
+			<string>customFolderSwipeUpMethod</string>
+			<key>label</key>
+			<string>Swipe Up</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
+				<string>Open last app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>1</string>
+				<string>2</string>
+				<string>3</string>
+				<string>4</string>
+				<string>5</string>
+				<string>6</string>
+				<string>0</string>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>0</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>SFCustomFolderSettingsListItemsController</string>
+			<key>key</key>
+			<string>customFolderSwipeDownMethod</string>
+			<key>id</key>
+			<string>customFolderSwipeDownMethod</string>
+			<key>label</key>
+			<string>Swipe Down</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
+				<string>Open last app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>1</string>
+				<string>2</string>
+				<string>3</string>
+				<string>4</string>
+				<string>5</string>
+				<string>6</string>
+				<string>0</string>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>0</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>SFCustomFolderSettingsListItemsController</string>
+			<key>key</key>
+			<string>customFolderDoubleTapMethod</string>
+			<key>id</key>
+			<string>customFolderDoubleTapMethod</string>
+			<key>label</key>
+			<string>Double Tap</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
+				<string>Open last app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>1</string>
+				<string>2</string>
+				<string>3</string>
+				<string>4</string>
+				<string>5</string>
+				<string>6</string>
+				<string>0</string>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>0</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>SFCustomFolderSettingsListItemsController</string>
+			<key>key</key>
+			<string>customFolderShortHoldMethod</string>
+			<key>id</key>
+			<string>customFolderShortHoldMethod</string>
+			<key>label</key>
+			<string>Short hold</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
+				<string>Open last app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>1</string>
+				<string>2</string>
+				<string>3</string>
+				<string>4</string>
+				<string>5</string>
+				<string>6</string>
+				<string>0</string>
+			</array>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>4</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>SFCustomFolderSettingsListItemsController</string>
+			<key>key</key>
+			<string>customFolderForceTouchMethod</string>
+			<key>id</key>
+			<string>customFolderForceTouchMethod</string>
+			<key>label</key>
+			<string>3D Touch</string>
+			<key>validTitles</key>
+			<array>
+				<string>Quick action on first app</string>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Custom: open x'th app</string>
+				<string>Open last app</string>
+				<string>Nothing - (Appendix/ Manila)</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<string>4</string>
+				<string>1</string>
+				<string>2</string>
+				<string>3</string>
+				<string>5</string>
+				<string>6</string>
+				<string>0</string>
+			</array>
+			<key>staticTextMessage</key>
+			<string>If you are facing issues with Appendix, try Manila instead</string>
+		</dict>
+	
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>Want to have folder specific settings in your tweak? Check MegaCookie/libFolders</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>Folder settings</string>
+</dict>
+</plist>
