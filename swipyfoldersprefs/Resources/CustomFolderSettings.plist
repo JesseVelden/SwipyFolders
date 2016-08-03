@@ -17,7 +17,7 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>cellClass</key>
-			<string>SFSwitchTableCell</string>
+			<string>SFCustomFolderSettingsSwitchController</string>
 			<key>default</key>
 			<true/>
 			<key>defaults</key>

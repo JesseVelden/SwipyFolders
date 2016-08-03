@@ -28,6 +28,8 @@ static UISwipeGestureRecognizer *swipeUp;
 static UISwipeGestureRecognizer *swipeDown;
 static UILongPressGestureRecognizer *shortHold;
 
+static NSDictionary *customFolderSettings;
+
 #define HAS_BIOPROTECT (%c(BioProtectController) != nil) 
 
 static void loadPreferences() {
@@ -80,6 +82,8 @@ static void loadPreferences() {
 	forceTouchMethodCustomAppIndex 	= [preferences integerForKey:@"forceTouchMethodCustomAppIndex"];
 
 	nestedFolderBehaviour 	= [preferences integerForKey:@"nestedFolderBehaviour"];
+
+	customFolderSettings = [preferences dictionaryForKey:@"customFolderSettings"];
 
 	[preferences release];
 	if(enabled) {
@@ -183,7 +187,7 @@ static UIImageView *customImageView;
 - (void)setIcon:(SBIcon *)icon {
 	%orig;
 
-	if(enabled && enableFolderPreview) [self setCustomFolderIcon];
+	if(enabled && enableFolderPreview && nestedFolderBehaviour !=0) [self setCustomFolderIcon];
 	if(enabled && hideGreyFolderBackground) MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
 }
 
@@ -222,6 +226,7 @@ static BOOL forceTouchRecognized;
 static BOOL shortcutMenuOpen = NO;
 
 CPDistributedMessagingCenter *messagingCenter;
+
 %hook SBIconController
 
 - (id)init {
@@ -267,7 +272,6 @@ CPDistributedMessagingCenter *messagingCenter;
 		
 		[foldersRepresentation setObject:folderDictionary forKey:[NSString stringWithFormat:@"%d", i]]; 
 	}
-	NSLog(@"SENDING*********************");
 
 	return foldersRepresentation;
 }
@@ -308,12 +312,13 @@ CPDistributedMessagingCenter *messagingCenter;
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder getFirstIcon];
 	if (!self.isEditing && iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
-		
+		NSInteger method = [iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod];
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
 
 				[iconView cancelLongPressTimer];
-				[iconView sf_method:forceTouchMethod withForceTouch:YES customAppIndex:forceTouchMethodCustomAppIndex];
+
+				[iconView sf_method:method withForceTouch:YES customAppIndex:forceTouchMethodCustomAppIndex];
 				forceTouchRecognized = YES;
 
 			}break;
@@ -326,7 +331,7 @@ CPDistributedMessagingCenter *messagingCenter;
 
 			case UIGestureRecognizerStateEnded: {
 
-				if (forceTouchMethod == 4) {
+				if (method == 4) {
 					SBApplicationShortcutMenuContentView *contentView = MSHookIvar<id>(self.presentedShortcutMenu,"_contentView");
 					NSMutableArray *itemViews = MSHookIvar<NSMutableArray *>(contentView,"_itemViews");
 					for(SBApplicationShortcutMenuItemView *item in itemViews) {
@@ -361,9 +366,11 @@ CPDistributedMessagingCenter *messagingCenter;
 
 - (void)iconTapped:(SBIconView *)iconView {
 	if (!self.isEditing && iconView.isFolderIconView && !forceTouchRecognized && enabled) {
+
 			NSDate *nowTime = [[NSDate date] retain];
 			if (!forceTouchRecognized && shortHoldMethod != 0 && longHoldInvokesEditMode && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
-				[iconView sf_method:shortHoldMethod withForceTouch:NO customAppIndex:shortHoldMethodCustomAppIndex];
+
+				[iconView sf_method:[iconView getFolderSetting:@"ShortHoldMethod" withDefaultSetting:shortHoldMethod] withForceTouch:NO customAppIndex:shortHoldMethodCustomAppIndex];
 				lastTouchedTime = nil;
 				
 				return;
@@ -371,7 +378,8 @@ CPDistributedMessagingCenter *messagingCenter;
 				if (iconView == tappedIcon) {
 					if (doubleTapMethod != 0 && [nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
 						doubleTapRecognized = YES;
-						[iconView sf_method:doubleTapMethod withForceTouch:NO customAppIndex:doubleTapMethodCustomAppIndex];
+
+						[iconView sf_method:[iconView getFolderSetting:@"DoubleTapMethod" withDefaultSetting:doubleTapMethod] withForceTouch:NO customAppIndex:doubleTapMethodCustomAppIndex];
 						lastTappedTime = 0;
 						iconView.highlighted = NO;
 						return;
@@ -384,11 +392,12 @@ CPDistributedMessagingCenter *messagingCenter;
 
 				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(doubleTapTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 					if (!doubleTapRecognized && iconView == tappedIcon) {
-						[iconView sf_method:singleTapMethod withForceTouch:NO customAppIndex:singleTapMethodCustomAppIndex];
+						[iconView sf_method:[iconView getFolderSetting:@"SingleTapMethod" withDefaultSetting:singleTapMethod] withForceTouch:NO customAppIndex:singleTapMethodCustomAppIndex];
 					}
 				});	
 			} else {
-				[iconView sf_method:singleTapMethod withForceTouch:NO customAppIndex:singleTapMethodCustomAppIndex];
+				int method = [iconView getFolderSetting:@"SingleTapMethod" withDefaultSetting:singleTapMethod];
+				[iconView sf_method:method withForceTouch:NO customAppIndex:singleTapMethodCustomAppIndex];
 				iconView.highlighted = NO;
 				return;
 			}
@@ -446,10 +455,23 @@ static BOOL isProtected = NO;
 	return self.icon.isFolderIcon && !([self.icon respondsToSelector:@selector(isNewsstandIcon)] && self.icon.isNewsstandIcon);
 }
 
+%new - (NSInteger)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting {
+	SBFolder *folder = ((SBIconView *)self).icon.folder;
+	NSDictionary *folderSettings = customFolderSettings[folder.displayName]; // >> Dit moet later een ID worden!
+	NSInteger sendMethod = globalSetting;
+	NSString *method = [NSString stringWithFormat:@"customFolder%@",setting];
+	
+	if([folderSettings objectForKey:method] && folderSettings[@"customFolderEnabled"]){
+		sendMethod = [[folderSettings objectForKey:method] intValue];
+	}
+
+	return sendMethod;
+}
+
 - (void)setIcon:(SBIcon*)icon {
 	
 	%orig;
-	
+
 	//SBIconController* iconController = [%c(SBIconController) sharedInstance];
 
 	if (self.isFolderIconView) {
@@ -494,21 +516,23 @@ static BOOL isProtected = NO;
 
 %new - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture {
 	if (gesture.state == UIGestureRecognizerStateBegan) {
-		[self sf_method:shortHoldMethod withForceTouch:NO customAppIndex:shortHoldMethodCustomAppIndex];
+		[self sf_method:[self getFolderSetting:@"ShortHoldMethod" withDefaultSetting:shortHoldMethod] withForceTouch:NO customAppIndex:shortHoldMethodCustomAppIndex];
 	}
 }
 
 %new - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture {
-	[self sf_method:swipeUpMethod withForceTouch:NO customAppIndex:swipeUpMethodCustomAppIndex];
+	[self sf_method:[self getFolderSetting:@"SwipeUpMethod" withDefaultSetting:swipeUpMethod] withForceTouch:NO customAppIndex:swipeUpMethodCustomAppIndex];
 }
 
 %new - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture {
-	[self sf_method:swipeDownMethod withForceTouch:NO customAppIndex:swipeDownMethodCustomAppIndex];
+	[self sf_method:[self getFolderSetting:@"SwipeDownMethod" withDefaultSetting:swipeDownMethod] withForceTouch:NO customAppIndex:swipeDownMethodCustomAppIndex];
 }
 
 //static UIImageView *custom3DImageView;
 %new - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch customAppIndex:(NSInteger)customAppIndex{
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
+	NSLog(@"WE GAAN DRAIIEEUIJEEn met nummero:%ld", (long)method);
+
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
 	if(enabled && !iconController.isEditing) {
 

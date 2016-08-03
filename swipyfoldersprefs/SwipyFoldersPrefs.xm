@@ -230,13 +230,12 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 		for(int i=0; i<[foldersDictionary count]; i++) {
 			NSDictionary *currentFolder = foldersDictionary[[NSString stringWithFormat:@"%d", i]];
 			PSSpecifier *spec = [PSSpecifier preferenceSpecifierNamed:currentFolder[@"displayName"] target:self set:NULL get:NULL detail:%c(SFCustomFolderSettingsController) cell:PSLinkCell edit:nil];
-			//UIImage *folderIcon = nil;
 			if ([UIImage respondsToSelector:@selector(_applicationIconImageForBundleIdentifier:format:scale:)]) {
-
+				NSArray *applicationBundleIDs = currentFolder[@"applicationBundleIDs"];
+				[spec setProperty:[self createFolderIconImageWithIdentifiers:applicationBundleIDs] forKey:@"iconImage"];
 			}
-			NSArray *applicationBundleIDs = currentFolder[@"applicationBundleIDs"];
+			
 
-			[spec setProperty:[self createFolderIconImageWithIdentifiers:applicationBundleIDs] forKey:@"iconImage"];
 			[spec setProperty:@"1" forKey:@"isController"];
 			[spec setProperty:@"IDIDIDIDID" forKey:@"id"];
 			[specs addObject:spec];
@@ -289,9 +288,26 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
     return 50;
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+	UITableView *tableView = MSHookIvar<UITableView*>(self, "_table");
+	[tableView reloadData];
+}
+
 - (id)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
-	cell.detailTextLabel.text = @"Not enabled";
+	PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
+
+	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+	NSDictionary *customFolderSettings = [preferences dictionaryForKey:@"customFolderSettings"];
+	NSDictionary *folderSettings = customFolderSettings[[specifier name]]; // >> Dit moet later een ID worden!
+
+	NSString *enabled = folderSettings[@"customFolderEnabled"];
+  	if([enabled intValue] == 1) {
+		cell.detailTextLabel.text = @"Enabled";
+	} else {
+		cell.detailTextLabel.text = @"Not enabled";
+	}
 	return cell;
 }
 

@@ -83,7 +83,9 @@
 - (void)setWallpaperRelativeCenter:(struct CGPoint)arg1;
 - (void)setIsEditing:(_Bool)arg1;
 
+
 //New:
+- (NSInteger)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting;
 - (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch customAppIndex:(NSInteger)customAppIndex;
 - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture;

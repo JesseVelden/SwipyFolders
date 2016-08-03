@@ -2,6 +2,8 @@
 #import "PreferenceHeaders/PSSpecifier.h"
 #import "PreferenceHeaders/PSListItemsController.h"
 #import "PreferenceHeaders/PSTableCell.h"
+#import "PreferenceHeaders/PSSwitchTableCell.h"
+
 
 @interface SFCustomFolderSettingsController : PSListController
 @end
@@ -44,11 +46,32 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 }
 */
 
+
+static UIColor * UIColorFromRGB(int rgb) {
+  return [UIColor colorWithRed:((rgb >> 16) & 0xFF) / 255.0F
+                         green:((rgb >> 8) & 0xFF) / 255.0F
+                          blue:(rgb & 0xFF) / 255.0F
+                         alpha:1];
+}
+
+static void setSetting(id value, NSString * folderName, NSString * specifierID) {
+	NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
+	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
+	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
+
+	[mutableFolderSettings setObject:value forKey:specifierID];
+	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName];
+
+	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
+	[preferences synchronize];
+}
+
 @implementation SFCustomFolderSettingsController
 
 - (void)getCustomFolderSettings {
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-	customFolderSettings = [preferences dictionaryForKey:@"customFolderSettings"];
+	customFolderSettings = [[preferences dictionaryForKey:@"customFolderSettings"] retain];
 	folderSettings = customFolderSettings[[self.specifier name]]; // >> Dit moet later een ID worden!
 	folderName = [self.specifier name];
 }
@@ -96,6 +119,46 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 @end
 
+@interface SFCustomFolderSettingsSwitchController : PSSwitchTableCell 
+@end
+
+@implementation SFCustomFolderSettingsSwitchController
+
+- (id)initWithStyle:(int)style reuseIdentifier:(id)identifier specifier:(id)specifier {
+  self = [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier specifier:specifier];
+  if (self) {
+    UIColor *tintColor = UIColorFromRGB(0xFF9000);
+    [((UISwitch *)[self control]) setOnTintColor:tintColor];
+
+  }
+  return self;
+}
+
+
+- (void)refreshCellContentsWithSpecifier:(PSSpecifier *)specifier {
+  [super refreshCellContentsWithSpecifier:specifier];
+  NSString *sublabel = [specifier propertyForKey:@"sublabel"];
+
+  if (sublabel) {
+    self.detailTextLabel.text = [sublabel description];
+    self.detailTextLabel.textColor = [UIColor grayColor];
+  }
+
+  NSString *enabled = folderSettings[[self.specifier identifier]];
+  if([enabled intValue] == 1) {
+  	[((UISwitch *)[self control]) setOn:YES animated:NO];
+  } else {
+  	[((UISwitch *)[self control]) setOn:NO animated:NO];
+  }
+}
+
+- (void)setValue:(id)valueSetting {
+	setSetting(valueSetting, [self.specifier propertyForKey:@"folderName"], [self.specifier identifier]);
+}
+
+
+@end
+
 @interface SFCustomFolderSettingsListItemsController : PSListItemsController
 @end
 
@@ -131,17 +194,8 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 	
 	NSInteger selectedRow = indexPath.row;
 
-	NSString *value = [self.specifier.values objectAtIndex:selectedRow]; //Working!!
-	NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
-	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
-	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
-
-	[mutableFolderSettings setObject:value forKey:[self.specifier identifier]];
-	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName]; //<< FolderName can be changed to: [self.specifier propertyForKey:@"folderName"]
-
-	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
-	[preferences synchronize];
+	NSString *value = [self.specifier.values objectAtIndex:selectedRow];
+	setSetting(value, [self.specifier propertyForKey:@"folderName"], [self.specifier identifier]);
 	
 
 	/*if(selectedRow == 4) { FFKES GEEN ZIN IN :P
