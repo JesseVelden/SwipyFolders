@@ -296,6 +296,9 @@
 @interface SBIconImageView : UIView
 @end
 
+@interface SBFolderIconImageView : SBIconImageView
+@end
+
 
 @interface UIGestureRecognizerTarget : NSObject {
 	id _target;

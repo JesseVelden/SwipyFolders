@@ -213,6 +213,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 //Interface is imported
 @implementation SFFolderListController
+
 - (NSArray *)specifiers {
 	
 	if (!_specifiers) {
@@ -290,13 +291,14 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 - (void)viewWillAppear:(BOOL)animated {
 	[super viewWillAppear:animated];
-	UITableView *tableView = MSHookIvar<UITableView*>(self, "_table");
-	[tableView reloadData];
+	[self.table reloadData];
+	NSLog(@"RELOAD");
 }
 
 - (id)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
 	PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
+	NSLog(@"Reloading table...");
 
 	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	NSDictionary *customFolderSettings = [preferences dictionaryForKey:@"customFolderSettings"];

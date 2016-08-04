@@ -14,7 +14,7 @@ static NSDictionary *customFolderSettings; //root
 static NSDictionary *folderSettings;
 static NSString *folderName;
 
-/*
+
 static NSString * addSuffixToNumber(int number) {
     NSString *suffix;
     int ones = number % 10;
@@ -44,15 +44,7 @@ static NSString * addSuffixToNumber(int number) {
 static NSString * setCustomAppIndexTextForIndex(int number) {
 	return [NSString stringWithFormat:@"Custom: open %@ app", addSuffixToNumber(number)]; 
 }
-*/
 
-
-static UIColor * UIColorFromRGB(int rgb) {
-  return [UIColor colorWithRed:((rgb >> 16) & 0xFF) / 255.0F
-                         green:((rgb >> 8) & 0xFF) / 255.0F
-                          blue:(rgb & 0xFF) / 255.0F
-                         alpha:1];
-}
 
 static void setSetting(id value, NSString * folderName, NSString * specifierID) {
 	NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
@@ -81,19 +73,21 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 	if (!_specifiers) {
 		_specifiers = [[self loadSpecifiersFromPlistName:@"CustomFolderSettings" target:self] retain];
 	}
-	for(int i=0; i<[_specifiers count]; i++) {
+	
+	/*for(int i=0; i<[_specifiers count]; i++) {
 		PSSpecifier *specifier = _specifiers[i];
 		[specifier setProperty:[self.specifier name] forKey:@"folderName"];
-	}
+	}*/
 	
 	return _specifiers;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
 	[super viewWillAppear:animated];
-	self.navigationItem.title = [self.specifier name];
 
 	[self getCustomFolderSettings];
+	self.navigationItem.title = folderName;
+
 	UITableView *tableView = self.table;
 	[tableView reloadData];
 }
@@ -102,62 +96,29 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 	UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
 	PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
 
-	if([specifier.identifier isEqualToString:@"customFolderEnabled"]) {
+	NSLog(@"Settings: %@",folderSettings);
 
-	} else {
-		
-		NSDictionary *titleValues = specifier.titleDictionary;
-		NSString *customSetting = folderSettings[specifier.identifier]; //Yes, the integer is stored as a NSString
-
-		//Also check for if the method is 5 >> customAppIndexText
-		cell.detailTextLabel.text = [titleValues objectForKey:customSetting]; 
+	if(![specifier.identifier isEqualToString:@"customFolderEnabled"]) {
+		int method  = [folderSettings[specifier.identifier] intValue];
+		if(method == 5) {
+			int customAppIndex  = [folderSettings[[NSString stringWithFormat:@"%@CustomAppIndex", specifier.identifier]] intValue];
+			cell.detailTextLabel.text = setCustomAppIndexTextForIndex(customAppIndex); 
+		}
 	}
-
 
 	return cell;
 }
 
-@end
-
-@interface SFCustomFolderSettingsSwitchController : PSSwitchTableCell 
-@end
-
-@implementation SFCustomFolderSettingsSwitchController
-
-- (id)initWithStyle:(int)style reuseIdentifier:(id)identifier specifier:(id)specifier {
-  self = [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier specifier:specifier];
-  if (self) {
-    UIColor *tintColor = UIColorFromRGB(0xFF9000);
-    [((UISwitch *)[self control]) setOnTintColor:tintColor];
-
-  }
-  return self;
+-(id)readPreferenceValue:(PSSpecifier*)specifier {
+	return folderSettings[specifier.identifier];
 }
 
-
-- (void)refreshCellContentsWithSpecifier:(PSSpecifier *)specifier {
-  [super refreshCellContentsWithSpecifier:specifier];
-  NSString *sublabel = [specifier propertyForKey:@"sublabel"];
-
-  if (sublabel) {
-    self.detailTextLabel.text = [sublabel description];
-    self.detailTextLabel.textColor = [UIColor grayColor];
-  }
-
-  NSString *enabled = folderSettings[[self.specifier identifier]];
-  if([enabled intValue] == 1) {
-  	[((UISwitch *)[self control]) setOn:YES animated:NO];
-  } else {
-  	[((UISwitch *)[self control]) setOn:NO animated:NO];
-  }
+-(void)setValuePreference:(id)value forSpecifier:(PSSpecifier*)specifier {
+	setSetting(value, [self.specifier name], specifier.identifier); //>> LATER EEN ID
 }
-
-- (void)setValue:(id)valueSetting {
-	setSetting(valueSetting, [self.specifier propertyForKey:@"folderName"], [self.specifier identifier]);
-}
-
 
 @end
+
 
 @interface SFCustomFolderSettingsListItemsController : PSListItemsController
 @end
@@ -165,40 +126,24 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 @implementation SFCustomFolderSettingsListItemsController
 
 
+
 - (PSTableCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	PSTableCell *cell = (PSTableCell*)[super tableView:tableView cellForRowAtIndexPath:indexPath];
 
-	int selectedRow = [self.specifier.values indexOfObject:folderSettings[[self.specifier identifier]]];
-
-	if(indexPath.row == selectedRow) {
-		cell.accessoryType = UITableViewCellAccessoryCheckmark;
-	} else {
-		cell.accessoryType = UITableViewCellAccessoryNone;
+	if(indexPath.row == 4) {
+		int customAppIndex  = [folderSettings[[NSString stringWithFormat:@"%@CustomAppIndex", [self.specifier identifier]]] intValue];
+		cell.textLabel.text = setCustomAppIndexTextForIndex(customAppIndex);
 	}
 
-	/*
-	if(indexPath.row == 4) {
-		int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", self.specifier.identifier]];
-		cell.textLabel.text = setCustomAppIndexTextForIndex(customAppIndex);
-	}*/
-
+		
 	return cell;
 }
 
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[super tableView:tableView didSelectRowAtIndexPath:indexPath];
-
 	
-	//UITableViewCell *cell = (PSTableCell*)[super tableView:tableView cellForRowAtIndexPath:indexPath];
-	//PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
-	
-	NSInteger selectedRow = indexPath.row;
-
-	NSString *value = [self.specifier.values objectAtIndex:selectedRow];
-	setSetting(value, [self.specifier propertyForKey:@"folderName"], [self.specifier identifier]);
-	
-
-	/*if(selectedRow == 4) { FFKES GEEN ZIN IN :P
+	if(indexPath.row == 4) { 
 
 		UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"SwipyFolders"
 			message:@"Enter an app's position in the folder. Example: the third app will be: 3"
@@ -213,7 +158,7 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 			actionWithTitle:@"Enter"
 			style:UIAlertActionStyleDefault
 			handler:^(UIAlertAction *action) {
-
+				
 				NSString *appIndexText = alertController.textFields.firstObject.text;
 				NSNumber *appIndex = @([appIndexText intValue]);
 				if (!appIndex || appIndex.integerValue < 1) {
@@ -229,16 +174,13 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 
 				cell.textLabel.text = setCustomAppIndexTextForIndex([appIndex intValue]);
 
-				[preferences setInteger:appIndex.integerValue forKey:[NSString stringWithFormat:@"%@CustomAppIndex", self.specifier.identifier]];
-				[preferences synchronize];
-
-
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-						// notify after file write to update
-						CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (__bridge CFStringRef)[self.specifier propertyForKey:@"PostNotification"], NULL, NULL, YES);
-				});
-
+				NSString *specifierID = [NSString stringWithFormat:@"%@CustomAppIndex", [self.specifier identifier]];
+				NSLog(@"Folder: %@, ID: %@", folderName, specifierID);
+				setSetting(@"42", folderName, @"customFolderSwipeUpMethodCustomAppIndex"); //>> LATER EEN ID*/
+				setSetting(@"5", folderName, [self.specifier identifier]);
 				
+
+
 
 			}];
 
@@ -255,7 +197,7 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 		[alertController addAction:okAction];
 		[self presentViewController:alertController animated:YES completion:nil];
 
-	}*/
+	}
 	
 }
 @end

@@ -123,7 +123,7 @@ static void respring() {
 	[alert show];
 }
 */
-
+/*
 %hook SBIconGridImage
 + (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count{
 	if (enableFolderPreview && enabled) {
@@ -143,6 +143,7 @@ static void respring() {
 }
 
 %end
+*/
 
 /*
 %hook SBFolderIcon
@@ -159,36 +160,10 @@ static void respring() {
 */
 
 %hook SBFolderIconView
-static UIImageView *customImageView;
-
-
-- (UIView *)initWithFrame:(struct CGRect)frame{
-    UIView *view = %orig;
-    
-    CGSize size = [%c(SBIconView) defaultIconImageSize];
-    CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
-    if(!hideGreyFolderBackground) {
-    	iconFrame = CGRectMake(7.5, 7.5, 45, 45); //Full size is 60
-    }
-    self.customImageView = [[UIImageView alloc] initWithFrame:iconFrame];
-    self.customImageView.backgroundColor = [UIColor clearColor];
-    view.backgroundColor = [UIColor clearColor];
-
-    [view insertSubview:self.customImageView atIndex:0];
-    
-    return view;
-}
-
-- (void)dealloc{
-    [self.customImageView release];
-    %orig;
-}
 
 - (void)setIcon:(SBIcon *)icon {
 	%orig;
-
-	if(enabled && enableFolderPreview && nestedFolderBehaviour !=0) [self setCustomFolderIcon];
-	if(enabled && hideGreyFolderBackground) MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
+	[self setCustomFolderIcon];
 }
 
 - (void)_applyEditingStateAnimated:(_Bool)arg1 { //Update folder icon when done editing
@@ -197,22 +172,20 @@ static UIImageView *customImageView;
 }
 
 %new - (void)setCustomFolderIcon {
-	if(nestedFolderBehaviour != 0) {
-		SBFolder *folder = self.icon.folder;
-		SBIcon *firstIcon = [folder getFirstIcon];
+	MSHookIvar<UIImageView *>([self _folderIconImageView], "_rightWrapperView").hidden = YES;
+	UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>([self _folderIconImageView], "_leftWrapperView");
 
-		self.customImageView.image = [firstIcon getIconImage:2];
-		[self bringSubviewToFront:self.customImageView];
+	SBFolder *folder = self.icon.folder;
+	SBIcon *firstIcon = [folder getFirstIcon];
 
+	innerFolderImageView.image = [firstIcon getIconImage:2];
+
+	if(hideGreyFolderBackground){
+		MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
+		[[self _folderIconImageView] bringSubviewToFront:innerFolderImageView];
 	}
-}
 
-%new(@@:) - (UIImageView *)customImageView {
-    return objc_getAssociatedObject(self, &customImageView);
-}
-
-%new(v@:@) - (void)setCustomImageView:(UIImageView *)imageView {
-    objc_setAssociatedObject(self, &customImageView, imageView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+	
 }
 %end
 
@@ -584,33 +557,18 @@ static BOOL isProtected = NO;
 						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
 						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
 
+						SBIconView *editedIconView = MSHookIvar<SBIconView *>(iconController.presentedShortcutMenu, "_proxyIconView");
+						SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(editedIconView, "_iconImageView");
+						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+						folderImageView.image = [firstIcon getIconImage:2];
+
 						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
 
 						[rootView.view insertSubview:iconController.presentedShortcutMenu atIndex:5];
 	
 						[iconController.presentedShortcutMenu presentAnimated:YES];
 						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu]; 
-
-						SBFolderIconView *folderIconView = (SBFolderIconView*)self;
-						if(nestedFolderBehaviour!= 0 && [folderIconView respondsToSelector:@selector(customImageView)]) {
-							CGRect customIconImageViewFrame = CGRectMake(self.frame.origin.x, self.frame.origin.y+20, self.frame.size.width, self.frame.size.height);
-							UIView *customIconView = [[UIImageView alloc] initWithFrame:customIconImageViewFrame];
-							
-							UIImageView *customIconImageView = [[UIImageView alloc] initWithFrame:folderIconView.customImageView.frame];
-						    customIconImageView.backgroundColor = [UIColor clearColor];
-
-						    customIconImageView.image = folderIconView.customImageView.image;
-						    [customIconView insertSubview:customIconImageView atIndex:0];
-						    customIconView.tag = 342880;
-
-						    [rootView.view insertSubview:customIconView atIndex:0];
-						    [rootView.view bringSubviewToFront:customIconView];
-						}
-							
-
-						if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
-							[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
-						}
+						
 						shortcutMenuOpen = YES;
 
 					} else {

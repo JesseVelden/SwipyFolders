@@ -1,6 +1,14 @@
 #import "SFFolderListController.h"
 
 @implementation SFFolderListController
+
+- (void)viewWillAppear:(BOOL)animated {
+	[super viewWillAppear:animated];
+
+	UITableView *tableView = self.table;
+	[tableView reloadData];
+}
+
 - (NSArray *)specifiers {
 	
 	if (!_specifiers) {
