@@ -124,6 +124,7 @@ static void respring() {
 }
 */
 
+/*
 %hook SBFolderIconView
 
 - (void)setIcon:(SBIcon *)icon {
@@ -148,23 +149,16 @@ static void respring() {
 	MSHookIvar<UIImageView *>([self _folderIconImageView], "_rightWrapperView").hidden = YES;
 	UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>([self _folderIconImageView], "_leftWrapperView");
 
-	
 	SBIcon *firstIcon = [folder getFirstIcon];
 
 	innerFolderImageView.image = [firstIcon getIconImage:2];
 	MSHookIvar<UIImageView *>([self _folderIconImageView], "_rightWrapperView").image = [firstIcon getIconImage:2];
-/*
-	if(hideGreyFolderBackground || [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1){
-		//MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
-	}
-	*/
 
 	
 }
 
 %end
-
-
+*/
 
 
 %hook SBFolderIconImageView
@@ -190,17 +184,23 @@ static void respring() {
 	}
 }
 
-/*
-- (void)_showRightMinigrid{%log; %orig;}
-- (void)_showLeftMinigrid{%log; %orig;}
-*/
-- (void)_updateRasterization{
-	SBFolder *folder = self._folderIcon.folder;
-	SBIcon *firstIcon = [folder getFirstIcon];
-	UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
-	innerFolderImageView.image = [firstIcon getIconImage:2];
 
+- (void)_showLeftMinigrid{
+ 	%orig;
+ 	if(enabled && enableFolderPreview){
+ 		SBFolder *folder = self._folderIcon.folder;
+ 		NSDictionary *folderSettings = customFolderSettings[folder.displayName]; // >> Dit moet later een ID worden!
+ 		
+ 		if([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings objectForKey:@"customFolderEnableFolderPreview"] != nil && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0) {
+			return;
+		}
+	
+		SBIcon *firstIcon = [folder getFirstIcon];
+		UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
+		innerFolderImageView.image = [firstIcon getIconImage:2];
+	}
 }
+
 %end
 
 

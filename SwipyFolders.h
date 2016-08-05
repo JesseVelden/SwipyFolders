@@ -313,9 +313,7 @@
 
 @interface SBFolderIconImageView : SBIconImageView
 - (SBFolderIcon *)_folderIcon;
-- (void)_showRightMinigrid;
 - (void)_showLeftMinigrid;
-- (void)_updateRasterization;
 @end
 
 @interface UIGestureRecognizerTarget : NSObject {
