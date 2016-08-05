@@ -145,6 +145,7 @@
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
+				<string>Open last opened app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -155,6 +156,7 @@
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
+				<integer>7</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -183,6 +185,7 @@
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
+				<string>Open last opened app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -193,6 +196,7 @@
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
+				<integer>7</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -221,6 +225,7 @@
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
+				<string>Open last opened app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -231,6 +236,7 @@
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
+				<integer>7</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -259,6 +265,7 @@
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
+				<string>Open last opened app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -269,6 +276,7 @@
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
+				<integer>7</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -297,6 +305,7 @@
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
+				<string>Open last opened app</string>
 				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
@@ -307,6 +316,7 @@
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
+				<integer>7</integer>
 				<integer>0</integer>
 			</array>
 		</dict>
@@ -329,22 +339,24 @@
 			<string>3D Touch</string>
 			<key>validTitles</key>
 			<array>
-				<string>Quick action on first app</string>
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
-				<string>Nothing - (Appendix/ Manila)</string>
+				<string>Open last opened app</string>
+				<string>Nothing</string>
 			</array>
 			<key>validValues</key>
 			<array>
-				<integer>4</integer>
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
+				<integer>7</integer>
 				<integer>0</integer>
 			</array>
 			<key>staticTextMessage</key>

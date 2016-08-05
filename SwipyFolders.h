@@ -20,7 +20,6 @@
 - (NSString*)bundleIdentifier;
 - (NSString*)displayName;
 - (NSString*)displayIdentifier;
-- (NSString*)bundleIdentifier;
 - (_Bool)statusBarHiddenForCurrentOrientation;
 - (_Bool)isRunning;
 @end;
@@ -38,7 +37,7 @@
 - (void)launchFromLocation:(NSInteger)location context:(id)context; 
 - (SBApplication*)application;
 - (id)folder;
-- (void)openApp;
+- (void)openAppFromFolder:(NSString*)folder;
 
 @end
 
@@ -170,9 +169,16 @@
 - (unsigned long long)indexOfIcon:(id)icon;
 @end
 
+@interface SBIconModel : NSObject
+- (SBIcon*)applicationIconForBundleIdentifier:(id)arg1;
+- (SBIcon*)applicationIconForDisplayIdentifier:(id)arg1;
+@end
+
 @interface SBIconViewMap
 - (SBIconView*)iconViewForIcon:(SBIcon*)icon;
 - (SBIconView*)mappedIconViewForIcon:(SBIcon*)icon;
++(SBIconViewMap *)homescreenMap;
+@property(readonly, nonatomic) SBIconModel *iconModel;
 
 @end
 
@@ -193,7 +199,7 @@
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer ;
 - (void)iconTapped:(SBIconView *)iconView;
 - (_Bool)hasOpenFolder;
-- (id)openFolder;
+- (SBFolder*)openFolder;
 - (void)scrollToIconListContainingIcon:(SBIcon *)icon animate:(_Bool)arg2;
 -(void)openFolder:(id)folder animated:(BOOL)animated;
 - (void)closeFolderAnimated:(_Bool)arg1;

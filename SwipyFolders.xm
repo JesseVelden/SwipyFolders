@@ -370,7 +370,7 @@ CPDistributedMessagingCenter *messagingCenter;
 			}
 	} else {
 		if(self.hasOpenFolder && !iconView.isFolderIconView && enabled) {
-			[iconView.icon openApp];
+			[iconView.icon openAppFromFolder:self.openFolder.displayName];
 			if(closeFolderOnOpen) [self closeFolderAnimated:NO withCompletion:nil]; 
 		}
 		
@@ -433,9 +433,12 @@ static BOOL isProtected = NO;
 		}
 	}
 
+	NSLog(@"Folder settings: %@", folderSettings);
+
 	NSMutableDictionary *sendInfo = [NSMutableDictionary new];
 	[sendInfo setObject:sendMethod forKey:@"method"];
 	[sendInfo setObject:sendAppIndex forKey:@"customAppIndex"];
+	if(folderSettings[@"lastOpenedApp"]) [sendInfo setObject:folderSettings[@"lastOpenedApp"] forKey:@"lastOpenedApp"];
 
 
 	return sendInfo;
@@ -505,6 +508,13 @@ static BOOL isProtected = NO;
 %new - (void)sf_method:(NSDictionary*)methodDict withForceTouch:(BOOL)forceTouch{
 	NSInteger method = [methodDict[@"method"] intValue];
 	NSInteger customAppIndex = [methodDict[@"customAppIndex"] intValue];
+	NSString *lastOpenedApp;
+	if([methodDict objectForKey:@"lastOpenedApp"] != nil) {
+		lastOpenedApp = methodDict[@"lastOpenedApp"];
+	} else if(method == 7) {
+		method = 2; 
+	}
+
 
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 
@@ -551,7 +561,7 @@ static BOOL isProtected = NO;
 			case 2: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
 				firstIcon = [folder getFirstIcon];
-				[firstIcon openApp];
+				[firstIcon openAppFromFolder:folder.displayName];
 
 			}break;
 
@@ -593,6 +603,23 @@ static BOOL isProtected = NO;
 				[folder openLastApp];
 			}break;
 
+			case 7: {
+				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
+				//Open the last opened app from the folder
+				SBIcon *icon;
+				if([[%c(SBIconController) sharedInstance] respondsToSelector:@selector(homescreenIconViewMap)]) {
+					icon = [[[[%c(SBIconController) sharedInstance] homescreenIconViewMap] iconModel] applicationIconForBundleIdentifier:lastOpenedApp]; //IOS 9.3
+				} else {
+					if ([[[%c(SBIconViewMap) homescreenMap] iconModel] respondsToSelector:@selector(applicationIconForBundleIdentifier:)]) {
+						icon = [[[%c(SBIconViewMap) homescreenMap] iconModel] applicationIconForBundleIdentifier:lastOpenedApp]; //IOS 8
+					} else {
+						icon = [[[%c(SBIconViewMap) homescreenMap] iconModel] applicationIconForDisplayIdentifier:lastOpenedApp]; //IOS 7
+					}
+				}
+				
+				[icon openAppFromFolder:folder.displayName];
+			}
+
 			default: 
 			break;
 		}
@@ -625,7 +652,7 @@ static BOOL isProtected = NO;
 %end
 
 %hook SBIcon
-%new - (void)openApp {
+%new - (void)openAppFromFolder:(NSString*)folderName {
 	if(HAS_BIOPROTECT) {
 		if ([[%c(BioProtectController) sharedInstance ] requiresAuthenticationForIdentifier: self.application.bundleIdentifier ]){ 
 			[[%c(BioProtectController) sharedInstance ] launchApplicationWithIdentifier: self.application.bundleIdentifier ];
@@ -633,6 +660,24 @@ static BOOL isProtected = NO;
 		}
 	}
 
+	//NSLog(@"From folder: %@", folderName);
+
+	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[folderName] mutableCopy];
+	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
+	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
+
+	[mutableFolderSettings setObject:self.application.bundleIdentifier forKey:@"lastOpenedApp"];
+	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName];
+
+	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
+	[preferences synchronize];
+
+	CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged";
+	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
+
+	NSLog(@"preferences folder: %@", preferences);
 
 	if([self respondsToSelector:@selector(launchFromLocation:context:)]) {
 		[self launchFromLocation:0 context:nil];
@@ -707,7 +752,7 @@ static BOOL isProtected = NO;
 		i++;
 	}
 
-	[[self iconAtIndexPath:indexPath] openApp];
+	[[self iconAtIndexPath:indexPath] openAppFromFolder:self.displayName];
 
 }
 
@@ -724,7 +769,7 @@ static BOOL isProtected = NO;
 			NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
 			SBIcon *icon = [self iconAtIndexPath:indexPath];
 			if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
-				[icon openApp];
+				[icon openAppFromFolder:self.displayName];
 				break;
 			}
 			i++;
