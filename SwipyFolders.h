@@ -87,8 +87,8 @@
 
 
 //New:
-- (NSInteger)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting;
-- (void)sf_method:(NSInteger)method withForceTouch:(BOOL)forceTouch customAppIndex:(NSInteger)customAppIndex;
+- (NSDictionary*)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting withDefaultCustomAppIndex:(NSInteger)globalAppIndex;
+- (void)sf_method:(NSDictionary*)methodInfo withForceTouch:(BOOL)forceTouch;
 - (void)sf_swipeUp:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture;
 - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture;
@@ -299,6 +299,7 @@
 @end
 
 @interface SBFolderIconImageView : SBIconImageView
+- (SBFolderIcon *)_folderIcon;
 @end
 
 

@@ -3,14 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>items</key>
-	<array>
+	<array>	
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Set enabled</string>
+			<string>APPEARANCE</string>
 		</dict>
-
 		<dict>
 			<key>PostNotification</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
@@ -23,20 +22,84 @@
 			<key>defaults</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs</string>
 			<key>key</key>
-			<string>customFolderEnabled</string>
+			<string>customFolderAppearance</string>
 			<key>id</key>
-			<string>customFolderEnabled</string>
+			<string>customFolderAppearance</string>
 			<key>label</key>
-			<string>Enabled</string>
+			<string>Enable custom Appearance</string>
+			<key>set</key>
+			<string>setValuePreference:forSpecifier:</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>customFolderEnableFolderPreview</string>
+			<key>id</key>
+			<string>customFolderEnableFolderPreview</string>
+			<key>label</key>
+			<string>Set first icon as Folder Preview</string>
+			<key>sublabel</key>
+			<string>Needs a respring</string>
 			<key>set</key>
 			<string>setValuePreference:forSpecifier:</string>
 		</dict>
 
 		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>customFolderHideGreyFolderBackground</string>
+			<key>id</key>
+			<string>customFolderHideGreyFolderBackground</string>
+			<key>label</key>
+			<string>Hide grey Folder Background</string>
+			<key>sublabel</key>
+			<string>Needs a respring</string>
+			<key>set</key>
+			<string>setValuePreference:forSpecifier:</string>
+		</dict>
+		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>FUNCTIONALITY</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>cellClass</key>
+			<string>SFSwitchTableCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>key</key>
+			<string>customFolderFunctionallity</string>
+			<key>id</key>
+			<string>customFolderFunctionallity</string>
+			<key>label</key>
+			<string>Enable custom Functionallity</string>
+			<key>set</key>
+			<string>setValuePreference:forSpecifier:</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>

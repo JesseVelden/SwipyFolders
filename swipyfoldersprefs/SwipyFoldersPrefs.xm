@@ -292,20 +292,17 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 - (void)viewWillAppear:(BOOL)animated {
 	[super viewWillAppear:animated];
 	[self.table reloadData];
-	NSLog(@"RELOAD");
 }
 
 - (id)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
 	PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
-	NSLog(@"Reloading table...");
 
 	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	NSDictionary *customFolderSettings = [preferences dictionaryForKey:@"customFolderSettings"];
 	NSDictionary *folderSettings = customFolderSettings[[specifier name]]; // >> Dit moet later een ID worden!
 
-	NSString *enabled = folderSettings[@"customFolderEnabled"];
-  	if([enabled intValue] == 1) {
+  	if([folderSettings[@"customFolderFunctionallity"] intValue] == 1 || [folderSettings[@"customFolderAppearance"] intValue] == 1) {
 		cell.detailTextLabel.text = @"Enabled";
 	} else {
 		cell.detailTextLabel.text = @"Not enabled";

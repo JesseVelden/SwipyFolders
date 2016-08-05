@@ -60,6 +60,8 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 
 	CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged"; //(CFStringRef)specifier.properties[@"PostNotification"];
 	if(toPost) CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
+
+	NSLog(@"mutableFolderSettings: %@", mutableCustomFolderSettings);
 }
 
 @implementation SFCustomFolderSettingsController
@@ -104,6 +106,8 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 	if(![specifier.identifier isEqualToString:@"customFolderEnabled"]) {
 		int method  = [folderSettings[specifier.identifier] intValue];
 		if(method == 5) {
+			//NSString *customAppIndexString = [NSString stringWithFormat:@"%@CustomAppIndex", specifier.identifier];
+
 			int customAppIndex  = [folderSettings[[NSString stringWithFormat:@"%@CustomAppIndex", specifier.identifier]] intValue];
 			cell.detailTextLabel.text = setCustomAppIndexTextForIndex(customAppIndex); 
 		}
@@ -177,12 +181,19 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 
 				cell.textLabel.text = setCustomAppIndexTextForIndex([appIndex intValue]);
 
+				//Set settings isn't working :(
 				NSString *specifierID = [NSString stringWithFormat:@"%@CustomAppIndex", [self.specifier identifier]];
-				NSLog(@"Folder: %@, ID: %@", folderName, specifierID);
-				setSetting(@"42", folderName, @"customFolderSwipeUpMethodCustomAppIndex"); //>> LATER EEN ID*/
-				setSetting(@"5", folderName, [self.specifier identifier]);
-				
 
+				NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
+				NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+
+				[mutableFolderSettings setObject:appIndexText forKey:specifierID];
+				[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName];
+
+				[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
+				[preferences synchronize];
+
+				setSetting(@"5", folderName, [self.specifier identifier]); //This works :P
 
 
 			}];
