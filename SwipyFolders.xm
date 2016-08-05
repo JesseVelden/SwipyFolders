@@ -567,14 +567,14 @@ static BOOL isProtected = NO;
 	NSArray *targets = MSHookIvar<NSMutableArray *>(otherGestureRecognizer, "_targets");
 	for(UIGestureRecognizerTarget *_target in targets) {
 		id target = MSHookIvar<id>(_target, "_target");
-		if(swipeDownMethod && [target isKindOfClass:%c(SBSearchScrollView)]) {
+		if([target isKindOfClass:%c(SBSearchScrollView)]) {
 			otherGestureRecognizer.enabled = NO;
 		}
-		if(swipeUpMethod == 4 && [target isKindOfClass:%c(SBIconScrollView)]) {
+		/*if([target isKindOfClass:%c(SBIconScrollView)]) {
 			conflictGesture = YES;
 			otherGestureRecognizer.enabled = NO;
 			break;
-		}
+		}*/
 	}
 
 	return !conflictGesture;
