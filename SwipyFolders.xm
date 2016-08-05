@@ -152,6 +152,7 @@ static void respring() {
 	SBIcon *firstIcon = [folder getFirstIcon];
 
 	innerFolderImageView.image = [firstIcon getIconImage:2];
+	MSHookIvar<UIImageView *>([self _folderIconImageView], "_rightWrapperView").image = [firstIcon getIconImage:2];
 /*
 	if(hideGreyFolderBackground || [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1){
 		//MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
@@ -160,7 +161,11 @@ static void respring() {
 
 	
 }
+
 %end
+
+
+
 
 %hook SBFolderIconImageView
 -(void)layoutSubviews {
@@ -183,6 +188,18 @@ static void respring() {
 
 		MSHookIvar<UIView *>(self, "_backgroundView").hidden = YES;
 	}
+}
+
+/*
+- (void)_showRightMinigrid{%log; %orig;}
+- (void)_showLeftMinigrid{%log; %orig;}
+*/
+- (void)_updateRasterization{
+	SBFolder *folder = self._folderIcon.folder;
+	SBIcon *firstIcon = [folder getFirstIcon];
+	UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
+	innerFolderImageView.image = [firstIcon getIconImage:2];
+
 }
 %end
 
@@ -660,7 +677,7 @@ static BOOL isProtected = NO;
 		}
 	}
 
-	//NSLog(@"From folder: %@", folderName);
+	NSLog(@"From folder: %@", folderName);
 
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];

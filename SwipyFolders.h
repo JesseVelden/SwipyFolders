@@ -234,12 +234,19 @@
 - (void)iconImageDidUpdate:(SBIcon *)icon;
 - (id)miniGridCellImageForIcon:(SBIcon*)icon;
 
+- (id)gridImages;
+
 @end
 
 @interface SBFolderIconView : SBIconView
 - (SBFolder *)folder;
 - (SBFolderIcon*)folderIcon;
 - (UIImageView *)_folderIconImageView;
+
+- (void)scrollToGapOrTopIfFullOfPage:(unsigned long long)arg1 animated:(_Bool)arg2;
+- (void)scrollToTopOfPage:(unsigned long long)arg1 animated:(_Bool)arg2;
+- (void)scrollToFirstGapAnimated:(_Bool)arg1;
+- (void)scrollToTopOfFirstPageAnimated:(_Bool)arg1;
 
 
 - (UIImageView *)customImageView;
@@ -306,8 +313,10 @@
 
 @interface SBFolderIconImageView : SBIconImageView
 - (SBFolderIcon *)_folderIcon;
+- (void)_showRightMinigrid;
+- (void)_showLeftMinigrid;
+- (void)_updateRasterization;
 @end
-
 
 @interface UIGestureRecognizerTarget : NSObject {
 	id _target;
