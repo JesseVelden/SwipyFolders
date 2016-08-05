@@ -27,6 +27,8 @@
 
 
 @interface SBIcon : NSObject
++ (struct CGSize)defaultIconImageSize;
++ (struct CGSize)defaultIconSize;
 @property(readonly, copy, nonatomic) NSString *displayName;
 - (UIImage*)getIconImage:(int)arg1;
 - (_Bool)isFolderIcon;

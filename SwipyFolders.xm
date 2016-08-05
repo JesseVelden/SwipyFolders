@@ -123,41 +123,6 @@ static void respring() {
 	[alert show];
 }
 */
-/*
-%hook SBIconGridImage
-+ (struct CGRect)rectAtIndex:(NSUInteger)index maxCount:(NSUInteger)count{
-	if (enableFolderPreview && enabled) {
-
-		CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
-		//Full size is 60.
-		if(hideGreyFolderBackground) {
-			iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 60 : 69; //TEST ON IPAD!!!
-		}
-		if (index == 0) {
-			return CGRectMake(0, 0, iconSize, iconSize);
-		} else {
-			return CGRectMake(iconSize / 2, iconSize, 1, 1);
-		}
-	}
-	return %orig;
-}
-
-%end
-*/
-
-/*
-%hook SBFolderIcon
-- (id)miniGridCellImageForIcon:(SBIcon*)icon {
-	if([icon isKindOfClass:%c(SBFolderIcon)]) {
-		SBIcon *firstIcon = [icon.folder getFirstIcon];
-		//[[[SBIconController sharedInstance] homescreenIconViewMap] iconViewForIcon:firstIcon];
-		return [firstIcon getIconImage:2];
-	}
-
-	return %orig;
-}
-%end
-*/
 
 %hook SBFolderIconView
 
@@ -182,10 +147,27 @@ static void respring() {
 
 	if(hideGreyFolderBackground){
 		MSHookIvar<UIView *>([self _folderIconImageView], "_backgroundView").hidden = YES;
-		[[self _folderIconImageView] bringSubviewToFront:innerFolderImageView];
 	}
 
 	
+}
+%end
+
+%hook SBFolderIconImageView
+-(void)layoutSubviews {
+  	%orig;
+
+  	if(hideGreyFolderBackground){
+	  	CGSize iconImageSize = [%c(SBIconView) defaultIconImageSize];
+
+		UIView *gridContainer  = MSHookIvar<UIView *>(self, "_pageGridContainer");
+		CGRect orig = gridContainer.frame;
+		gridContainer.frame = CGRectMake(0, 0, iconImageSize.width, iconImageSize.height);
+
+		UIView *wrapper = MSHookIvar<UIView*>(self,"_leftWrapperView");
+		orig = wrapper.frame;
+		wrapper.frame = CGRectMake(0, 0, iconImageSize.width, iconImageSize.height);
+	}
 }
 %end
 
@@ -196,7 +178,6 @@ static NSDate *lastTouchedTime;
 static NSDate *lastTappedTime;
 static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
-static BOOL shortcutMenuOpen = NO;
 
 CPDistributedMessagingCenter *messagingCenter;
 
@@ -267,9 +248,6 @@ CPDistributedMessagingCenter *messagingCenter;
 		if([[%c(SBIconController) sharedInstance] respondsToSelector:@selector(closeFolderAnimated:withCompletion:)]) {
 			[[%c(SBIconController) sharedInstance] closeFolderAnimated:YES withCompletion:nil]; 
 		}
-	}
-	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
-		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 	}
 }
 
@@ -383,13 +361,6 @@ CPDistributedMessagingCenter *messagingCenter;
 		%orig;
 	}
 	forceTouchRecognized = NO;
-}
-
-- (void)applicationShortcutMenuDidDismiss:(id)arg1{
-	shortcutMenuOpen = NO;
-	%orig;
-	UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-	[[rootView.view viewWithTag:342880] removeFromSuperview];
 }
 
 %end
@@ -507,6 +478,13 @@ static BOOL isProtected = NO;
 	NSLog(@"WE GAAN DRAIIEEUIJEEn met nummero:%ld", (long)method);
 
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
+	if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
+		SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
+		if(shortcutMenu.isPresented) {
+			return;
+		}
+	}
+
 	if(enabled && !iconController.isEditing) {
 
 		if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
@@ -516,21 +494,16 @@ static BOOL isProtected = NO;
 			case 1: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
 
-				SBFolderIconView *folderIconView = (SBFolderIconView*)self;
-				[folderIconView sendSubviewToBack:folderIconView.customImageView];
 				if(HAS_BIOPROTECT) {
 					if ([[%c(BioProtectController) sharedInstance ] requiresAuthenticationForOpeningFolder: folder ]){ 
 						[[%c(BioProtectController) sharedInstance ] authenticateForOpeningFolder: folder ]; 
+						return;
 					}
-				} else {
-					[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
 				}
-				
-				if(forceTouch) self.highlighted = NO;
 
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.8 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
-					[folderIconView bringSubviewToFront:folderIconView.customImageView];
-				});	
+				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+
+				if(forceTouch) self.highlighted = NO;
 
 			}break;
 
@@ -548,34 +521,23 @@ static BOOL isProtected = NO;
 
 			case 4: {
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
+					
+					[iconController.presentedShortcutMenu dismissAnimated:NO completionHandler:nil];
 					SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
-
 					if(!shortcutMenu.isPresented) {
-
-						firstIcon = [folder getFirstIcon];
+						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
 
 						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
 						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+						[rootView.view addSubview:iconController.presentedShortcutMenu];
+						[iconController.presentedShortcutMenu presentAnimated:YES];
 
 						SBIconView *editedIconView = MSHookIvar<SBIconView *>(iconController.presentedShortcutMenu, "_proxyIconView");
 						SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(editedIconView, "_iconImageView");
 						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 						folderImageView.image = [firstIcon getIconImage:2];
-
-						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-
-						[rootView.view insertSubview:iconController.presentedShortcutMenu atIndex:5];
-	
-						[iconController.presentedShortcutMenu presentAnimated:YES];
-						[iconController applicationShortcutMenuDidPresent:iconController.presentedShortcutMenu]; 
-						
-						shortcutMenuOpen = YES;
-
-					} else {
-						NSLog(@"CLOSED GATE&&&&&*********");
-						[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil];
-						[iconController applicationShortcutMenuDidDismiss:iconController.presentedShortcutMenu];
-						//[iconController.presentedShortcutMenu dealloc];
+						//[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil]; //HIERMEE LAAT JE DE STATUSBAR WEER ZIEN!
 					}
 				}
 			}break;
@@ -636,11 +598,6 @@ static BOOL isProtected = NO;
 		[self launchFromLocation:0];
 	} else if ([self respondsToSelector:@selector(launch)]) {
 		[self launch];
-	}
-
-
-	if([[%c(SBAppStatusBarManager) sharedInstance] respondsToSelector:@selector(showStatusBar)]) {
-		[[%c(SBAppStatusBarManager) sharedInstance] showStatusBar];
 	}
 	
 }
