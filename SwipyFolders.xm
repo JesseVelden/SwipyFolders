@@ -405,7 +405,7 @@ static BOOL isProtected = NO;
 	NSInteger sendMethod = globalSetting;
 	NSString *method = [NSString stringWithFormat:@"customFolder%@",setting];
 	
-	if([folderSettings objectForKey:method] && folderSettings[@"customFolderEnabled"]){
+	if([folderSettings objectForKey:method] && [folderSettings[@"customFolderEnabled"] intValue] == 1){
 		sendMethod = [[folderSettings objectForKey:method] intValue];
 	}
 
@@ -501,7 +501,16 @@ static BOOL isProtected = NO;
 					}
 				}
 
+				SBFolderIconView *folderIconView = (SBFolderIconView*)self;
+				UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>([folderIconView _folderIconImageView], "_leftWrapperView");
+				innerFolderImageView.hidden = YES;
+				
+
 				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+					innerFolderImageView.hidden = NO;
+				});	
 
 				if(forceTouch) self.highlighted = NO;
 
