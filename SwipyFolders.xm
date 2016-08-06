@@ -521,7 +521,6 @@ static BOOL isProtected = NO;
 	[self sf_method:[self getFolderSetting:@"SwipeDownMethod" withDefaultSetting:swipeDownMethod withDefaultCustomAppIndex:swipeDownMethodCustomAppIndex] withForceTouch:NO];
 }
 
-//static UIImageView *custom3DImageView;
 %new - (void)sf_method:(NSDictionary*)methodDict withForceTouch:(BOOL)forceTouch{
 	NSInteger method = [methodDict[@"method"] intValue];
 	NSInteger customAppIndex = [methodDict[@"customAppIndex"] intValue];
@@ -531,7 +530,6 @@ static BOOL isProtected = NO;
 	} else if(method == 7) {
 		method = 2; 
 	}
-
 
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 
@@ -546,9 +544,6 @@ static BOOL isProtected = NO;
 
 	if(enabled && !iconController.isEditing) {
 
-		if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-			if(iconController.presentedShortcutMenu) [iconController.presentedShortcutMenu removeFromSuperview];
-		}
 		switch (method) {
 			case 1: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
@@ -602,6 +597,7 @@ static BOOL isProtected = NO;
 						[iconController.presentedShortcutMenu presentAnimated:YES];
 
 						SBIconView *editedIconView = MSHookIvar<SBIconView *>(iconController.presentedShortcutMenu, "_proxyIconView");
+						editedIconView.labelView.hidden = YES;
 						SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(editedIconView, "_iconImageView");
 						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 						folderImageView.image = [firstIcon getIconImage:2];

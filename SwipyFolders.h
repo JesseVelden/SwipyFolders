@@ -96,6 +96,7 @@
 - (UIImageView *)_currentImageView;
 - (void)setWallpaperRelativeCenter:(struct CGPoint)arg1;
 - (void)setIsEditing:(_Bool)arg1;
+- (UIView*)labelView;
 
 
 //New:
