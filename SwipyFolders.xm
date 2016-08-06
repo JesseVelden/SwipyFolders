@@ -623,18 +623,20 @@ static BOOL isProtected = NO;
 			case 7: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
 				//Open the last opened app from the folder
-				SBIcon *icon;
+
+				//Using SBLeafIcon in order to also load SBBookmarkIcons!!
+
+				SBLeafIcon *icon = nil;
 				if([[%c(SBIconController) sharedInstance] respondsToSelector:@selector(homescreenIconViewMap)]) {
-					icon = [[[[%c(SBIconController) sharedInstance] homescreenIconViewMap] iconModel] applicationIconForBundleIdentifier:lastOpenedApp]; //IOS 9.3
+					icon = [[[[%c(SBIconController) sharedInstance] homescreenIconViewMap] iconModel] leafIconForIdentifier:lastOpenedApp]; //IOS 9.3
 				} else {
-					if ([[[%c(SBIconViewMap) homescreenMap] iconModel] respondsToSelector:@selector(applicationIconForBundleIdentifier:)]) {
-						icon = [[[%c(SBIconViewMap) homescreenMap] iconModel] applicationIconForBundleIdentifier:lastOpenedApp]; //IOS 8
-					} else {
-						icon = [[[%c(SBIconViewMap) homescreenMap] iconModel] applicationIconForDisplayIdentifier:lastOpenedApp]; //IOS 7
+					if ([[[%c(SBIconViewMap) homescreenMap] iconModel] respondsToSelector:@selector(leafIconForIdentifier:)]) {
+						icon = [[[%c(SBIconViewMap) homescreenMap] iconModel] leafIconForIdentifier:lastOpenedApp]; //IOS 4+
 					}
 				}
 				
 				[icon openAppFromFolder:folder.displayName];
+				
 			}
 
 			default: 
@@ -677,7 +679,13 @@ static BOOL isProtected = NO;
 		}
 	}
 
-	NSLog(@"From folder: %@", folderName);
+	NSString *lastOpenedIdentifier;
+	if(![self isKindOfClass:%c(SBLeafIcon)]){
+		lastOpenedIdentifier = self.application.bundleIdentifier;
+	} else {
+		SBLeafIcon *leafIcon = (SBLeafIcon*)self;
+		lastOpenedIdentifier = leafIcon.leafIdentifier;
+	}
 
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
@@ -685,7 +693,7 @@ static BOOL isProtected = NO;
 	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
 	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
 
-	[mutableFolderSettings setObject:self.application.bundleIdentifier forKey:@"lastOpenedApp"];
+	[mutableFolderSettings setObject:lastOpenedIdentifier forKey:@"lastOpenedApp"];
 	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName];
 
 	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
@@ -694,7 +702,7 @@ static BOOL isProtected = NO;
 	CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged";
 	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
 
-	NSLog(@"preferences folder: %@", preferences);
+
 
 	if([self respondsToSelector:@selector(launchFromLocation:context:)]) {
 		[self launchFromLocation:0 context:nil];
@@ -706,6 +714,14 @@ static BOOL isProtected = NO;
 	
 }
 
+%end
+
+
+%hook SBFolderView
+- (void)_setFolderName:(id)arg1 { //YAAY FOUND IT!
+	%log;
+	%orig;
+}
 %end
 
 

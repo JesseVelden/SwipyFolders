@@ -51,6 +51,7 @@
 - (id)defaultDisplayName;
 - (id)allIcons;
 - (id)orderedIcons;
+- (void)setDefaultDisplayName:(id)arg1;
 
 - (NSIndexPath*)getFolderIndexPathForIndex:(int)index;
 - (void)openLastApp;
@@ -63,8 +64,20 @@
 
 @end
 
+@interface SBFolderView : UIView
+- (void)_setFolderName:(id)arg1;
+@end
+
 @interface SBApplicationIcon : NSObject
 - (SBApplication*)application;
+@end
+
+@interface SBLeafIcon : SBIcon
+- (id)leafIdentifier;
+@end
+
+@interface SBBookmarkIcon : SBLeafIcon //Eigenlijk SBLeafIcon
+@property(readonly, nonatomic) NSURL *launchURL;
 @end
 
 @interface SBIconIndexMutableList : NSObject
@@ -172,6 +185,7 @@
 @interface SBIconModel : NSObject
 - (SBIcon*)applicationIconForBundleIdentifier:(id)arg1;
 - (SBIcon*)applicationIconForDisplayIdentifier:(id)arg1;
+- (id)leafIconForIdentifier:(id)arg1;
 @end
 
 @interface SBIconViewMap
