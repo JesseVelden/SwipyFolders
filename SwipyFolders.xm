@@ -1,4 +1,21 @@
+#import <CommonCrypto/CommonDigest.h>
 #import "SwipyFolders.h"
+
+//Helper functions:
+/*
+static NSString * calculateMD5(NSString * input) {
+    const char *cStr = [input UTF8String];
+    unsigned char digest[CC_MD5_DIGEST_LENGTH];
+    CC_MD5( cStr, strlen(cStr), digest ); 
+
+    NSMutableString *output = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+
+    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
+    [output appendFormat:@"%02x", digest[i]];
+
+    return  output;
+}
+*/
 
 static NSUserDefaults *preferences;
 static bool enabled;
@@ -124,49 +141,12 @@ static void respring() {
 }
 */
 
-/*
-%hook SBFolderIconView
-
-- (void)setIcon:(SBIcon *)icon {
-	%orig;
-	if(enabled && enableFolderPreview) [self setCustomFolderIcon];
-}
-
-- (void)_applyEditingStateAnimated:(_Bool)arg1 { //Update folder icon when done editing
-	%orig;
-	if(enabled && enableFolderPreview) [self setCustomFolderIcon];
-}
-
-%new - (void)setCustomFolderIcon {
-
-	SBFolder *folder = self.icon.folder;
-	NSDictionary *folderSettings = customFolderSettings[folder.displayName]; // >> Dit moet later een ID worden!
-
-	if([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings objectForKey:@"customFolderEnableFolderPreview"] != nil && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0) {
-		return;
-	}
-
-	MSHookIvar<UIImageView *>([self _folderIconImageView], "_rightWrapperView").hidden = YES;
-	UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>([self _folderIconImageView], "_leftWrapperView");
-
-	SBIcon *firstIcon = [folder getFirstIcon];
-
-	innerFolderImageView.image = [firstIcon getIconImage:2];
-	MSHookIvar<UIImageView *>([self _folderIconImageView], "_rightWrapperView").image = [firstIcon getIconImage:2];
-
-	
-}
-
-%end
-*/
-
-
 %hook SBFolderIconImageView
 -(void)layoutSubviews {
   	%orig;
 
   	SBFolder *folder = self._folderIcon.folder;
-	NSDictionary *folderSettings = customFolderSettings[folder.displayName]; // >> Dit moet later een ID worden!
+	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 
 
   	if(hideGreyFolderBackground || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)){
@@ -189,9 +169,9 @@ static void respring() {
  	%orig;
  	if(enabled && enableFolderPreview){
  		SBFolder *folder = self._folderIcon.folder;
- 		NSDictionary *folderSettings = customFolderSettings[folder.displayName]; // >> Dit moet later een ID worden!
+ 		NSDictionary *folderSettings = customFolderSettings[folder.folderID];
  		
- 		if([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings objectForKey:@"customFolderEnableFolderPreview"] != nil && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0) {
+ 		if([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil || [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0)) {
 			return;
 		}
 	
@@ -204,10 +184,12 @@ static void respring() {
 %end
 
 
+
 static SBIcon *firstIcon;
 static SBIconView *tappedIcon;
 static NSDate *lastTouchedTime;
 static NSDate *lastTappedTime;
+static NSDate *forceTouchOpenedTime;
 static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
 
@@ -228,17 +210,19 @@ CPDistributedMessagingCenter *messagingCenter;
 %new - (NSDictionary*)handleMessageNamed:(NSString *)name withUserInfo:(NSDictionary *)userinfo { //Only going to use for sending over folders so no additional checks needed
 	NSArray *folderArray = [[[self rootFolder] folderIcons] allObjects];
 
+	/*
 	NSArray *sortedFolderArray = [NSArray new];
 	sortedFolderArray = [folderArray sortedArrayUsingComparator:^NSComparisonResult(SBFolderIcon* a, SBFolderIcon* b) {
 	    NSString *first = a.folder.displayName;
 	    NSString *second = b.folder.displayName;
 	    return [first compare:second];
 	}];
+	*/
 
 	NSMutableDictionary *foldersRepresentation = [NSMutableDictionary dictionary];
 
-	for (int i=0; i<[sortedFolderArray count]; i++) {
-		SBFolderIcon *folderIcon = [sortedFolderArray objectAtIndex:i];
+	for (int i=0; i<[folderArray count]; i++) {
+		SBFolderIcon *folderIcon = [folderArray objectAtIndex:i];
 		SBFolder *folder = folderIcon.folder;
 
 		//NSString *defaultDisplayName = MSHookIvar<NSString*>(folder, "defaultDisplayName");
@@ -249,16 +233,21 @@ CPDistributedMessagingCenter *messagingCenter;
 			if(appIcon.application.bundleIdentifier != nil) [applicationBundleIDs addObject:appIcon.application.bundleIdentifier];
 			
 		}
-		//DEFAULT DISPLAY TOO!
 		NSMutableDictionary *folderDictionary = [NSMutableDictionary dictionary];
 		[folderDictionary setObject:folder.displayName forKey:@"displayName"]; // String
 		//[folderDictionary setObject:folder.orderedIcons forKey:@"icons"]; //SBApplicationIcon
 		//[folderDictionary setObject:folder.lists forKey:@"lists"]; //SBIconListModel
-		[folderDictionary setObject:applicationBundleIDs forKey:@"applicationBundleIDs"]; //NSArray with bundle id strings 
+
+		[folderDictionary setObject:applicationBundleIDs forKey:@"applicationBundleIDs"]; //NSArray with bundle id strings
+
+		NSString *folderID = folder.folderID;
+
+		[folderDictionary setObject:folderID forKey:@"folderID"]; 
 		
-		[foldersRepresentation setObject:folderDictionary forKey:[NSString stringWithFormat:@"%d", i]]; 
+		[foldersRepresentation setObject:folderDictionary forKey:folderID]; //[NSString stringWithFormat:@"%d", i]
 	}
 
+	HBLogDebug(@"%@", foldersRepresentation);
 	return foldersRepresentation;
 }
 
@@ -387,7 +376,7 @@ CPDistributedMessagingCenter *messagingCenter;
 			}
 	} else {
 		if(self.hasOpenFolder && !iconView.isFolderIconView && enabled) {
-			[iconView.icon openAppFromFolder:self.openFolder.displayName];
+			[iconView.icon openAppFromFolder:self.openFolder.folderID];
 			if(closeFolderOnOpen) [self closeFolderAnimated:NO withCompletion:nil]; 
 		}
 		
@@ -434,7 +423,7 @@ static BOOL isProtected = NO;
 
 %new - (NSDictionary*)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting withDefaultCustomAppIndex:(NSInteger)globalAppIndex {
 	SBFolder *folder = ((SBIconView *)self).icon.folder;
-	NSDictionary *folderSettings = customFolderSettings[folder.displayName]; // >> Dit moet later een ID worden!
+	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 
 
 	NSNumber *sendMethod = [NSNumber numberWithInt:globalSetting];
@@ -573,7 +562,7 @@ static BOOL isProtected = NO;
 			case 2: {
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
 				firstIcon = [folder getFirstIcon];
-				[firstIcon openAppFromFolder:folder.displayName];
+				[firstIcon openAppFromFolder:folder.folderID];
 
 			}break;
 
@@ -587,7 +576,10 @@ static BOOL isProtected = NO;
 					
 					[iconController.presentedShortcutMenu dismissAnimated:NO completionHandler:nil];
 					SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
-					if(!shortcutMenu.isPresented) {
+
+					NSDate *nowTime = [[NSDate date] retain];
+
+					if(!shortcutMenu.isPresented && (forceTouchOpenedTime == nil || [nowTime timeIntervalSinceDate:forceTouchOpenedTime] > 1)) {
 						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
 
 						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
@@ -602,6 +594,8 @@ static BOOL isProtected = NO;
 						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 						folderImageView.image = [firstIcon getIconImage:2];
 						//[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil]; //HIERMEE LAAT JE DE STATUSBAR WEER ZIEN!
+
+						forceTouchOpenedTime = nowTime;
 					}
 				}
 			}break;
@@ -631,7 +625,7 @@ static BOOL isProtected = NO;
 					}
 				}
 				
-				[icon openAppFromFolder:folder.displayName];
+				[icon openAppFromFolder:folder.folderID];
 				
 			}
 
@@ -667,7 +661,7 @@ static BOOL isProtected = NO;
 %end
 
 %hook SBIcon
-%new - (void)openAppFromFolder:(NSString*)folderName {
+%new - (void)openAppFromFolder:(NSString*)folderID {
 	if(HAS_BIOPROTECT) {
 		if ([[%c(BioProtectController) sharedInstance ] requiresAuthenticationForIdentifier: self.application.bundleIdentifier ]){ 
 			[[%c(BioProtectController) sharedInstance ] launchApplicationWithIdentifier: self.application.bundleIdentifier ];
@@ -685,12 +679,12 @@ static BOOL isProtected = NO;
 
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[folderName] mutableCopy];
+	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[folderID] mutableCopy];
 	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
 	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
 
 	[mutableFolderSettings setObject:lastOpenedIdentifier forKey:@"lastOpenedApp"];
-	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName];
+	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
 
 	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 	[preferences synchronize];
@@ -712,16 +706,111 @@ static BOOL isProtected = NO;
 
 %end
 
-
+static NSString *oldFolderID;
 %hook SBFolderView
-- (void)_setFolderName:(id)arg1 { //YAAY FOUND IT!
-	%log;
+
+/*
+- (void)_setFolderName:(NSString*)newFolderName { //This isn't even needed anymore!!
+	
+	//oldFolderID = self.folder.folderID;
+	//HBLogDebug(@"De folder: %@ wordt vernoemd naar: %@", oldFolderName, newFolderName);
 	%orig;
+	
+	NSString* newFolderID = [self.folder folderID];
+	HBLogDebug(@"De folder: %@ wordt vernoemd naar: %@", oldFolderID, newFolderID);
+	[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
+	oldFolderID = newFolderID;
+}*/
+
+- (void)setEditing:(_Bool)editing animated:(_Bool)arg2{
+	%orig; 
+	if(editing == 0 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
+		NSString* newFolderID = [self.folder folderID];
+		HBLogDebug(@"De folder: %@ wordt vernoemd naar: %@", oldFolderID, newFolderID);
+		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
+		//oldFolderID = newFolderID; //If any further changes
+	} 
+	else if(editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
+		oldFolderID = [[self.folder folderID] retain];
+	}
+
+
+}
+
+- (void)cleanupAfterClosing { //Works but what if Springboard crashes while still in editing mode >> then we've corrupted settings
+	%orig;
+	if(self.editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
+		NSString* newFolderID = [self.folder folderID];
+		HBLogDebug(@"CLEANUP: de %@ wordt vernoemd naar: %@", oldFolderID, newFolderID);
+		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
+		
+	}
+}
+
+
+
+%end
+
+/*
+%hook SBFolderIcon
+- (void)node:(id)arg1 didRemoveContainedNodeIdentifiers:(id)nodeList {
+	%orig;
+	NSArray *nodeArray = [nodeList allObjects];
+	id firstObject = [nodeArray objectAtIndex:0];
+	if([firstObject isKindOfClass:%c(SBIconListModel)]) {
+		SBIconListModel *iconListModel = (SBIconListModel*)firstObject;
+		if(iconListModel.folder.displayName) %log;
+	}
 }
 %end
+*/
 
 
 %hook SBFolder
+
+%new - (NSString*)folderID {
+	//Misschien iets meer optimalisatie. Gewoon geen md5
+	SBIcon *firstIcon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]]]; //To ignore nested folder settings
+
+	NSString *firstIconIdentifier;
+	if(![firstIcon isKindOfClass:%c(SBLeafIcon)]){
+		firstIconIdentifier = firstIcon.application.bundleIdentifier;
+	} else {
+		SBLeafIcon *leafIcon = (SBLeafIcon*)firstIcon;
+		firstIconIdentifier = leafIcon.leafIdentifier;
+	}
+
+
+	return [self createFolderIDWithDisplayName:self.displayName andFirstIconIdentifier:firstIconIdentifier];
+}
+
+%new - (NSString*)createFolderIDWithDisplayName:displayName andFirstIconIdentifier:(NSString*)firstIconIdentifier {
+
+	NSString *folderID = [NSString stringWithFormat:@"%@-%@", displayName, firstIconIdentifier]; //calculateMD5(); //md5? slower :(
+
+	return folderID;
+}
+
+%new - (void)replaceOldFolderID:(NSString*)oldFolderID byNewFolderID:(NSString*)newFolderID {
+	if(oldFolderID && ![oldFolderID isEqualToString:newFolderID]) {
+		HBLogDebug(@"YOO WE GAAN BEGINNEN");
+		preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+		NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+		NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
+		if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
+		HBLogDebug(@"WE ZIJN VERDER");
+		[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
+		[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:newFolderID];
+
+		[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
+		[preferences synchronize];
+
+		CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged";
+		CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
+
+	}
+}
+
 
 %new - (NSIndexPath*)getFolderIndexPathForIndex:(int)index { //The beauty of long method names :P
 	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists");
@@ -781,7 +870,7 @@ static BOOL isProtected = NO;
 		i++;
 	}
 
-	[[self iconAtIndexPath:indexPath] openAppFromFolder:self.displayName];
+	[[self iconAtIndexPath:indexPath] openAppFromFolder:self.folderID];
 
 }
 
@@ -798,7 +887,7 @@ static BOOL isProtected = NO;
 			NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
 			SBIcon *icon = [self iconAtIndexPath:indexPath];
 			if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
-				[icon openAppFromFolder:self.displayName];
+				[icon openAppFromFolder:self.folderID];
 				break;
 			}
 			i++;

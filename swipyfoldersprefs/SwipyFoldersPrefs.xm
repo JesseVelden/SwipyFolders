@@ -206,11 +206,6 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 @end
 
 
-
-
-
-
-
 //Interface is imported
 @implementation SFFolderListController
 
@@ -228,8 +223,13 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 		[header setProperty:@"Folders" forKey:@"footerText"];
 		[specs insertObject:header atIndex:0];
 
-		for(int i=0; i<[foldersDictionary count]; i++) {
-			NSDictionary *currentFolder = foldersDictionary[[NSString stringWithFormat:@"%d", i]];
+		NSArray * sortedFolderKeys = [[foldersDictionary allKeys] sortedArrayUsingSelector: @selector(caseInsensitiveCompare:)];
+
+		//for(int i=0; i<[foldersDictionary count]; i++) {
+		for (id key in sortedFolderKeys) {
+			NSDictionary *currentFolder = [foldersDictionary objectForKey:key];
+
+			//NSDictionary *currentFolder = foldersDictionary[[NSString stringWithFormat:@"%d", i]];
 			PSSpecifier *spec = [PSSpecifier preferenceSpecifierNamed:currentFolder[@"displayName"] target:self set:NULL get:NULL detail:%c(SFCustomFolderSettingsController) cell:PSLinkCell edit:nil];
 			if ([UIImage respondsToSelector:@selector(_applicationIconImageForBundleIdentifier:format:scale:)]) {
 				NSArray *applicationBundleIDs = currentFolder[@"applicationBundleIDs"];
@@ -238,7 +238,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 			
 
 			[spec setProperty:@"1" forKey:@"isController"];
-			[spec setProperty:@"IDIDIDIDID" forKey:@"id"];
+			[spec setProperty:currentFolder[@"folderID"] forKey:@"folderID"];
 			[specs addObject:spec];
 
 		}
@@ -300,7 +300,9 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	NSDictionary *customFolderSettings = [preferences dictionaryForKey:@"customFolderSettings"];
-	NSDictionary *folderSettings = customFolderSettings[[specifier name]]; // >> Dit moet later een ID worden!
+
+	NSString *folderID = [specifier propertyForKey:@"folderID"];
+	NSDictionary *folderSettings = customFolderSettings[folderID]; // >> Dit moet later een ID worden!
 
   	if([folderSettings[@"customFolderFunctionallity"] intValue] == 1 || [folderSettings[@"customFolderAppearance"] intValue] == 1) {
 		cell.detailTextLabel.text = @"Enabled";

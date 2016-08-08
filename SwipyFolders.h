@@ -41,6 +41,7 @@
 
 @end
 
+
 @interface SBFolder : NSObject
 @property(readonly, nonatomic) long long listCount;
 @property(readonly, nonatomic) long long _maxIconCountInLists;
@@ -51,7 +52,14 @@
 - (id)defaultDisplayName;
 - (id)allIcons;
 - (id)orderedIcons;
-- (void)setDefaultDisplayName:(id)arg1;
+- (void)setDefaultDisplayName:(SBFolder*)folder;
+- (NSIndexPath*)indexPathForIcon:(id)arg1;
+
+
+- (NSString*)createFolderIDWithDisplayName:displayName andFirstIconIdentifier:(NSString*)firstIconIdentifier;
+- (NSString*)folderID;
+- (void)replaceOldFolderID:(NSString*)oldFolderID byNewFolderID:(NSString*)newFolderID;
+
 
 - (NSIndexPath*)getFolderIndexPathForIndex:(int)index;
 - (void)openLastApp;
@@ -64,8 +72,18 @@
 
 @end
 
+@interface SBIconListModel : NSObject
+@property(readonly, nonatomic) __weak SBFolder *folder; 
+- (void)removeListObserver:(id)arg1;
+- (void)removeNodeObserver:(id)arg1;
+@end
+
 @interface SBFolderView : UIView
+@property(retain, nonatomic) SBFolder *folder; 
+@property(readonly, nonatomic, getter=isEditing) _Bool editing; 
 - (void)_setFolderName:(id)arg1;
+- (void)setEditing:(_Bool)arg1 animated:(_Bool)arg2;
+- (void)cleanupAfterClosing;
 @end
 
 @interface SBApplicationIcon : NSObject
@@ -97,7 +115,6 @@
 - (void)setWallpaperRelativeCenter:(struct CGPoint)arg1;
 - (void)setIsEditing:(_Bool)arg1;
 - (UIView*)labelView;
-
 
 //New:
 - (NSDictionary*)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting withDefaultCustomAppIndex:(NSInteger)globalAppIndex;
@@ -168,6 +185,7 @@
 
 @end
 
+
 @interface SBIconListView : UIView
 -(void)setIconsNeedLayout;
 -(void)layoutIconsIfNeeded:(double)needed domino:(BOOL)domino;
@@ -175,6 +193,7 @@
 -(CGPoint)originForIcon:(id)icon;
 -(CGPoint)originForIconAtIndex:(unsigned)index;
 -(CGSize)defaultIconSize;
+
 @end
 
 @interface SBRootIconListView : SBIconListView
@@ -187,6 +206,7 @@
 - (SBIcon*)applicationIconForBundleIdentifier:(id)arg1;
 - (SBIcon*)applicationIconForDisplayIdentifier:(id)arg1;
 - (id)leafIconForIdentifier:(id)arg1;
+
 @end
 
 @interface SBIconViewMap
@@ -249,8 +269,6 @@
 - (void)iconImageDidUpdate:(SBIcon *)icon;
 - (id)miniGridCellImageForIcon:(SBIcon*)icon;
 
-- (id)gridImages;
-
 @end
 
 @interface SBFolderIconView : SBIconView
@@ -264,12 +282,13 @@
 - (void)scrollToTopOfFirstPageAnimated:(_Bool)arg1;
 
 
+- (void)folder:(id)arg1 didAddList:(id)arg2;
+
 - (UIImageView *)customImageView;
 - (void)setCustomIconImage:(UIImage *)image;
 - (void)setCustomImageView:(UIImageView *)imageView;
 -(UIImage*)generateIconImage:(int)image ;
 - (UIImage*)getGenericIconImage:(int)arg1;
-- (void)_applyEditingStateAnimated:(_Bool)arg1;
 - (void)setCustomFolderIcon;
 @end
 

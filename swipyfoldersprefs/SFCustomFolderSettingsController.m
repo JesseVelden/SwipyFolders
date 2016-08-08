@@ -13,6 +13,7 @@ static NSUserDefaults *preferences;
 static NSDictionary *customFolderSettings; //root
 static NSDictionary *folderSettings;
 static NSString *folderName;
+static NSString *folderID;
 
 
 static NSString * addSuffixToNumber(int number) {
@@ -46,20 +47,24 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 }
 
 
-static void setSetting(id value, NSString * folderName, NSString * specifierID) {
-	NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
+static void setSetting(id value, NSString * folderID, NSString * specifierID) {
+
 	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+	NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
 	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
 	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
 
+	
 	[mutableFolderSettings setObject:value forKey:specifierID];
-	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName];
-
+	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
+	
 	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 	[preferences synchronize];
 
+
 	CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged"; //(CFStringRef)specifier.properties[@"PostNotification"];
 	if(toPost) CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
+	
 
 	NSLog(@"mutableFolderSettings: %@", mutableCustomFolderSettings);
 }
@@ -69,7 +74,9 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 - (void)getCustomFolderSettings {
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	customFolderSettings = [[preferences dictionaryForKey:@"customFolderSettings"] retain];
-	folderSettings = customFolderSettings[[self.specifier name]]; // >> Dit moet later een ID worden!
+
+	folderID = [self.specifier propertyForKey:@"folderID"];
+	folderSettings = customFolderSettings[folderID]; // >> Dit moet later een ID worden!
 	folderName = [self.specifier name];
 }
 
@@ -121,7 +128,7 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 }
 
 -(void)setValuePreference:(id)value forSpecifier:(PSSpecifier*)specifier {
-	setSetting(value, [self.specifier name], specifier.identifier); //>> LATER EEN ID
+	setSetting(value, folderID, specifier.identifier); //>> LATER EEN ID
 }
 
 @end
@@ -188,12 +195,12 @@ static void setSetting(id value, NSString * folderName, NSString * specifierID) 
 				NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
 
 				[mutableFolderSettings setObject:appIndexText forKey:specifierID];
-				[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderName];
+				[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
 
 				[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 				[preferences synchronize];
 
-				setSetting(@"5", folderName, [self.specifier identifier]); //This works :P
+				setSetting(@"5", folderID, [self.specifier identifier]); //This works :P
 
 
 			}];
