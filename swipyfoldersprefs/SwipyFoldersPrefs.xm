@@ -159,7 +159,8 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 			style:UIAlertActionStyleDefault
 			handler:^(UIAlertAction *action) {
 
-				NSString *appIndexText = alertController.textFields.firstObject.text;
+				UITextField *text_field = alertController.textFields.firstObject;
+				NSString *appIndexText = text_field.text;
 				NSNumber *appIndex = @([appIndexText intValue]);
 				if (!appIndex || appIndex.integerValue < 1) {
 					UIAlertController * alert=   [UIAlertController alertControllerWithTitle:@"SwipyFolders" message:@"Please enter a valid number" preferredStyle:UIAlertControllerStyleAlert];
