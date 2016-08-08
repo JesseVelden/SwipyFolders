@@ -109,37 +109,10 @@ static void loadPreferences() {
 		shortHold.enabled 	= (shortHoldMethod != 0 && !longHoldInvokesEditMode) ? YES : NO;
 	}
 }
-/*
-static void respring() {
-	/* For iOS 10 when old alertview will be deprecated:
-	UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Respring - SwipyFolders"
-						message:@"In order to change the folder preview, a respring is required. Want to respring now?"
-						preferredStyle:UIAlertControllerStyleAlert];
-	UIAlertAction *cancelAction = [UIAlertAction 
-					actionWithTitle:@"Nope"
-					style:UIAlertActionStyleCancel
-					handler:nil];
-	UIAlertAction *okAction = [UIAlertAction 
-					actionWithTitle:@"YUP RESPRING"
-					style:UIAlertActionStyleDefault
-					handler:^(UIAlertAction *action)
-					{
-						system("killall -9 SpringBoard");
-					}];
-	[alertController addAction:cancelAction];
-	[alertController addAction:okAction];
-	[[%c(SBIconController) sharedInstance] presentViewController:alertController animated:YES completion:nil];
-	*/
-	/*
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Respring - SwipyFolders" 
-						  message:@"In order to change the folder preview, a respring is required. Want to respring now?" 
-						  delegate:[%c(SBIconController) sharedInstance]
-						  cancelButtonTitle:@"Nope" 
-						  otherButtonTitles:@"YUP RESPRING", nil];
 
-	[alert show];
-}
-*/
+
+
+
 
 %hook SBFolderIconImageView
 -(void)layoutSubviews {
@@ -210,15 +183,6 @@ CPDistributedMessagingCenter *messagingCenter;
 %new - (NSDictionary*)handleMessageNamed:(NSString *)name withUserInfo:(NSDictionary *)userinfo { //Only going to use for sending over folders so no additional checks needed
 	NSArray *folderArray = [[[self rootFolder] folderIcons] allObjects];
 
-	/*
-	NSArray *sortedFolderArray = [NSArray new];
-	sortedFolderArray = [folderArray sortedArrayUsingComparator:^NSComparisonResult(SBFolderIcon* a, SBFolderIcon* b) {
-	    NSString *first = a.folder.displayName;
-	    NSString *second = b.folder.displayName;
-	    return [first compare:second];
-	}];
-	*/
-
 	NSMutableDictionary *foldersRepresentation = [NSMutableDictionary dictionary];
 
 	for (int i=0; i<[folderArray count]; i++) {
@@ -228,15 +192,13 @@ CPDistributedMessagingCenter *messagingCenter;
 		//NSString *defaultDisplayName = MSHookIvar<NSString*>(folder, "defaultDisplayName");
 		NSArray *folderAppIcons = [folder.orderedIcons allObjects];
 		NSMutableArray *applicationBundleIDs = [[NSMutableArray alloc] init];
-		for(int k=0; k<[folderAppIcons count]; k++ ) {
+		for(int k=0; k<[folderAppIcons count] && k<9; k++ ) {
 			SBApplicationIcon *appIcon = [folderAppIcons objectAtIndex:k];
 			if(appIcon.application.bundleIdentifier != nil) [applicationBundleIDs addObject:appIcon.application.bundleIdentifier];
 			
 		}
 		NSMutableDictionary *folderDictionary = [NSMutableDictionary dictionary];
 		[folderDictionary setObject:folder.displayName forKey:@"displayName"]; // String
-		//[folderDictionary setObject:folder.orderedIcons forKey:@"icons"]; //SBApplicationIcon
-		//[folderDictionary setObject:folder.lists forKey:@"lists"]; //SBIconListModel
 
 		[folderDictionary setObject:applicationBundleIDs forKey:@"applicationBundleIDs"]; //NSArray with bundle id strings
 
@@ -247,7 +209,6 @@ CPDistributedMessagingCenter *messagingCenter;
 		[foldersRepresentation setObject:folderDictionary forKey:folderID]; //[NSString stringWithFormat:@"%d", i]
 	}
 
-	HBLogDebug(@"%@", foldersRepresentation);
 	return foldersRepresentation;
 }
 
@@ -271,6 +232,7 @@ CPDistributedMessagingCenter *messagingCenter;
 		}
 	}
 }
+
 
 //Finally the real deal:
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
@@ -439,7 +401,7 @@ static BOOL isProtected = NO;
 		}
 	}
 
-	NSLog(@"Folder settings: %@", folderSettings);
+	//NSLog(@"Folder settings: %@", folderSettings);
 
 	NSMutableDictionary *sendInfo = [NSMutableDictionary new];
 	[sendInfo setObject:sendMethod forKey:@"method"];
@@ -709,26 +671,12 @@ static BOOL isProtected = NO;
 static NSString *oldFolderID;
 %hook SBFolderView
 
-/*
-- (void)_setFolderName:(NSString*)newFolderName { //This isn't even needed anymore!!
-	
-	//oldFolderID = self.folder.folderID;
-	//HBLogDebug(@"De folder: %@ wordt vernoemd naar: %@", oldFolderName, newFolderName);
-	%orig;
-	
-	NSString* newFolderID = [self.folder folderID];
-	HBLogDebug(@"De folder: %@ wordt vernoemd naar: %@", oldFolderID, newFolderID);
-	[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
-	oldFolderID = newFolderID;
-}*/
 
 - (void)setEditing:(_Bool)editing animated:(_Bool)arg2{
 	%orig; 
 	if(editing == 0 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
 		NSString* newFolderID = [self.folder folderID];
-		HBLogDebug(@"De folder: %@ wordt vernoemd naar: %@", oldFolderID, newFolderID);
 		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
-		//oldFolderID = newFolderID; //If any further changes
 	} 
 	else if(editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
 		oldFolderID = [[self.folder folderID] retain];
@@ -741,7 +689,6 @@ static NSString *oldFolderID;
 	%orig;
 	if(self.editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
 		NSString* newFolderID = [self.folder folderID];
-		HBLogDebug(@"CLEANUP: de %@ wordt vernoemd naar: %@", oldFolderID, newFolderID);
 		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
 		
 	}
@@ -750,20 +697,6 @@ static NSString *oldFolderID;
 
 
 %end
-
-/*
-%hook SBFolderIcon
-- (void)node:(id)arg1 didRemoveContainedNodeIdentifiers:(id)nodeList {
-	%orig;
-	NSArray *nodeArray = [nodeList allObjects];
-	id firstObject = [nodeArray objectAtIndex:0];
-	if([firstObject isKindOfClass:%c(SBIconListModel)]) {
-		SBIconListModel *iconListModel = (SBIconListModel*)firstObject;
-		if(iconListModel.folder.displayName) %log;
-	}
-}
-%end
-*/
 
 
 %hook SBFolder
@@ -793,12 +726,10 @@ static NSString *oldFolderID;
 
 %new - (void)replaceOldFolderID:(NSString*)oldFolderID byNewFolderID:(NSString*)newFolderID {
 	if(oldFolderID && ![oldFolderID isEqualToString:newFolderID]) {
-		HBLogDebug(@"YOO WE GAAN BEGINNEN");
 		preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 		NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
 		NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
 		if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
-		HBLogDebug(@"WE ZIJN VERDER");
 		[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
 		[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:newFolderID];
 

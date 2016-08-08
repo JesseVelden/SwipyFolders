@@ -192,22 +192,8 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 
 				NSString *specifierID = [NSString stringWithFormat:@"%@CustomAppIndex", [self.specifier identifier]];
 
-				/*
-				//Set settings isn't working :(
-
-				NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
-				NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-
-				[mutableFolderSettings setObject:appIndexText forKey:specifierID];
-				[mutableFolderSettings setObject:@"5" forKey:[self.specifier identifier]];
-				[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
-
-				[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
-				[preferences synchronize];
-				*/
-
 				setSetting(appIndexText, folderID, specifierID); 
-				setSetting(@"5", folderID, [self.specifier identifier]); //This works :P
+				setSetting(@"5", folderID, [self.specifier identifier]);
 
 
 			}];
