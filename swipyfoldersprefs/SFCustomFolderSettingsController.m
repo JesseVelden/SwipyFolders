@@ -58,15 +58,17 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 	[mutableFolderSettings setObject:value forKey:specifierID];
 	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
 	
+	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 	[preferences synchronize];
 
 
 	CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged"; //(CFStringRef)specifier.properties[@"PostNotification"];
 	if(toPost) CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
-	
 
-	NSLog(@"mutableFolderSettings: %@", mutableCustomFolderSettings);
+	customFolderSettings = [mutableCustomFolderSettings copy];
+	folderSettings = [mutableFolderSettings copy];
+	
 }
 
 @implementation SFCustomFolderSettingsController
@@ -108,8 +110,6 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 	UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
 	PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
 
-	NSLog(@"Settings: %@",folderSettings);
-
 	if(![specifier.identifier isEqualToString:@"customFolderEnabled"]) {
 		int method  = [folderSettings[specifier.identifier] intValue];
 		if(method == 5) {
@@ -128,7 +128,9 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 }
 
 -(void)setValuePreference:(id)value forSpecifier:(PSSpecifier*)specifier {
-	setSetting(value, folderID, specifier.identifier); //>> LATER EEN ID
+	HBLogDebug(@"We gaan de setting veranderen!!! naar: %@ voor: %@", value, specifier.identifier);
+
+	setSetting(value, folderID, specifier.identifier);
 }
 
 @end
@@ -188,18 +190,23 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 
 				cell.textLabel.text = setCustomAppIndexTextForIndex([appIndex intValue]);
 
-				//Set settings isn't working :(
 				NSString *specifierID = [NSString stringWithFormat:@"%@CustomAppIndex", [self.specifier identifier]];
+
+				/*
+				//Set settings isn't working :(
 
 				NSMutableDictionary *mutableFolderSettings = [folderSettings mutableCopy];
 				NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
 
 				[mutableFolderSettings setObject:appIndexText forKey:specifierID];
+				[mutableFolderSettings setObject:@"5" forKey:[self.specifier identifier]];
 				[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
 
 				[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 				[preferences synchronize];
+				*/
 
+				setSetting(appIndexText, folderID, specifierID); 
 				setSetting(@"5", folderID, [self.specifier identifier]); //This works :P
 
 
