@@ -6,7 +6,7 @@ SwipyFoldersPrefs_INSTALL_PATH = /Library/PreferenceBundles
 SwipyFoldersPrefs_FRAMEWORKS = UIKit CoreGraphics
 SwipyFoldersPrefs_PRIVATE_FRAMEWORKS = Preferences AppSupport
 
-SwipyFoldersPrefs_LDFLAGS += 
+SwipyFoldersPrefs_LDFLAGS += -Wl,-segalign,4000
 
 
 

@@ -25,8 +25,12 @@ Every gesture can be customized to:
 * Open first app  
 * Open second app  
 * Quick action on first icon
+* Open custom app with index
+* Open last app in the folder
+* Open the last opened app of the folder
 
 You can even set the first icon as the folder preview, and removing the background from the folder icon. Bye bye ugly looking folders!
+Since version 1.4.0 SwipyFolders ships with per folder customizable settings!
 
 Suggestions and improvements/ pull requests are welcome!
 
