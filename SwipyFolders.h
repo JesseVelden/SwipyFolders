@@ -54,6 +54,7 @@
 - (id)orderedIcons;
 - (void)setDefaultDisplayName:(SBFolder*)folder;
 - (NSIndexPath*)indexPathForIcon:(id)arg1;
+- (void)didRemoveFolder:(id)arg1;
 
 
 - (NSString*)createFolderIDWithDisplayName:displayName andFirstIconIdentifier:(NSString*)firstIconIdentifier;

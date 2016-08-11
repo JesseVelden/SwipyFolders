@@ -122,7 +122,12 @@ static void loadPreferences() {
 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 
 
-  	if(hideGreyFolderBackground || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)){
+  	if(enabled && (hideGreyFolderBackground || ([folderSettings objectForKey:@"customFolderAppearance"] != nil && [folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1))){
+	  	
+	  	if([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings objectForKey:@"customFolderHideGreyFolderBackground"] == nil || [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
+			return;
+		}
+
 	  	CGSize iconImageSize = [%c(SBIconView) defaultIconImageSize];
 
 		UIView *gridContainer  = MSHookIvar<UIView *>(self, "_pageGridContainer");
@@ -140,9 +145,11 @@ static void loadPreferences() {
 
 - (void)_showLeftMinigrid{
  	%orig;
- 	if(enabled && enableFolderPreview){
- 		SBFolder *folder = self._folderIcon.folder;
- 		NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+
+ 	SBFolder *folder = self._folderIcon.folder;
+ 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+ 	if(enabled && (enableFolderPreview || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1))){	
+ 		
  		
  		if([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil || [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0)) {
 			return;
@@ -151,6 +158,11 @@ static void loadPreferences() {
 		SBIcon *firstIcon = [folder getFirstIcon];
 		UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
 		innerFolderImageView.image = [firstIcon getIconImage:2];
+
+		if([folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1) {
+			MSHookIvar<UIView *>(self, "_backgroundView").hidden = NO;
+		}
+
 	}
 }
 
@@ -401,7 +413,7 @@ static BOOL isProtected = NO;
 		}
 	}
 
-	//NSLog(@"Folder settings: %@", folderSettings);
+	NSLog(@"Folder settings: %@", folderSettings);
 
 	NSMutableDictionary *sendInfo = [NSMutableDictionary new];
 	[sendInfo setObject:sendMethod forKey:@"method"];
@@ -631,6 +643,7 @@ static BOOL isProtected = NO;
 		}
 	}
 
+	
 	NSString *lastOpenedIdentifier;
 	if(![self isKindOfClass:%c(SBLeafIcon)]){
 		lastOpenedIdentifier = self.application.bundleIdentifier;
@@ -639,7 +652,6 @@ static BOOL isProtected = NO;
 		lastOpenedIdentifier = leafIcon.leafIdentifier;
 	}
 
-	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
 	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[folderID] mutableCopy];
 	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
@@ -648,12 +660,11 @@ static BOOL isProtected = NO;
 	[mutableFolderSettings setObject:lastOpenedIdentifier forKey:@"lastOpenedApp"];
 	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
 
+	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 	[preferences synchronize];
-
-	CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged";
-	CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
-
+	customFolderSettings = [mutableCustomFolderSettings copy];
+	
 
 
 	if([self respondsToSelector:@selector(launchFromLocation:context:)]) {
@@ -701,6 +712,20 @@ static NSString *oldFolderID;
 
 %hook SBFolder
 
+/*
+- (void)didRemoveFolder:(SBFolder*)folder {
+	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
+	if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
+	[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
+
+	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
+	[preferences synchronize];
+	customFolderSettings = [mutableCustomFolderSettings copy];
+	%orig;
+}
+*/
+
 %new - (NSString*)folderID {
 	//Misschien iets meer optimalisatie. Gewoon geen md5
 	SBIcon *firstIcon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]]]; //To ignore nested folder settings
@@ -726,18 +751,16 @@ static NSString *oldFolderID;
 
 %new - (void)replaceOldFolderID:(NSString*)oldFolderID byNewFolderID:(NSString*)newFolderID {
 	if(oldFolderID && ![oldFolderID isEqualToString:newFolderID]) {
-		preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 		NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
 		NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
 		if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
 		[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
 		[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:newFolderID];
 
+		NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 		[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 		[preferences synchronize];
-
-		CFStringRef toPost = (CFStringRef)@"nl.jessevandervelden.swipyfoldersprefs/prefsChanged";
-		CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), toPost, NULL, NULL, YES);
+		customFolderSettings = [mutableCustomFolderSettings copy];
 
 	}
 }

@@ -128,8 +128,6 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 }
 
 -(void)setValuePreference:(id)value forSpecifier:(PSSpecifier*)specifier {
-	HBLogDebug(@"We gaan de setting veranderen!!! naar: %@ voor: %@", value, specifier.identifier);
-
 	setSetting(value, folderID, specifier.identifier);
 }
 
