@@ -87,12 +87,12 @@
 - (void)cleanupAfterClosing;
 @end
 
-@interface SBApplicationIcon : NSObject
-- (SBApplication*)application;
-@end
-
 @interface SBLeafIcon : SBIcon
 - (id)leafIdentifier;
+@end
+
+@interface SBApplicationIcon : SBLeafIcon
+- (SBApplication*)application;
 @end
 
 @interface SBBookmarkIcon : SBLeafIcon //Eigenlijk SBLeafIcon

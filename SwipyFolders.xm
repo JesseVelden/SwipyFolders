@@ -121,7 +121,6 @@ static void loadPreferences() {
   	SBFolder *folder = self._folderIcon.folder;
 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 
-
   	if(enabled && (hideGreyFolderBackground || ([folderSettings objectForKey:@"customFolderAppearance"] != nil && [folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1))){
 	  	
 	  	if([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings objectForKey:@"customFolderHideGreyFolderBackground"] == nil || [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
@@ -202,11 +201,22 @@ CPDistributedMessagingCenter *messagingCenter;
 		SBFolder *folder = folderIcon.folder;
 
 		//NSString *defaultDisplayName = MSHookIvar<NSString*>(folder, "defaultDisplayName");
-		NSArray *folderAppIcons = [folder.orderedIcons allObjects];
+		NSArray *folderAppIcons = [folder.allIcons allObjects]; //orderedIcons iOS 9+
 		NSMutableArray *applicationBundleIDs = [[NSMutableArray alloc] init];
 		for(int k=0; k<[folderAppIcons count] && k<9; k++ ) {
-			SBApplicationIcon *appIcon = [folderAppIcons objectAtIndex:k];
-			if(appIcon.application.bundleIdentifier != nil) [applicationBundleIDs addObject:appIcon.application.bundleIdentifier];
+			NSIndexPath *indexPath = [NSIndexPath indexPathForRow:k inSection:0];
+			SBIcon *appIcon = (SBApplicationIcon*)[folder iconAtIndexPath:indexPath];
+			if(appIcon.application.bundleIdentifier != nil){
+				[applicationBundleIDs addObject:appIcon.application.bundleIdentifier];
+				//SBApplicationIcon *appIcon = [folderAppIcons objectAtIndex:k];
+			}else {
+				SBLeafIcon *leafIcon = (SBLeafIcon*)appIcon;
+				if(leafIcon.leafIdentifier != nil) {
+					[applicationBundleIDs addObject:leafIcon.leafIdentifier];
+				} else {
+					[applicationBundleIDs addObject:@""];
+				}
+			} 
 			
 		}
 		NSMutableDictionary *folderDictionary = [NSMutableDictionary dictionary];
@@ -738,7 +748,6 @@ static NSString *oldFolderID;
 		firstIconIdentifier = leafIcon.leafIdentifier;
 	}
 
-
 	return [self createFolderIDWithDisplayName:self.displayName andFirstIconIdentifier:firstIconIdentifier];
 }
 
@@ -782,9 +791,11 @@ static NSString *oldFolderID;
 	while(i <= (iconList.count * maxIconCountInList)) { 
 		NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
 		SBIcon *icon = [self iconAtIndexPath:indexPath];
-		if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
-			return i;
-			break;
+		if([icon respondsToSelector:@selector(displayName)]) {
+			if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
+				return i;
+				break;
+			}
 		}
 		i++;
 	}
@@ -817,10 +828,11 @@ static NSString *oldFolderID;
 
 	while(i <= (maxIconCountInList * iconList.count)) { 
 		SBIcon *icon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:i]];
-
-		if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
-			indexPath = [self getFolderIndexPathForIndex:i];
-		} 
+		if([icon respondsToSelector:@selector(displayName)]) {
+			if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
+				indexPath = [self getFolderIndexPathForIndex:i];
+			} 
+		}
 		i++;
 	}
 
@@ -840,9 +852,11 @@ static NSString *oldFolderID;
 		while (i <= (maxIconCountInList * iconList.count)) {
 			NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
 			SBIcon *icon = [self iconAtIndexPath:indexPath];
-			if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
-				[icon openAppFromFolder:self.folderID];
-				break;
+			if([icon respondsToSelector:@selector(displayName)]) {
+				if(icon.displayName != nil && ![icon isKindOfClass:%c(SBFolderIcon)]){
+					[icon openAppFromFolder:self.folderID];
+					break;
+				}
 			}
 			i++;
 		}

@@ -273,9 +273,10 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 			width = margin;
 			height += iconSize+margin;
 		}
-
-		UIImage *appImage = [UIImage _applicationIconImageForBundleIdentifier:bundleIdentifiers[i] format:0 scale:[UIScreen mainScreen].scale];
-		[appImage drawInRect:CGRectMake(width, height, iconSize, iconSize)];
+		if(![bundleIdentifiers[i] isEqualToString:@"com.broganminer.anchor"] && ![bundleIdentifiers[i] isEqualToString:@""]) {
+			UIImage *appImage = [UIImage _applicationIconImageForBundleIdentifier:bundleIdentifiers[i] format:0 scale:[UIScreen mainScreen].scale];
+			[appImage drawInRect:CGRectMake(width, height, iconSize, iconSize)];
+		}
 		width += iconSize+margin;
 
 	}
