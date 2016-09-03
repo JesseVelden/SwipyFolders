@@ -41,13 +41,21 @@
 
 @end
 
+@interface SBLeafIcon : SBIcon
+- (id)leafIdentifier;
+@end
+
+@interface SBApplicationIcon : SBLeafIcon
+- (SBApplication*)application;
+@end
+
 
 @interface SBFolder : NSObject
 @property(readonly, nonatomic) long long listCount;
 @property(readonly, nonatomic) long long _maxIconCountInLists;
 @property(copy, nonatomic) NSString *displayName;
 @property(readonly, copy, nonatomic) NSArray *lists;
-- (SBIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
+- (SBApplicationIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 - (id)folderIcons;
 - (id)defaultDisplayName;
 - (id)allIcons;
@@ -85,14 +93,6 @@
 - (void)_setFolderName:(id)arg1;
 - (void)setEditing:(_Bool)arg1 animated:(_Bool)arg2;
 - (void)cleanupAfterClosing;
-@end
-
-@interface SBLeafIcon : SBIcon
-- (id)leafIdentifier;
-@end
-
-@interface SBApplicationIcon : SBLeafIcon
-- (SBApplication*)application;
 @end
 
 @interface SBBookmarkIcon : SBLeafIcon //Eigenlijk SBLeafIcon
@@ -285,7 +285,6 @@
 
 - (void)folder:(id)arg1 didAddList:(id)arg2;
 
-- (UIImageView *)customImageView;
 - (void)setCustomIconImage:(UIImage *)image;
 - (void)setCustomImageView:(UIImageView *)imageView;
 -(UIImage*)generateIconImage:(int)image ;
@@ -299,6 +298,18 @@
 - (void)setShortcutItems:(id)arg1 forBundleIdentifier:(id)arg2;
 - (id)shortcutItemsForBundleIdentifier:(id)arg1;
 - (id)init;
+@end
+
+@interface SBIconBlurryBackgroundView : UIView
+- (void)dealloc;
+- (id)initWithFrame:(struct CGRect)arg1;
+@end
+
+@interface SBFolderIconBackgroundView : SBIconBlurryBackgroundView
+- (UIImageView *)customImageView;
+- (void)setCustomImageView:(UIImageView *)imageView;
+- (id)initWithDefaultSize;
+- (id)_contentsImageForColor:(struct CGColor *)arg1;
 @end
 
 
@@ -349,6 +360,10 @@
 @interface SBFolderIconImageView : SBIconImageView
 - (SBFolderIcon *)_folderIcon;
 - (void)_showLeftMinigrid;
+
+- (id)initWithFrame:(struct CGRect)arg1;
+- (void)_setPageElements:(id)arg1;
+- (void)_setupGridViewsInDefaultConfiguration;
 @end
 
 @interface UIGestureRecognizerTarget : NSObject {

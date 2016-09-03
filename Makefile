@@ -2,7 +2,7 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = SwipyFolders
 SwipyFolders_FILES = SwipyFolders.xm
-SwipyFolders_FRAMEWORKS = UIKit Foundation QuartzCore
+SwipyFolders_FRAMEWORKS = UIKit Foundation QuartzCore CoreGraphics
 SwipyFolders_PRIVATE_FRAMEWORKS = AppSupport
 SwipyFolders_LDFlags += -Wl,-segalign,4000
 
