@@ -1,21 +1,6 @@
-#import <CommonCrypto/CommonDigest.h>
+
 #import "SwipyFolders.h"
 
-//Helper functions:
-/*
-static NSString * calculateMD5(NSString * input) {
-    const char *cStr = [input UTF8String];
-    unsigned char digest[CC_MD5_DIGEST_LENGTH];
-    CC_MD5( cStr, strlen(cStr), digest ); 
-
-    NSMutableString *output = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
-
-    for(int i = 0; i < CC_MD5_DIGEST_LENGTH; i++)
-    [output appendFormat:@"%02x", digest[i]];
-
-    return  output;
-}
-*/
 
 static NSUserDefaults *preferences;
 static bool enabled;
@@ -47,10 +32,18 @@ static UILongPressGestureRecognizer *shortHold;
 
 static NSDictionary *customFolderSettings;
 
+static bool classicFoldersEnabled;
+
 #define HAS_BIOPROTECT (%c(BioProtectController) != nil) 
 
 static void loadPreferences() {
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+
+	classicFoldersEnabled = NO;
+	if([NSFileManager.defaultManager fileExistsAtPath:@"/private/var/mobile/Library/Preferences/org.coolstar.classicfolders.plist"] && [NSFileManager.defaultManager fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/ClassicFolders.dylib"]) {
+		NSUserDefaults *classicFolderPreferences = [[NSUserDefaults alloc] initWithSuiteName:@"org.coolstar.classicfolders"];
+		classicFoldersEnabled = ([classicFolderPreferences boolForKey:@"enabled"]) ? YES : NO;
+	}
 
 	[preferences registerDefaults:@{
 		@"enabled": @YES,
@@ -113,127 +106,222 @@ static void loadPreferences() {
 
 
 
-static UIImageView *customImageView;
 %hook SBFolderIconImageView
-
-
-
--(void)layoutSubviews {
-  	%orig;
-
-
-  	/*
-  	SBFolder *folder = self._folderIcon.folder;
-	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
-
-  	if(enabled && (hideGreyFolderBackground || ([folderSettings objectForKey:@"customFolderAppearance"] != nil && [folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1))){
-	  	
-	  	if([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings objectForKey:@"customFolderHideGreyFolderBackground"] == nil || [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
-			return;
-		}
-
-	  	CGSize iconImageSize = [%c(SBIconView) defaultIconImageSize];
-
-		UIView *gridContainer  = MSHookIvar<UIView *>(self, "_pageGridContainer");
-		CGRect orig = gridContainer.frame;
-		gridContainer.frame = CGRectMake(0, 0, iconImageSize.width, iconImageSize.height);
-
-		UIView *wrapper = MSHookIvar<UIView*>(self,"_leftWrapperView");
-		orig = wrapper.frame;
-		wrapper.frame = CGRectMake(0, 0, iconImageSize.width, iconImageSize.height);
-
-		MSHookIvar<UIView *>(self, "_backgroundView").hidden = YES;
-
-
-	}
-	*/
-
-	SBFolder *folder = self._folderIcon.folder;
-	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
-
-  	if(enabled && (enableFolderPreview || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1))){	
- 		
- 		if([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil || [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0)) {
-			return;
-		}
-
-		SBFolderIconBackgroundView *backgroundView = MSHookIvar<SBFolderIconBackgroundView *>(self, "_backgroundView");
-		[[backgroundView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
-
-		CGSize size = [%c(SBIconView) defaultIconImageSize];
-	    CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
-	    if(!hideGreyFolderBackground) {
-	    	iconFrame = CGRectMake(7.5, 7.5, 45, 45); //Full size is 60
-	    }
-
-	    backgroundView.customImageView = [[UIImageView alloc] initWithFrame:iconFrame];
-
-		SBIcon *firstIcon = [folder getFirstIcon];
-		UIImage *firstImage = [firstIcon getIconImage:2];
-
-	    [backgroundView insertSubview:backgroundView.customImageView atIndex:0];
-
-	    backgroundView.customImageView.image = firstImage;
-	    
-	
-	    UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
-		innerFolderImageView.hidden = YES;
-		[innerFolderImageView removeFromSuperview];
-	}
-
-	
-}
-
 
 - (void)_showLeftMinigrid{
 	%orig;
 
-	/*
-	UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
-	innerFolderImageView.hidden = YES;
-	[innerFolderImageView removeFromSuperview];
-	*/
-
-	/*
- 	SBFolder *folder = self._folderIcon.folder;
- 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
- 	if(enabled && (enableFolderPreview || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1))){	
- 		
- 		
- 		if([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil || [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0)) {
-			return;
-		}
 	
-		SBIcon *firstIcon = [folder getFirstIcon];
+	SBFolder *folder = self._folderIcon.folder;
+	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+	if(enabled){	
+		
+		
 		UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
-		UIImage *firstImage = [firstIcon getIconImage:2];
+		
+		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
+			SBIcon *firstIcon = [folder getFirstIcon];
+			UIImage *firstImage = [firstIcon getIconImage:2];
+			innerFolderImageView.image = firstImage;
+			self.backgroundView.customImageView.image = firstImage;
+		
+			[self hideInnerFolderImageView: YES];
 
-	    innerFolderImageView.image = firstImage;
 
-		if([folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1) {
-			MSHookIvar<UIView *>(self, "_backgroundView").hidden = NO;
+			CGSize size = [%c(SBIconView) defaultIconImageSize];
+			CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
+			
+			if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
+				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
+				iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
+			}
+				
+			self.backgroundView.customImageView.frame = iconFrame;
+		} else {
+			self.backgroundView.customImageView.image = nil;
+			[self hideInnerFolderImageView: NO];
 		}
 
 	}
-	*/
+
+	
 }
+
+%new -(void)hideInnerFolderImageView:(BOOL)hide {
+	UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
+	innerFolderImageView.hidden = hide;
+}
+
 
 
 %end
 
+
 %hook SBFolderIconBackgroundView
+static UIImageView *customImageView;
+
+- (UIView *)initWithDefaultSize{
+
+	UIView *view = %orig;
+
+	if(enabled) {
+		CGSize size = [%c(SBIconView) defaultIconImageSize];
+		CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
+		if(!hideGreyFolderBackground) {
+			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
+			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize); //Full size is 60
+		}
+
+
+		self.customImageView = [[UIImageView alloc] initWithFrame:iconFrame];
+		self.customImageView.backgroundColor = [UIColor clearColor];
+
+		[view insertSubview:self.customImageView atIndex:0];
+	}
+
+	return view;
+
+}
+
+
 %new(v@:@) - (void)setCustomImageView:(UIImageView *)imageView {
-    objc_setAssociatedObject(self, &customImageView, imageView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+	objc_setAssociatedObject(self, &customImageView, imageView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 %new(@@:) - (UIImageView *)customImageView {
-    return objc_getAssociatedObject(self, &customImageView);
+	return objc_getAssociatedObject(self, &customImageView);
 }
 
 -(void)dealloc {
 	[self.customImageView release];
 	%orig;
 }
+
+
+%end
+
+%hook SBFolderIconZoomAnimator
+
+-(void)_prepareAnimation{
+
+	%orig;
+
+	SBFolder *folder = self.targetIcon.folder;
+	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+	if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
+
+
+		SBFolderIconImageView *folderIconImageView  = self.targetIconView._folderIconImageView;
+
+
+		[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+
+		folderIconImageView.backgroundView.customImageView.alpha = 0;
+		[UIView beginAnimations:nil context:NULL];
+		[UIView setAnimationDuration:0.5];
+		[folderIconImageView.backgroundView.customImageView setAlpha:1.0];
+		[UIView commitAnimations];
+	}
+
+	//If not calling %orig; the icons behind the screen are not removed, so cool iOS 10 gimmick?
+
+
+}
+%end
+
+//Some stupid methods to let it work with ClassicFolders
+%hook SBFolderController
+
+-(void)prepareToOpen{ 
+	%orig;
+	
+	if(enabled && ![self isKindOfClass:%c(SBRootFolderController)]) {
+		SBFolder *folder = self.folder;
+		NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+
+		SBIcon *icon = folder.icon;
+		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
+		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
+
+		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
+
+			[folderIconImageView hideInnerFolderImageView: YES];
+
+			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+
+		} else {
+			[folderIconImageView hideInnerFolderImageView: NO];
+
+			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
+		}
+
+	}
+
+}
+
+-(void)prepareToClose{ 
+	%orig;
+	
+
+	if(enabled && ![self isKindOfClass:%c(SBRootFolderController)]) {
+
+
+
+		SBFolder *folder = self.folder;
+		NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+
+		SBIcon *icon = folder.icon;
+		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
+		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
+
+		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
+
+			[folderIconImageView hideInnerFolderImageView: YES];
+
+			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+			
+		} else {
+			[folderIconImageView hideInnerFolderImageView: NO];
+
+			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
+		}
+	}
+
+
+
+
+}
+
+-(void)setOpen:(BOOL)arg1 {
+	%orig;
+	
+
+	if(enabled) {
+		if(arg1 && ![self isKindOfClass:%c(SBRootFolderController)]) {
+			SBFolder *folder = self.folder;
+			NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+
+			SBIcon *icon = folder.icon;
+			SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
+			SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
+			if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
+
+
+				[folderIconImageView hideInnerFolderImageView: YES];
+
+				[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+
+			} else {
+				[folderIconImageView hideInnerFolderImageView: NO];
+
+				[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
+			}
+		}
+	}
+
+	%orig;
+}
+
 %end
 
 
@@ -312,6 +400,7 @@ CPDistributedMessagingCenter *messagingCenter;
 		%orig;
 	}
 }
+
 
 //In order to still being able to close the folder with the home button:
 - (void)handleHomeButtonTap {
@@ -394,7 +483,7 @@ CPDistributedMessagingCenter *messagingCenter;
 	if (!self.isEditing && iconView.isFolderIconView && !forceTouchRecognized && enabled) {
 
 			NSDate *nowTime = [[NSDate date] retain];
-			if (!forceTouchRecognized && shortHoldMethod != 0 && longHoldInvokesEditMode && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
+			if (!forceTouchRecognized && shortHoldMethod != 0 && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
 
 				[iconView sf_method:[iconView getFolderSetting:@"ShortHoldMethod" withDefaultSetting:shortHoldMethod withDefaultCustomAppIndex:shortHoldMethodCustomAppIndex] withForceTouch:NO];
 				lastTouchedTime = nil;
@@ -439,6 +528,11 @@ CPDistributedMessagingCenter *messagingCenter;
 }
 
 %end
+
+
+
+
+
 
 //For protecting shortcutmenu items with BioProtect
 static BOOL isProtected = NO;
@@ -492,7 +586,6 @@ static BOOL isProtected = NO;
 		}
 	}
 
-	NSLog(@"Folder settings: %@", folderSettings);
 
 	NSMutableDictionary *sendInfo = [NSMutableDictionary new];
 	[sendInfo setObject:sendMethod forKey:@"method"];
@@ -521,7 +614,7 @@ static BOOL isProtected = NO;
 		swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
 		[self addGestureRecognizer:swipeDown];
 		
-		/* TEMPORARY  FIX????
+		/* Not in settings anymore as it causes troubles when not enabled at pre-iphone 6s models
 		if(!longHoldInvokesEditMode) {
 			shortHold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(sf_shortHold:)];
 			shortHold.minimumPressDuration = shortHoldTime;
@@ -599,16 +692,21 @@ static BOOL isProtected = NO;
 					}
 				}
 
+
+				
 				SBFolderIconView *folderIconView = (SBFolderIconView*)self;
 				UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>([folderIconView _folderIconImageView], "_leftWrapperView");
-				innerFolderImageView.hidden = YES;
 				
 
 				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+				if(!classicFoldersEnabled) {
+					innerFolderImageView.hidden = YES; //Dit niet doen wanneer classicfolders enabled is
 
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
-					innerFolderImageView.hidden = NO;
-				});	
+
+					dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+						innerFolderImageView.hidden = NO;
+					});	
+				}
 
 				if(forceTouch) self.highlighted = NO;
 
@@ -716,8 +814,20 @@ static BOOL isProtected = NO;
 %end
 
 %hook SBIcon
+
+%new - (id)getIconView {
+	SBIconView *iconView;
+	if([[%c(SBIconController) sharedInstance] respondsToSelector:@selector(homescreenIconViewMap)]) {
+		iconView = [[[%c(SBIconController) sharedInstance] homescreenIconViewMap] mappedIconViewForIcon:self];
+	} else {
+		iconView = [[%c(SBIconViewMap) homescreenMap] mappedIconViewForIcon:self];
+	}
+
+	return iconView;
+}
+
+
 %new - (void)openAppFromFolder:(NSString*)folderID {
-	NSLog(@"Will open app from folder");
 	if(HAS_BIOPROTECT) {
 		if ([[%c(BioProtectController) sharedInstance ] requiresAuthenticationForIdentifier: self.application.bundleIdentifier ]){ 
 			[[%c(BioProtectController) sharedInstance ] launchApplicationWithIdentifier: self.application.bundleIdentifier ];
@@ -770,6 +880,22 @@ static NSString *oldFolderID;
 	if(editing == 0 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
 		NSString* newFolderID = [self.folder folderID];
 		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
+
+		SBIcon *icon = self.folder.icon;
+		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
+		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
+			
+		CGSize size = [%c(SBIconView) defaultIconImageSize];
+		CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
+		
+		NSDictionary *folderSettings = customFolderSettings[newFolderID];
+		if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
+			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
+			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
+		}
+				
+		folderIconImageView.backgroundView.customImageView.frame = iconFrame;
+		[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
 	} 
 	else if(editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
 		oldFolderID = [[self.folder folderID] retain];
@@ -783,6 +909,24 @@ static NSString *oldFolderID;
 	if(self.editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
 		NSString* newFolderID = [self.folder folderID];
 		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
+
+		SBIcon *icon = self.folder.icon;
+		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
+		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
+			
+		CGSize size = [%c(SBIconView) defaultIconImageSize];
+		CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
+
+		NSDictionary *folderSettings = customFolderSettings[newFolderID];	
+		if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
+			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
+			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
+		}
+
+				
+		folderIconImageView.backgroundView.customImageView.frame = iconFrame;
+
+		[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
 		
 	}
 }
@@ -860,15 +1004,20 @@ static NSString *oldFolderID;
 	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists"); //9
 
 	int i = 0;
-	NSLog(@"Swipyfolders: let's begin getFirstAppIconIndex");
 	while(i <= (iconList.count * maxIconCountInList)) { 
 		NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
-		SBApplicationIcon *icon = [self iconAtIndexPath:indexPath];
-		NSLog(@"Found icon: %@", icon);
+		//SBApplicationIcon *icon = [self iconAtIndexPath:indexPath];
+		SBIcon *icon = (SBApplicationIcon*)[self iconAtIndexPath:indexPath];
 		if([icon respondsToSelector:@selector(application)]) {
 			if(icon.application.displayName != nil){ //&& ![icon isKindOfClass:%c(SBFolderIcon)
 				return i;
 				break;
+			} else if([icon isKindOfClass:%c(SBLeafIcon)]){
+				SBLeafIcon *leafIcon = (SBLeafIcon*)icon;
+				if(leafIcon.leafIdentifier != nil) {
+					return i;
+					break;
+				}
 			}
 		}
 		i++;
@@ -880,7 +1029,6 @@ static NSString *oldFolderID;
 %new - (SBIcon*)getFirstIcon { 
 	switch (nestedFolderBehaviour) {
 		case 2: {
-			NSLog(@"Custom folder behaviour 2");
 			SBIcon *icon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:0]];
 			if([icon isKindOfClass:%c(SBFolderIcon)]) {
 				return [icon.folder iconAtIndexPath: [icon.folder getFolderIndexPathForIndex:[icon.folder getFirstAppIconIndex]]];
@@ -889,7 +1037,6 @@ static NSString *oldFolderID;
 			}
 		}break;
 		default: {
-			NSLog(@"Default custom folder behaviour");
 			return [self iconAtIndexPath: [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]]];
 		}break;
 	}
@@ -903,11 +1050,17 @@ static NSString *oldFolderID;
 	NSIndexPath *indexPath = [self getFolderIndexPathForIndex:0];
 
 	while(i <= (maxIconCountInList * iconList.count)) { 
-		SBApplicationIcon *icon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:i]];
+		//SBApplicationIcon *icon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:i]];
+		SBIcon *icon = (SBApplicationIcon*)[self iconAtIndexPath:[self getFolderIndexPathForIndex:i]];
 		if([icon respondsToSelector:@selector(application)]) {
 			if(icon.application.displayName != nil){ //&& ![icon isKindOfClass:%c(SBFolderIcon)]
 				indexPath = [self getFolderIndexPathForIndex:i];
-			} 
+			} else if([icon isKindOfClass:%c(SBLeafIcon)]){
+				SBLeafIcon *leafIcon = (SBLeafIcon*)icon;
+				if(leafIcon.leafIdentifier != nil) {
+					indexPath = [self getFolderIndexPathForIndex:i];
+				}
+			}
 		}
 		i++;
 	}
@@ -927,11 +1080,17 @@ static NSString *oldFolderID;
 
 		while (i <= (maxIconCountInList * iconList.count)) {
 			NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
-			SBApplicationIcon *icon = [self iconAtIndexPath:indexPath];
+			//SBApplicationIcon *icon = [self iconAtIndexPath:indexPath];
+			SBIcon *icon = (SBApplicationIcon*)[self iconAtIndexPath:indexPath];
 			if([icon respondsToSelector:@selector(application)]) {
 				if(icon.application.displayName != nil ){ // && ![icon isKindOfClass:%c(SBFolderIcon)]
 					[icon openAppFromFolder:self.folderID];
 					break;
+				} else if([icon isKindOfClass:%c(SBLeafIcon)]){
+					SBLeafIcon *leafIcon = (SBLeafIcon*)icon;
+					if(leafIcon.leafIdentifier != nil) {
+						[icon openAppFromFolder:self.folderID];
+					}
 				}
 			}
 			i++;

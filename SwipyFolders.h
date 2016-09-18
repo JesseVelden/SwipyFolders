@@ -38,6 +38,7 @@
 - (SBApplication*)application;
 - (id)folder;
 - (void)openAppFromFolder:(NSString*)folder;
+- (id)getIconView;
 
 @end
 
@@ -55,6 +56,7 @@
 @property(readonly, nonatomic) long long _maxIconCountInLists;
 @property(copy, nonatomic) NSString *displayName;
 @property(readonly, copy, nonatomic) NSArray *lists;
+@property (assign,nonatomic) SBIcon * icon; 
 - (SBApplicationIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 - (id)folderIcons;
 - (id)defaultDisplayName;
@@ -261,6 +263,15 @@
 
 - (BOOL)isFolderIconView:(SBIconView *)view;
 - (void)launchFirstApp:(SBIconView *)iconView;
+
+
+-(id)_currentFolderController;
+
+@end
+
+@interface SBFolderController : NSObject
+-(void)prepareToClose;
+@property (nonatomic,retain) SBFolder * folder; 
 @end
 
 
@@ -269,13 +280,42 @@
 - (SBFolder *)folder;
 - (void)iconImageDidUpdate:(SBIcon *)icon;
 - (id)miniGridCellImageForIcon:(SBIcon*)icon;
-
 @end
+
+@interface SBIconImageView : UIView
+@end
+
+@interface SBIconBlurryBackgroundView : UIView
+- (void)dealloc;
+- (id)initWithFrame:(struct CGRect)arg1;
+- (void)didAddSubview:(id)arg1;
+@end
+
+@interface SBFolderIconBackgroundView : SBIconBlurryBackgroundView
+- (UIImageView *)customImageView;
+- (void)setCustomImageView:(UIImageView *)imageView;
+- (id)initWithDefaultSize;
+- (id)_contentsImageForColor:(struct CGColor *)arg1;
+@end
+
+
+@interface SBFolderIconImageView : SBIconImageView
+- (SBFolderIcon *)_folderIcon;
+- (void)_showLeftMinigrid;
+- (SBFolderIconBackgroundView*)backgroundView;
+
+- (id)initWithFrame:(struct CGRect)arg1;
+- (void)_setPageElements:(id)arg1;
+- (void)_setupGridViewsInDefaultConfiguration;
+
+-(void)hideInnerFolderImageView:(BOOL)hide;
+@end
+
 
 @interface SBFolderIconView : SBIconView
 - (SBFolder *)folder;
 - (SBFolderIcon*)folderIcon;
-- (UIImageView *)_folderIconImageView;
+- (SBFolderIconImageView*)_folderIconImageView;
 
 - (void)scrollToGapOrTopIfFullOfPage:(unsigned long long)arg1 animated:(_Bool)arg2;
 - (void)scrollToTopOfPage:(unsigned long long)arg1 animated:(_Bool)arg2;
@@ -298,18 +338,6 @@
 - (void)setShortcutItems:(id)arg1 forBundleIdentifier:(id)arg2;
 - (id)shortcutItemsForBundleIdentifier:(id)arg1;
 - (id)init;
-@end
-
-@interface SBIconBlurryBackgroundView : UIView
-- (void)dealloc;
-- (id)initWithFrame:(struct CGRect)arg1;
-@end
-
-@interface SBFolderIconBackgroundView : SBIconBlurryBackgroundView
-- (UIImageView *)customImageView;
-- (void)setCustomImageView:(UIImageView *)imageView;
-- (id)initWithDefaultSize;
-- (id)_contentsImageForColor:(struct CGColor *)arg1;
 @end
 
 
@@ -354,16 +382,11 @@
 - (BOOL)addIcon:(SBIcon *)icon asDirty:(BOOL)dirty;
 @end
 
-@interface SBIconImageView : UIView
-@end
 
-@interface SBFolderIconImageView : SBIconImageView
-- (SBFolderIcon *)_folderIcon;
-- (void)_showLeftMinigrid;
+@interface SBFolderIconZoomAnimator : NSObject
+@property (nonatomic,retain,readonly) SBFolderIconView * targetIconView; 
+@property (nonatomic,retain,readonly) SBFolderIcon * targetIcon; 
 
-- (id)initWithFrame:(struct CGRect)arg1;
-- (void)_setPageElements:(id)arg1;
-- (void)_setupGridViewsInDefaultConfiguration;
 @end
 
 @interface UIGestureRecognizerTarget : NSObject {
