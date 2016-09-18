@@ -920,8 +920,8 @@ static NSString *oldFolderID;
 				
 		folderIconImageView.backgroundView.customImageView.frame = iconFrame;
 
-		[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
-	}
+		[folderIconImageView.backgroundView sendSubviewToBack:folderIconImageView.backgroundView.customImageView];
+	} 
 }
 
 %end
