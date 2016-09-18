@@ -881,21 +881,7 @@ static NSString *oldFolderID;
 		NSString* newFolderID = [self.folder folderID];
 		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
 
-		SBIcon *icon = self.folder.icon;
-		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
-		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
-			
-		CGSize size = [%c(SBIconView) defaultIconImageSize];
-		CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
-		
-		NSDictionary *folderSettings = customFolderSettings[newFolderID];
-		if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
-			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
-			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
-		}
-				
-		folderIconImageView.backgroundView.customImageView.frame = iconFrame;
-		[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
+		[self updateIcon];
 	} 
 	else if(editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
 		oldFolderID = [[self.folder folderID] retain];
@@ -910,6 +896,14 @@ static NSString *oldFolderID;
 		NSString* newFolderID = [self.folder folderID];
 		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
 
+		[self updateIcon];
+		
+		
+	}
+}
+
+%new - (void)updateIcon {
+	if(enabled) {
 		SBIcon *icon = self.folder.icon;
 		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
 		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
@@ -917,7 +911,7 @@ static NSString *oldFolderID;
 		CGSize size = [%c(SBIconView) defaultIconImageSize];
 		CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
 
-		NSDictionary *folderSettings = customFolderSettings[newFolderID];	
+		NSDictionary *folderSettings = customFolderSettings[self.folder.folderID];	
 		if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
 			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
 			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
@@ -927,11 +921,8 @@ static NSString *oldFolderID;
 		folderIconImageView.backgroundView.customImageView.frame = iconFrame;
 
 		[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
-		
 	}
 }
-
-
 
 %end
 

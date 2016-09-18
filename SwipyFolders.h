@@ -95,6 +95,7 @@
 - (void)_setFolderName:(id)arg1;
 - (void)setEditing:(_Bool)arg1 animated:(_Bool)arg2;
 - (void)cleanupAfterClosing;
+- (void)updateIcon;
 @end
 
 @interface SBBookmarkIcon : SBLeafIcon //Eigenlijk SBLeafIcon
