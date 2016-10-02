@@ -2,6 +2,11 @@
 #import "SwipyFolders.h"
 
 
+/**
+ * The preferences
+ *	
+ */
+
 static NSUserDefaults *preferences;
 static bool enabled;
 static bool enableFolderPreview;
@@ -105,6 +110,10 @@ static void loadPreferences() {
 
 
 
+/**
+ * Setting the folder preview
+ *	
+ */
 
 %hook SBFolderIconImageView
 
@@ -218,7 +227,6 @@ static UIImageView *customImageView;
 
 	%orig;
 
-	HBLogDebug(@"YO HELLO 2"); 
 
 	SBFolder *folder = self.targetIcon.folder;
 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
@@ -245,13 +253,16 @@ static UIImageView *customImageView;
 }
 %end
 
-//Some stupid methods to let it work with ClassicFolders
+/**
+ * Some stupid methods to let it work with ClassicFolders
+ *	
+ */
+
 %hook SBFolderController
 
 -(void)prepareToOpen{ 
 	%orig;
 
-	HBLogDebug(@"YO HELLO 3"); 
 	
 	if(enabled && ![self isKindOfClass:%c(SBRootFolderController)]) {
 		SBFolder *folder = self.folder;
@@ -278,10 +289,7 @@ static UIImageView *customImageView;
 }
 
 -(void)prepareToClose{ 
-	%orig;
-
-	HBLogDebug(@"YO HELLO 4"); 
-	
+	%orig;	
 
 	if(enabled && ![self isKindOfClass:%c(SBRootFolderController)]) {
 
@@ -318,8 +326,6 @@ static UIImageView *customImageView;
 -(void)setOpen:(BOOL)arg1 {
 	%orig;
 	
-	HBLogDebug(@"YO HELLO 5"); 
-
 	if(enabled) {
 		if(arg1 && ![self isKindOfClass:%c(SBRootFolderController)]) {
 			SBFolder *folder = self.folder;
@@ -357,6 +363,13 @@ static NSDate *lastTappedTime;
 static NSDate *forceTouchOpenedTime;
 static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
+
+
+
+/**
+ * Methods to iterate all folders, for folder specific options in the preference pane
+ *	
+ */
 
 CPDistributedMessagingCenter *messagingCenter;
 
@@ -415,6 +428,13 @@ CPDistributedMessagingCenter *messagingCenter;
 	return foldersRepresentation;
 }
 
+
+
+/**
+ * Some bugfixes on pre 9.3 devices:
+ *	
+ */
+
 //- (void)folderControllerShouldClose:(id)arg1; //9.3 not needed
 // Okay, this may look crazy, but without preventing closeFolderAnimated, a 3D touch will close the folder
 - (void)closeFolderAnimated:(_Bool)arg1 {
@@ -438,7 +458,13 @@ CPDistributedMessagingCenter *messagingCenter;
 }
 
 
-//Finally the real deal:
+
+/**
+ * Finally the real deal:
+ *	
+ */
+
+//A method for 3D Touch
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
@@ -492,6 +518,11 @@ CPDistributedMessagingCenter *messagingCenter;
 		%orig;
 	}
 }
+
+/**
+ * Methods for other gestures on the folder icon
+ *
+ */
 
 - (void) iconHandleLongPress:(SBIconView *)iconView {
 	lastTouchedTime = nil;
@@ -557,8 +588,11 @@ CPDistributedMessagingCenter *messagingCenter;
 
 
 
-
-//For protecting shortcutmenu items with BioProtect
+/**
+ * Protecting folders for those with BioProtect
+ *
+ *
+ */
 static BOOL isProtected = NO;
 %hook SBApplicationShortcutMenu
 - (void)menuContentView:(id)arg1 activateShortcutItem:(id)arg2 index:(long long)arg3 {
@@ -586,7 +620,17 @@ static BOOL isProtected = NO;
 
 %end
 
+
+
+
+
 %hook SBIconView
+
+/**
+ * Get folder specific settings
+ *
+ */
+
 
 %new - (BOOL)isFolderIconView {
 	return self.icon.isFolderIcon && !([self.icon respondsToSelector:@selector(isNewsstandIcon)] && self.icon.isNewsstandIcon);
@@ -619,6 +663,11 @@ static BOOL isProtected = NO;
 
 	return sendInfo;
 }
+
+/**
+ * Add the last gestures to the folder icon
+ *
+ */
 
 - (void)setIcon:(SBIcon*)icon {
 	
@@ -681,6 +730,12 @@ static BOOL isProtected = NO;
 %new - (void)sf_swipeDown:(UISwipeGestureRecognizer *)gesture {
 	[self sf_method:[self getFolderSetting:@"SwipeDownMethod" withDefaultSetting:swipeDownMethod withDefaultCustomAppIndex:swipeDownMethodCustomAppIndex] withForceTouch:NO];
 }
+
+
+/**
+ * The method to do specific actions on a gesture
+ *
+ */
 
 %new - (void)sf_method:(NSDictionary*)methodDict withForceTouch:(BOOL)forceTouch{
 	NSInteger method = [methodDict[@"method"] intValue];
@@ -812,7 +867,12 @@ static BOOL isProtected = NO;
 	}
 }
 
-//To disable Spotlight view from showing up, if user swipe down on the icon && beter swiping up support if it is set to open Shortcutview to prevent moving SpringBoard:
+
+/**
+ * To disable Spotlight view from showing up, if user swipe down on the icon && beter swiping up support if it is set to open Shortcutview to prevent moving SpringBoard:
+ *
+ */
+
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
 	if(!enabled) return YES;
 
@@ -837,7 +897,15 @@ static BOOL isProtected = NO;
 
 %end
 
+
+
+
 %hook SBIcon
+
+/**
+ * Helper function to get an icon view
+ *
+ */
 
 %new - (id)getIconView {
 	SBIconView *iconView;
@@ -849,6 +917,12 @@ static BOOL isProtected = NO;
 
 	return iconView;
 }
+
+/**
+ * Opening a specific app, and log that to the folder settings as the last opened app in folder settings
+ *  and check if BioProtect is enabled for a specific app
+ *
+ */
 
 
 %new - (void)openAppFromFolder:(NSString*)folderID {
@@ -894,6 +968,12 @@ static BOOL isProtected = NO;
 }
 
 %end
+
+
+/**
+ * Methods to save a new folder ID after editing
+ *
+ */
 
 static NSString *oldFolderID;
 %hook SBFolderView
@@ -986,6 +1066,12 @@ static NSString *oldFolderID;
 }
 */
 
+
+/**
+ * Getting the folder ID, based on the folder name and the first app in the folder
+ *
+ */
+
 %new - (NSString*)folderID {
 	//Misschien iets meer optimalisatie. Gewoon geen md5
 	SBIcon *firstIcon = [self iconAtIndexPath: [self getFolderIndexPathForIndex:[self getFirstAppIconIndex]]]; //To ignore nested folder settings
@@ -1023,6 +1109,14 @@ static NSString *oldFolderID;
 
 	}
 }
+
+
+
+/**
+ * Some methods to get the first index of an app in a folder
+ *  as some stupids are using other tweaks
+ *
+ */
 
 
 %new - (NSIndexPath*)getFolderIndexPathForIndex:(int)index { //The beauty of long method names :P
@@ -1075,6 +1169,12 @@ static NSString *oldFolderID;
 		}break;
 	}
 }
+
+
+/**
+ * Some methods to open up apps at a specific index
+ *
+ */
 
 %new - (void)openLastApp {
 	SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
@@ -1134,6 +1234,11 @@ static NSString *oldFolderID;
 }
 
 %end
+
+/**
+ * Finally register a listener to reload preferences on changes
+ *
+ */
 
 %ctor{
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(),
