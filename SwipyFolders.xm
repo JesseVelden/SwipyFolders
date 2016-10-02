@@ -221,22 +221,18 @@ static UIImageView *customImageView;
 
 	%orig;
 
-
-	SBFolder *folder = self.targetIcon.folder;
-	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 	SBFolderIconImageView *folderIconImageView  = self.targetIconView._folderIconImageView;
 
 	if(folderIconImageView.backgroundView.customImageView.image != nil) {
-		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
 
-			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+		[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
 
-			folderIconImageView.backgroundView.customImageView.alpha = 0;
-			[UIView beginAnimations:nil context:NULL];
-			[UIView setAnimationDuration:0.5];
-			[folderIconImageView.backgroundView.customImageView setAlpha:1.0];
-			[UIView commitAnimations];
-		}
+		folderIconImageView.backgroundView.customImageView.alpha = 0;
+		[UIView beginAnimations:nil context:NULL];
+		[UIView setAnimationDuration:0.5];
+		[folderIconImageView.backgroundView.customImageView setAlpha:1.0];
+		[UIView commitAnimations];
+		
 	}
 
 
@@ -245,108 +241,6 @@ static UIImageView *customImageView;
 
 }
 %end
-
-/**
- * Some stupid methods to let it work with ClassicFolders
- *	
- */
-
-/*
-
-%hook SBFolderController
-
--(void)prepareToOpen{ 
-	%orig;
-
-	
-	if(enabled && ![self isKindOfClass:%c(SBRootFolderController)]) {
-		SBFolder *folder = self.folder;
-		NSDictionary *folderSettings = customFolderSettings[folder.folderID];
-
-		SBIcon *icon = folder.icon;
-		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
-		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
-
-		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
-
-			//[folderIconImageView hideInnerFolderImageView: YES];
-
-			//[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
-
-		} else {
-			[folderIconImageView hideInnerFolderImageView: NO];
-
-			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
-		}
-
-	}
-
-}
-
--(void)prepareToClose{ 
-	%orig;	
-
-	if(enabled && ![self isKindOfClass:%c(SBRootFolderController)]) {
-
-		SBFolder *folder = self.folder;
-		NSDictionary *folderSettings = customFolderSettings[folder.folderID];
-
-		SBIcon *icon = folder.icon;
-		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
-		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
-
-		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
-
-			//[folderIconImageView hideInnerFolderImageView: YES];
-
-			//[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
-
-			
-		} else {
-			[folderIconImageView hideInnerFolderImageView: NO];
-
-			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
-			UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
-			[folderIconImageView bringSubviewToFront:innerFolderImageView];
-		}
-	}
-
-
-
-
-}
-
--(void)setOpen:(BOOL)arg1 {
-	%orig;
-	
-	if(enabled) {
-		if(arg1 && ![self isKindOfClass:%c(SBRootFolderController)]) {
-			SBFolder *folder = self.folder;
-			NSDictionary *folderSettings = customFolderSettings[folder.folderID];
-
-			SBIcon *icon = folder.icon;
-			SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
-			SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
-			if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
-
-
-				//[folderIconImageView hideInnerFolderImageView: YES];
-
-				//[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
-
-			} else {
-				[folderIconImageView hideInnerFolderImageView: NO];
-
-				[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
-			}
-		}
-	}
-
-	%orig;
-}
-
-%end
-*/
 
 
 
@@ -1035,19 +929,6 @@ static NSString *oldFolderID;
 
 		} else {
 			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView]; // The most important part
-			
-			/*UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
-			innerFolderImageView.alpha = 0;
-			[UIView beginAnimations:nil context:NULL];
-			[UIView setAnimationDuration:0.5];
-			[innerFolderImageView setAlpha:1.0];
-			[UIView commitAnimations];*/
-
-			
-			/*[folderIconImageView hideInnerFolderImageView: NO];
-			folderIconImageView.backgroundView.customImageView.image = nil;
-			
-			[folderIconImageView bringSubviewToFront:innerFolderImageView];*/
 		}
 	} 
 }
