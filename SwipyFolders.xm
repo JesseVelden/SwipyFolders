@@ -133,9 +133,7 @@ static void loadPreferences() {
 		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
 			SBIcon *firstIcon = [folder getFirstIcon];
 			UIImage *firstImage = [firstIcon getIconImage:2];
-			
-			//innerFolderImageView.image = firstImage;
-			
+						
 			self.backgroundView.customImageView.image = firstImage;
 
 		
@@ -151,22 +149,17 @@ static void loadPreferences() {
 			}
 				
 			self.backgroundView.customImageView.frame = iconFrame;
-			//[self bringSubviewToFront:innerFolderImageView];
 
 		} else {
 			self.backgroundView.customImageView.image = nil;
 			[self hideInnerFolderImageView: NO];
 			[self sendSubviewToBack:self.backgroundView];
 			[self bringSubviewToFront:innerFolderImageView];
-			
-
-			
+					
 		}
-
 
 	}
 
-	
 }
 
 %new -(void)hideInnerFolderImageView:(BOOL)hide {
@@ -233,20 +226,19 @@ static UIImageView *customImageView;
 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 	SBFolderIconImageView *folderIconImageView  = self.targetIconView._folderIconImageView;
 
-	if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
+	if(folderIconImageView.backgroundView.customImageView.image != nil) {
+		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
 
-		[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
 
-		folderIconImageView.backgroundView.customImageView.alpha = 0;
-		[UIView beginAnimations:nil context:NULL];
-		[UIView setAnimationDuration:0.5];
-		[folderIconImageView.backgroundView.customImageView setAlpha:1.0];
-		[UIView commitAnimations];
-	} else {
-
-		/*[folderIconImageView hideInnerFolderImageView: NO];
-		[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];*/
+			folderIconImageView.backgroundView.customImageView.alpha = 0;
+			[UIView beginAnimations:nil context:NULL];
+			[UIView setAnimationDuration:0.5];
+			[folderIconImageView.backgroundView.customImageView setAlpha:1.0];
+			[UIView commitAnimations];
+		}
 	}
+
 
 	//If not calling %orig; the icons behind the screen are not removed, so cool iOS 10 gimmick?
 
@@ -258,6 +250,8 @@ static UIImageView *customImageView;
  * Some stupid methods to let it work with ClassicFolders
  *	
  */
+
+/*
 
 %hook SBFolderController
 
@@ -275,9 +269,9 @@ static UIImageView *customImageView;
 
 		if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
 
-			[folderIconImageView hideInnerFolderImageView: YES];
+			//[folderIconImageView hideInnerFolderImageView: YES];
 
-			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+			//[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
 
 		} else {
 			[folderIconImageView hideInnerFolderImageView: NO];
@@ -305,7 +299,7 @@ static UIImageView *customImageView;
 
 			//[folderIconImageView hideInnerFolderImageView: YES];
 
-			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+			//[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
 
 			
 		} else {
@@ -336,9 +330,9 @@ static UIImageView *customImageView;
 			if((enableFolderPreview && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && ([folderSettings[@"customFolderEnableFolderPreview"] intValue] == 0 || [folderSettings objectForKey:@"customFolderEnableFolderPreview"] == nil))) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1)){
 
 
-				[folderIconImageView hideInnerFolderImageView: YES];
+				//[folderIconImageView hideInnerFolderImageView: YES];
 
-				[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+				//[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
 
 			} else {
 				[folderIconImageView hideInnerFolderImageView: NO];
@@ -352,6 +346,7 @@ static UIImageView *customImageView;
 }
 
 %end
+*/
 
 
 
@@ -1029,19 +1024,30 @@ static NSString *oldFolderID;
 			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView.customImageView];
 			SBIcon *firstIcon = [self.folder getFirstIcon];
 			UIImage *firstImage = [firstIcon getIconImage:2];
-			folderIconImageView.backgroundView.customImageView.image = firstImage;
+
+
+			[UIView transitionWithView:folderIconImageView.backgroundView.customImageView
+                  	duration:0.5f
+                	options:UIViewAnimationOptionTransitionCrossDissolve
+                	animations:^{
+                  		folderIconImageView.backgroundView.customImageView.image = firstImage;
+                	} completion:nil];
 
 		} else {
-			[folderIconImageView hideInnerFolderImageView: NO];
-			folderIconImageView.backgroundView.customImageView.image = nil;
-			UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
-
-			[folderIconImageView bringSubviewToFront:innerFolderImageView];
-			folderIconImageView.backgroundView.customImageView.image = nil;
-
 			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView]; // The most important part
+			
+			/*UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+			innerFolderImageView.alpha = 0;
+			[UIView beginAnimations:nil context:NULL];
+			[UIView setAnimationDuration:0.5];
+			[innerFolderImageView setAlpha:1.0];
+			[UIView commitAnimations];*/
 
-			//[folderIconImageView.]
+			
+			/*[folderIconImageView hideInnerFolderImageView: NO];
+			folderIconImageView.backgroundView.customImageView.image = nil;
+			
+			[folderIconImageView bringSubviewToFront:innerFolderImageView];*/
 		}
 	} 
 }
