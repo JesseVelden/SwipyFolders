@@ -172,7 +172,10 @@
 - (void)applicationShortcutMenuDidDismiss:(SBApplicationShortcutMenu *)arg1;
 @end
 
-@interface SBApplicationShortcutMenu : UIView
+@interface SBApplicationShortcutMenu : UIView {
+	SBApplicationShortcutMenuContentView* _contentView;
+}
+@property(retain, nonatomic) SBApplicationShortcutMenuContentView *contentView; 
 @property(retain, nonatomic) SBApplication *application; 
 @property(retain ,nonatomic) id <SBApplicationShortcutMenuDelegate> applicationShortcutMenuDelegate; 
 @property(readonly, nonatomic) _Bool isPresented;

@@ -466,6 +466,7 @@ CPDistributedMessagingCenter *messagingCenter;
 //A method for 3D Touch actions
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
+
 	firstIcon = nil;
 	if(!iconView.isFolderIconView) {
 		%orig;
@@ -495,7 +496,7 @@ CPDistributedMessagingCenter *messagingCenter;
 
 			case UIGestureRecognizerStateEnded: {
 
-				if (method == 4) {
+				if (method == 4 && self.presentedShortcutMenu.isPresented) {
 					SBApplicationShortcutMenuContentView *contentView = MSHookIvar<id>(self.presentedShortcutMenu,"_contentView");
 					NSMutableArray *itemViews = MSHookIvar<NSMutableArray *>(contentView,"_itemViews");
 					for(SBApplicationShortcutMenuItemView *item in itemViews) {
@@ -818,8 +819,7 @@ static BOOL isProtected = NO;
 
 						SBIconView *editedIconView = MSHookIvar<SBIconView *>(iconController.presentedShortcutMenu, "_proxyIconView");
 						editedIconView.labelView.hidden = YES;
-						self.labelView.hidden = YES;
-						
+
 						SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(editedIconView, "_iconImageView");
 						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 						folderImageView.image = [firstIcon getIconImage:2];

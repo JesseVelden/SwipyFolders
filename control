@@ -1,7 +1,7 @@
 Package: nl.jessevandervelden.swipyfolders
 Name: SwipyFolders
 Depends: mobilesubstrate, firmware (>= 8.0), com.rpetrich.rocketbootstrap (>= 1.0.4)
-Version: 1.4.0
+Version: 1.4.1
 Icon: file:///Library/PreferenceBundles/SwipyFoldersPrefs.bundle/swipe@2x.png
 Architecture: iphoneos-arm
 Description: Gestures for your folders
