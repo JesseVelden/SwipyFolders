@@ -1,4 +1,3 @@
-
 #import "SwipyFolders.h"
 
 
@@ -124,7 +123,9 @@ static void loadPreferences() {
 	SBFolder *folder = self._folderIcon.folder;
 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 
-	if(enabled){	
+	SBIconController *iconController = [%c(SBIconController) sharedInstance];
+
+	if(enabled && !iconController.isEditing){	
 		
 		
 		UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
@@ -292,8 +293,6 @@ static UIImageView *customImageView;
 	%orig;	
 
 	if(enabled && ![self isKindOfClass:%c(SBRootFolderController)]) {
-
-		//HBLogDebug(@"WE GAAN SLUITEN!!");
 
 		SBFolder *folder = self.folder;
 		NSDictionary *folderSettings = customFolderSettings[folder.folderID];
@@ -464,7 +463,7 @@ CPDistributedMessagingCenter *messagingCenter;
  *	
  */
 
-//A method for 3D Touch
+//A method for 3D Touch actions
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 	firstIcon = nil;
@@ -520,7 +519,7 @@ CPDistributedMessagingCenter *messagingCenter;
 }
 
 /**
- * Methods for other gestures on the folder icon
+ * Methods for setting other gestures on the folder icon
  *
  */
 
@@ -591,7 +590,6 @@ CPDistributedMessagingCenter *messagingCenter;
 /**
  * Protecting folders for those with BioProtect
  *
- *
  */
 static BOOL isProtected = NO;
 %hook SBApplicationShortcutMenu
@@ -619,8 +617,6 @@ static BOOL isProtected = NO;
 }
 
 %end
-
-
 
 
 
@@ -779,7 +775,7 @@ static BOOL isProtected = NO;
 
 				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
 				if(!classicFoldersEnabled) {
-					innerFolderImageView.hidden = YES; //Dit niet doen wanneer classicfolders enabled is
+					innerFolderImageView.hidden = YES;
 
 
 					dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
@@ -822,6 +818,8 @@ static BOOL isProtected = NO;
 
 						SBIconView *editedIconView = MSHookIvar<SBIconView *>(iconController.presentedShortcutMenu, "_proxyIconView");
 						editedIconView.labelView.hidden = YES;
+						self.labelView.hidden = YES;
+						
 						SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(editedIconView, "_iconImageView");
 						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 						folderImageView.image = [firstIcon getIconImage:2];
@@ -846,7 +844,7 @@ static BOOL isProtected = NO;
 				if(forceTouch) [[UIDevice currentDevice]._tapticEngine actuateFeedback:1];
 				//Open the last opened app from the folder
 
-				//Using SBLeafIcon in order to also load SBBookmarkIcons!!
+				//Using SBLeafIcon in order to also loads SBBookmarkIcons!!
 
 				SBLeafIcon *icon = nil;
 				if([[%c(SBIconController) sharedInstance] respondsToSelector:@selector(homescreenIconViewMap)]) {
@@ -869,7 +867,8 @@ static BOOL isProtected = NO;
 
 
 /**
- * To disable Spotlight view from showing up, if user swipe down on the icon && beter swiping up support if it is set to open Shortcutview to prevent moving SpringBoard:
+ * To disable Spotlight view from showing up, if user swipes down on the icon
+ *  and better swiping up support to prevent moving SpringBoard:
  *
  */
 
@@ -1040,7 +1039,7 @@ static NSString *oldFolderID;
 			[folderIconImageView bringSubviewToFront:innerFolderImageView];
 			folderIconImageView.backgroundView.customImageView.image = nil;
 
-			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView];
+			[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView]; // The most important part
 
 			//[folderIconImageView.]
 		}
