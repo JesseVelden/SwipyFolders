@@ -179,7 +179,7 @@ static UIImageView *customImageView;
 
 	UIView *view = %orig;
 
-	if(enabled) {
+	if(enabled && [self isKindOfClass:%c(SBFolderIconBackgroundView)]) {
 		CGSize size = [%c(SBIconView) defaultIconImageSize];
 		CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
 		if(!hideGreyFolderBackground) {

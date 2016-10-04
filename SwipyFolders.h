@@ -295,7 +295,7 @@
 - (void)didAddSubview:(id)arg1;
 @end
 
-@interface SBFolderIconBackgroundView : SBIconBlurryBackgroundView
+@interface SBFolderIconBackgroundView : UIView
 - (UIImageView *)customImageView;
 - (void)setCustomImageView:(UIImageView *)imageView;
 - (id)initWithDefaultSize;
@@ -334,6 +334,9 @@
 -(UIImage*)generateIconImage:(int)image ;
 - (UIImage*)getGenericIconImage:(int)arg1;
 - (void)setCustomFolderIcon;
+
+- (UIView *)initWithFrame:(struct CGRect)frame;
+- (UIImageView *)customImageView;
 @end
 
 @interface SBApplicationShortcutStoreManager : NSObject
