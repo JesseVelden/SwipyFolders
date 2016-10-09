@@ -115,6 +115,46 @@ static void loadPreferences() {
  */
 
 %hook SBFolderIconImageView
+static UIImageView *customImageView;
+
+
+-(id)initWithFrame:(CGRect)arg1{
+
+	//UIView *view = %orig;
+	self = %orig;
+
+	if(enabled) {
+		CGSize size = [%c(SBIconView) defaultIconImageSize];
+		CGRect iconFrame = CGRectMake(0, 0, size.width, size.height);
+		if(!hideGreyFolderBackground) {
+			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
+			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize); //Full size is 60
+		}
+
+
+		self.customImageView = [[UIImageView alloc] initWithFrame:iconFrame];
+		self.customImageView.backgroundColor = [UIColor clearColor];
+
+		[self insertSubview:self.customImageView atIndex:0];
+	}
+
+	return self;
+
+}
+
+
+%new(v@:@) - (void)setCustomImageView:(UIImageView *)imageView {
+	objc_setAssociatedObject(self, &customImageView, imageView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+%new(@@:) - (UIImageView *)customImageView {
+	return objc_getAssociatedObject(self, &customImageView);
+}
+
+-(void)dealloc {
+	[self.customImageView release];
+	%orig;
+}
 
 - (void)_showLeftMinigrid{
 	%orig;
@@ -134,26 +174,27 @@ static void loadPreferences() {
 			SBIcon *firstIcon = [folder getFirstIcon];
 			UIImage *firstImage = [firstIcon getIconImage:2];
 						
-			self.backgroundView.customImageView.image = firstImage;
-
-		
+			self.customImageView.image = firstImage;
 			[self hideInnerFolderImageView: YES];
 
 
+
 			CGSize size = [%c(SBIconView) defaultIconImageSize];
-			CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
+			CGRect iconFrame = CGRectMake(0, 0, size.width, size.height);
 			
 			if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
 				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
 				iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
 			}
 				
-			self.backgroundView.customImageView.frame = iconFrame;
+			self.customImageView.frame = iconFrame;
+
+			[self bringSubviewToFront:self.customImageView];
 
 		} else {
-			self.backgroundView.customImageView.image = nil;
+			self.customImageView.image = nil;
 			[self hideInnerFolderImageView: NO];
-			[self sendSubviewToBack:self.backgroundView];
+			[self sendSubviewToBack:self.customImageView]; //Misschien weg?
 			[self bringSubviewToFront:innerFolderImageView];
 					
 		}
@@ -172,49 +213,6 @@ static void loadPreferences() {
 %end
 
 
-%hook SBFolderIconBackgroundView
-static UIImageView *customImageView;
-
-- (UIView *)initWithDefaultSize{
-
-	UIView *view = %orig;
-
-	if(enabled && [self isKindOfClass:%c(SBFolderIconBackgroundView)]) {
-		CGSize size = [%c(SBIconView) defaultIconImageSize];
-		CGRect iconFrame = CGRectMake(-1, -1, size.width, size.height);
-		if(!hideGreyFolderBackground) {
-			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
-			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize); //Full size is 60
-		}
-
-
-		self.customImageView = [[UIImageView alloc] initWithFrame:iconFrame];
-		self.customImageView.backgroundColor = [UIColor clearColor];
-
-		[view insertSubview:self.customImageView atIndex:0];
-	}
-
-	return view;
-
-}
-
-
-%new(v@:@) - (void)setCustomImageView:(UIImageView *)imageView {
-	objc_setAssociatedObject(self, &customImageView, imageView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-%new(@@:) - (UIImageView *)customImageView {
-	return objc_getAssociatedObject(self, &customImageView);
-}
-
--(void)dealloc {
-	[self.customImageView release];
-	%orig;
-}
-
-
-%end
-
 %hook SBFolderIconZoomAnimator
 
 -(void)_prepareAnimation{
@@ -223,21 +221,20 @@ static UIImageView *customImageView;
 
 	SBFolderIconImageView *folderIconImageView  = self.targetIconView._folderIconImageView;
 
-	if(folderIconImageView.backgroundView.customImageView.image != nil) {
+	if(folderIconImageView.customImageView.image != nil) {
 
-		[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView];
+		folderIconImageView.customImageView.hidden = NO; //Because by opening a folder, the customImageView will be hided temporary
+		[folderIconImageView bringSubviewToFront:folderIconImageView.customImageView]; //.customImageView
 
-		folderIconImageView.backgroundView.customImageView.alpha = 0;
+		folderIconImageView.customImageView.alpha = 0;
 		[UIView beginAnimations:nil context:NULL];
 		[UIView setAnimationDuration:0.5];
-		[folderIconImageView.backgroundView.customImageView setAlpha:1.0];
+		[folderIconImageView.customImageView setAlpha:1.0];
 		[UIView commitAnimations];
 		
 	}
 
-
 	//If not calling %orig; the icons behind the screen are not removed, so cool iOS 10 gimmick?
-
 
 }
 %end
@@ -666,10 +663,11 @@ static BOOL isProtected = NO;
 				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
 				if(!classicFoldersEnabled) {
 					innerFolderImageView.hidden = YES;
-
+					folderIconView._folderIconImageView.customImageView.hidden = YES;
 
 					dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 						innerFolderImageView.hidden = NO;
+						folderIconView._folderIconImageView.customImageView.hidden = NO;
 					});	
 				}
 
@@ -900,18 +898,18 @@ static NSString *oldFolderID;
 		SBFolderIconView *folderIconView = (SBFolderIconView*)icon.getIconView;
 		SBFolderIconImageView *folderIconImageView = folderIconView._folderIconImageView;
 			
-		if(folderIconImageView.backgroundView.customImageView.image != nil) {
+		if(folderIconImageView.customImageView.image != nil) {
 			[folderIconImageView hideInnerFolderImageView: YES];
-			[folderIconImageView bringSubviewToFront:folderIconImageView.backgroundView.customImageView];
+			[folderIconImageView bringSubviewToFront:folderIconImageView.customImageView];
 			SBIcon *firstIcon = [self.folder getFirstIcon];
 			UIImage *firstImage = [firstIcon getIconImage:2];
 
 
-			[UIView transitionWithView:folderIconImageView.backgroundView.customImageView
+			[UIView transitionWithView:folderIconImageView.customImageView
                   	duration:0.5f
                 	options:UIViewAnimationOptionTransitionCrossDissolve
                 	animations:^{
-                  		folderIconImageView.backgroundView.customImageView.image = firstImage;
+                  		folderIconImageView.customImageView.image = firstImage;
                 	} completion:nil];
 
 		} else {

@@ -313,6 +313,11 @@
 - (void)_setupGridViewsInDefaultConfiguration;
 
 -(void)hideInnerFolderImageView:(BOOL)hide;
+
+- (void)setCustomIconImage:(UIImage *)image;
+- (void)setCustomImageView:(UIImageView *)imageView;
+- (UIImageView *)customImageView;
+
 @end
 
 
