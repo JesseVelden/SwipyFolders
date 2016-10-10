@@ -57,6 +57,7 @@
 @property(copy, nonatomic) NSString *displayName;
 @property(readonly, copy, nonatomic) NSArray *lists;
 @property (assign,nonatomic) SBIcon * icon; 
+@property (assign,getter=isOpen,nonatomic) BOOL open;
 - (SBApplicationIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 - (id)folderIcons;
 - (id)defaultDisplayName;
@@ -92,6 +93,8 @@
 @interface SBFolderView : UIView
 @property(retain, nonatomic) SBFolder *folder; 
 @property(readonly, nonatomic, getter=isEditing) _Bool editing; 
+@property (nonatomic,copy,readonly) NSArray * iconListViews; 
+@property (nonatomic,readonly) long long currentPageIndex;  
 - (void)_setFolderName:(id)arg1;
 - (void)setEditing:(_Bool)arg1 animated:(_Bool)arg2;
 - (void)cleanupAfterClosing;
@@ -276,6 +279,7 @@
 @interface SBFolderController : NSObject
 -(void)prepareToClose;
 @property (nonatomic,retain) SBFolder * folder; 
+@property (nonatomic,readonly) SBFolderView * contentView; 
 @end
 
 

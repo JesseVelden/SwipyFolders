@@ -177,13 +177,11 @@ static UIImageView *customImageView;
 			self.customImageView.image = firstImage;
 			[self hideInnerFolderImageView: YES];
 
-
-
 			CGSize size = [%c(SBIconView) defaultIconImageSize];
 			CGRect iconFrame = CGRectMake(0, 0, size.width, size.height);
 			
 			if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
-				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
+				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 47 : 54; 
 				iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
 			}
 				
@@ -221,16 +219,28 @@ static UIImageView *customImageView;
 
 	SBFolderIconImageView *folderIconImageView  = self.targetIconView._folderIconImageView;
 
-	if(folderIconImageView.customImageView.image != nil) {
+	if(folderIconImageView.customImageView.image != nil && !self.targetIcon.folder.open) { //Yes the last argument returns NO already
 
-		folderIconImageView.customImageView.hidden = NO; //Because by opening a folder, the customImageView will be hided temporary
-		[folderIconImageView bringSubviewToFront:folderIconImageView.customImageView]; //.customImageView
+
+		SBFolderView *innerFolderView = MSHookIvar<SBFolderView *>(self, "_innerFolderView");
+		UIView *scrollView = MSHookIvar<UIView *>(innerFolderView, "_scrollView");
+
+		UIImageView *leftView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+		leftView.hidden = YES;
+		UIImageView *rightView = MSHookIvar<UIImageView *>(folderIconImageView, "_rightWrapperView");
+		rightView.hidden = YES;
+
+
+		folderIconImageView.customImageView.hidden = NO;
+		[folderIconImageView bringSubviewToFront:folderIconImageView.customImageView];
 
 		folderIconImageView.customImageView.alpha = 0;
 		[UIView beginAnimations:nil context:NULL];
 		[UIView setAnimationDuration:0.5];
 		[folderIconImageView.customImageView setAlpha:1.0];
+		[scrollView setAlpha:0.0];
 		[UIView commitAnimations];
+
 		
 	}
 
@@ -238,7 +248,6 @@ static UIImageView *customImageView;
 
 }
 %end
-
 
 
 static SBIcon *firstIcon;
@@ -666,7 +675,7 @@ static BOOL isProtected = NO;
 					folderIconView._folderIconImageView.customImageView.hidden = YES;
 
 					dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
-						innerFolderImageView.hidden = NO;
+						if(folderIconView._folderIconImageView.customImageView.image == nil) innerFolderImageView.hidden = NO;
 						folderIconView._folderIconImageView.customImageView.hidden = NO;
 					});	
 				}
