@@ -360,7 +360,7 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>Want to have folder specific settings in your tweak? Check MegaCookie/libFolders</string>
+			<string>Coming soon: MegaCookie/libFolders</string>
 		</dict>
 	</array>
 

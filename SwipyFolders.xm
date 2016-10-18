@@ -163,10 +163,7 @@ static UIImageView *customImageView;
 	SBFolder *folder = self._folderIcon.folder;
 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
 
-	SBIconController *iconController = [%c(SBIconController) sharedInstance];
-
-	if(enabled && !iconController.isEditing){	
-		
+	if(enabled){	
 		
 		UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>(self, "_leftWrapperView");
 		
@@ -181,7 +178,7 @@ static UIImageView *customImageView;
 			CGRect iconFrame = CGRectMake(0, 0, size.width, size.height);
 			
 			if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
-				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 47 : 54; 
+				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
 				iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
 			}
 				
@@ -242,6 +239,11 @@ static UIImageView *customImageView;
 		[UIView commitAnimations];
 
 		
+	} else if(self.targetIcon.folder.open) {
+		folderIconImageView.customImageView.hidden = YES;
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+			folderIconImageView.customImageView.hidden = NO;
+		});	
 	}
 
 	//If not calling %orig; the icons behind the screen are not removed, so cool iOS 10 gimmick?
