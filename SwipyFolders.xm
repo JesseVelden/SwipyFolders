@@ -872,36 +872,7 @@ static BOOL isProtected = NO;
  *
  */
 
-static NSString *oldFolderID;
 %hook SBFolderView
-
-
-- (void)setEditing:(_Bool)editing animated:(_Bool)arg2{
-	%orig; 
-	if(editing == 0 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
-		NSString* newFolderID = [self.folder folderID];
-		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
-
-		[self updateIcon];
-	} 
-	else if(editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
-		oldFolderID = [[self.folder folderID] retain];
-	}
-
-
-}
-
-- (void)cleanupAfterClosing { //Works but what if Springboard crashes while still in editing mode >> then we've corrupted settings
-	%orig;
-	if(self.editing == 1 && self.folder.displayName && ![self.folder isKindOfClass:%c(SBRootFolder)]) {
-		NSString* newFolderID = [self.folder folderID];
-		[self.folder replaceOldFolderID:oldFolderID byNewFolderID:newFolderID];
-
-		[self updateIcon];
-		
-		
-	}
-}
 
 %new - (void)updateIcon {
 	if(enabled) {
@@ -947,6 +918,20 @@ static NSString *oldFolderID;
 	%orig;
 }
 */
+
+
+static NSString *oldFolderID;
+%new - (void)createOldFolderID {
+	self.oldFolderID = [self folderID];
+}
+
+%new(v@:@) - (void)setOldFolderID:(NSString *)folderID {
+	objc_setAssociatedObject(self, &oldFolderID, folderID, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+%new(@@:) - (NSString *)oldFolderID {
+	return objc_getAssociatedObject(self, &oldFolderID);
+}
 
 
 /**
@@ -1116,6 +1101,37 @@ static NSString *oldFolderID;
 }
 
 %end
+
+
+
+
+%hook SBRootFolderView
+
+
+-(void)setEditing:(BOOL)editing animated:(BOOL)arg2 {
+	NSArray *folderArray = [self.folder.folderIcons allObjects]; //ALL FOLDERS ^^
+
+	for (int i=0; i<[folderArray count]; i++) {
+		SBFolderIcon *folderIcon = [folderArray objectAtIndex:i];
+		SBFolder *folder = folderIcon.folder;
+
+		if(editing) {
+			[folder createOldFolderID];
+		} else {
+			[folder replaceOldFolderID:folder.oldFolderID byNewFolderID:[folder folderID]];
+		}
+	}
+
+	%orig; 
+
+	
+}
+	
+
+%end
+
+
+
 
 /**
  * Finally register a listener to reload preferences on changes

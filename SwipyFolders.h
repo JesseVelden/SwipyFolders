@@ -58,6 +58,8 @@
 @property(readonly, copy, nonatomic) NSArray *lists;
 @property (assign,nonatomic) SBIcon * icon; 
 @property (assign,getter=isOpen,nonatomic) BOOL open;
+@property (retain, nonatomic) NSString * uuid;
+@property (retain, nonatomic) NSString * oldFolderID;
 - (SBApplicationIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
 - (id)folderIcons;
 - (id)defaultDisplayName;
@@ -81,6 +83,10 @@
 - (void)quickActionOnFirstApp; 
 - (int)getFirstAppIconIndex;
 - (SBIcon*)getFirstIcon;
+- (NSString *)uuid;
+- (NSString *)createUUID;
+- (NSString *)createUUID;
+- (void)createOldFolderID;
 
 @end
 
@@ -228,6 +234,10 @@
 @end
 
 @interface SBRootFolder : SBFolder
+@end
+
+@interface SBRootFolderView : SBFolderView
+@property (nonatomic,retain) SBRootFolder * folder; 
 @end
 
 
