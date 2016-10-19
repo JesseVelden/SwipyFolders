@@ -161,7 +161,15 @@ static UIImageView *customImageView;
 
 	
 	SBFolder *folder = self._folderIcon.folder;
-	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
+	NSString *folderID = folder.folderID;
+
+	SBIconController *iconController = [%c(SBIconController) sharedInstance];
+	if(iconController.isEditing && ![folder.oldFolderID isEqualToString:@""]) {
+		folderID = folder.oldFolderID;
+	}
+
+	NSDictionary *folderSettings = customFolderSettings[folderID];
+
 
 	if(enabled){	
 		
