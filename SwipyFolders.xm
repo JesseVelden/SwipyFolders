@@ -473,7 +473,7 @@ CPDistributedMessagingCenter *messagingCenter;
 						doubleTapRecognized = YES;
 
 						[iconView sf_method:[iconView getFolderSetting:@"DoubleTapMethod" withDefaultSetting:doubleTapMethod withDefaultCustomAppIndex:doubleTapMethodCustomAppIndex] withForceTouch:NO];
-						lastTappedTime = 0;
+						lastTappedTime = nil;
 						iconView.highlighted = NO;
 						return;
 					}
