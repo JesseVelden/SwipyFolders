@@ -465,7 +465,7 @@ CPDistributedMessagingCenter *messagingCenter;
 
 				[iconView sf_method:[iconView getFolderSetting:@"ShortHoldMethod" withDefaultSetting:shortHoldMethod withDefaultCustomAppIndex:shortHoldMethodCustomAppIndex] withForceTouch:NO];
 				lastTouchedTime = nil;
-				
+				iconView.highlighted = NO;
 				return;
 			} else if(!forceTouchRecognized && doubleTapMethod != 0) {
 				if (iconView == tappedIcon) {
