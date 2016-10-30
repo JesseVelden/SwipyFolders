@@ -114,6 +114,7 @@ static void loadPreferences() {
  *	
  */
 
+
 %hook SBFolderIconImageView
 static UIImageView *customImageView;
 
@@ -159,7 +160,6 @@ static UIImageView *customImageView;
 - (void)_showLeftMinigrid{
 	%orig;
 
-	
 	SBFolder *folder = self._folderIcon.folder;
 	NSString *folderID = folder.folderID;
 
@@ -413,10 +413,11 @@ static BOOL interactionProgressDidComplete = NO;
 
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder getFirstIcon];
-	if (!self.isEditing && iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
-		//HBLogDebug(@"OK SEEMS NORMAL");
-		NSDictionary *methodDict = [iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
-		NSInteger method = [methodDict[@"method"] intValue];
+	NSDictionary *methodDict = [iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
+	NSInteger method = [methodDict[@"method"] intValue];
+
+	if (!self.isEditing && iconView.isFolderIconView && method != 0 && firstIcon && enabled) {
+
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
 				[iconView cancelLongPressTimer];
@@ -428,12 +429,22 @@ static BOOL interactionProgressDidComplete = NO;
 				self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
 				UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
 				[rootView.view addSubview:self.presentedShortcutMenu];
-				//[self.presentedShortcutMenu presentAnimated:YES];
-
 
 				[iconView setLabelHidden:true];
 				SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self.presentedShortcutMenu, "_proxyIconView");
 				forceTouchIconView.labelView.hidden = YES;
+
+				if (method == 4) {
+					SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
+					UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+
+					[UIView transitionWithView:folderImageView
+                  	duration:0.5f
+                	options:UIViewAnimationOptionTransitionCrossDissolve
+                	animations:^{
+                  		folderImageView.image = [firstIcon getIconImage:2];
+                	} completion:nil];
+				}
 
 
 			}break;
@@ -441,7 +452,6 @@ static BOOL interactionProgressDidComplete = NO;
 			case UIGestureRecognizerStateChanged: {
 				[iconView cancelLongPressTimer];
 				if (method == 4) [self.presentedShortcutMenu updateFromPressGestureRecognizer:recognizer];
-				//if (!interactionProgressDidComplete) [self.presentedShortcutMenu interactionProgressDidUpdate:iconView.shortcutMenuPresentProgress];
 			}break;
 
 			case UIGestureRecognizerStateEnded: {
@@ -477,6 +487,7 @@ static BOOL interactionProgressDidComplete = NO;
 		[self _cleanupForDismissingShortcutMenu:self.presentedShortcutMenu];
 	}
 }
+
 
 /**
  * Methods for setting other gestures on the folder icon
@@ -706,12 +717,6 @@ static BOOL isProtected = NO;
 
 	
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	/*if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-		SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
-		if(shortcutMenu.isPresented) {
-			return;
-		}
-	}*/
 
 	if(enabled && !iconController.isEditing) {
 
@@ -725,7 +730,6 @@ static BOOL isProtected = NO;
 						return;
 					}
 				}
-
 
 				
 				SBFolderIconView *folderIconView = (SBFolderIconView*)self;
@@ -760,35 +764,7 @@ static BOOL isProtected = NO;
 			}break;
 
 			case 4: {
-				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-					//[iconController.presentedShortcutMenu interactionProgress:self.shortcutMenuPresentProgress didEnd:YES];
-					[iconController.presentedShortcutMenu presentAnimated:YES];
-					/*
-					[iconController.presentedShortcutMenu dismissAnimated:NO completionHandler:nil];
-					SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
-
-					NSDate *nowTime = [[NSDate date] retain];
-
-					if(!shortcutMenu.isPresented && (forceTouchOpenedTime == nil || [nowTime timeIntervalSinceDate:forceTouchOpenedTime] > 1)) {
-						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
-
-						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
-						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
-						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
-						[rootView.view addSubview:iconController.presentedShortcutMenu];
-						[iconController.presentedShortcutMenu presentAnimated:YES];
-
-						SBIconView *editedIconView = MSHookIvar<SBIconView *>(iconController.presentedShortcutMenu, "_proxyIconView");
-						editedIconView.labelView.hidden = YES;
-
-						SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(editedIconView, "_iconImageView");
-						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
-						folderImageView.image = [firstIcon getIconImage:2];
-						//[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil]; //HIERMEE LAAT JE DE STATUSBAR WEER ZIEN!
-
-						forceTouchOpenedTime = nowTime;
-					}*/
-				}
+				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) [iconController.presentedShortcutMenu presentAnimated:YES];
 			}break;
 
 			case 5: {
@@ -967,29 +943,6 @@ static BOOL isProtected = NO;
 
 
 %hook SBFolder
-
-/*
-- (void)didRemoveFolder:(SBFolder*)folder {
-	
-	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
-	if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
-	[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
-
-	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
-	[preferences synchronize];
-	customFolderSettings = [mutableCustomFolderSettings copy];
-	
-	%orig;
-}
-
--(void)removeFolderObserver:(id)arg1 {
-	HBLogDebug(@"REMOVE THA FOLDER");
-	%orig;
-}*/
-
-
-
 
 static NSString *oldFolderID;
 %new - (void)createOldFolderID {
@@ -1204,7 +1157,6 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 		for (int i=0; i<[oldFolderIDsAtBeginEditing count]; i++) {
 			NSString *oldFolderID = [oldFolderIDsAtBeginEditing objectAtIndex:i];
 			if(![oldFolderIDsAtEndEditing containsObject:oldFolderID] && [oldFolderIDsAtEndEditing count] > 0) {
-				HBLogDebug(@"De folder die we gaan verwijderen: %@", oldFolderID);
 				
 				NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
 				if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
@@ -1230,33 +1182,9 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 
 
 %hook SBApplicationShortcutMenu 
-- (void)_peekWithContentFraction:(double)arg1 smoothedBlurFraction:(double)arg2 {
-	%orig;
-
-	/*if (arg1 > 1 && self.iconView.isFolderIconView) {
-		HBLogDebug(@"Daar gaan we!");
-		interactionProgressDidComplete = true;
-		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
-		NSInteger method = [methodDict[@"method"] intValue];
-		if (method != 4) [self dismissAnimated:false completionHandler:nil];
-		[self.iconView sf_method:methodDict withForceTouch:YES];
-	}*/
-}
-
--(void)interactionProgressDidUpdate:(UIPreviewForceInteractionProgress *)arg1 {
-	//Dit zorgt voor _peekWithContentFraction en die zorgt weer dat  _updateBackgroundForBlurFraction
-
-	//%log;
-
-
-
-	%orig;
-}
-
 
 - (void)interactionProgress:(id)arg1 didEnd:(_Bool)arg2 {
 	
-
 	if (enabled && arg2 && self.iconView.isFolderIconView) {
 		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
 		NSInteger method = [methodDict[@"method"] intValue];
@@ -1268,9 +1196,36 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 	} 
 
 	%orig;
-	
-	
 } 
+
+
+- (void)dismissAnimated:(_Bool)arg1 completionHandler:(id)arg2{
+	%log;
+	if(enabled && arg1 && self.iconView.isFolderIconView) {
+		SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self, "_proxyIconView");
+		SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
+		UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+		[UIView beginAnimations:nil context:NULL];
+		[UIView setAnimationDuration:0.2];
+		[folderImageView setAlpha:0.0];
+		[UIView commitAnimations];
+	}
+	%orig;
+}
+
+- (void)_finishPeekingWithCompletionHandler:(id)arg1 {
+	if(enabled && self.iconView.isFolderIconView) {
+		SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self, "_proxyIconView");
+		SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
+		UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+		[UIView beginAnimations:nil context:NULL];
+		[UIView setAnimationDuration:0.5];
+		[folderImageView setAlpha:0.0];
+		[UIView commitAnimations];
+	}
+	%orig;
+}
+
 
 - (id)_shortcutItemsToDisplay {
 	NSMutableArray *items = %orig;
@@ -1287,6 +1242,11 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 		}
 	}
 	return items;
+}
+
++ (void)cancelPrepareForPotentialPresentationWithReason:(id)arg1 {
+	HBLogDebug(@"JO STOP ER MAAR MEE");
+	//%orig;
 }
 
 %end
