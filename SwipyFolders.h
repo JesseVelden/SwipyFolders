@@ -124,6 +124,8 @@
 - (void)setWallpaperRelativeCenter:(struct CGPoint)arg1;
 - (void)setIsEditing:(_Bool)arg1;
 - (UIView*)labelView;
+- (void)setLabelHidden:(BOOL)arg1 ;
+-(void)_setPreparingForPotentialShortcutMenuPresentation:(BOOL)arg1 ;
 
 //New:
 - (NSDictionary*)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting withDefaultCustomAppIndex:(NSInteger)globalAppIndex;
@@ -151,6 +153,7 @@
 @property(readonly, nonatomic) long long menuPosition; 
 @property(retain, nonatomic) SBSApplicationShortcutItem *shortcutItem; 
 @property(nonatomic) _Bool highlighted; 
+
 
 + (id)_imageForShortcutItem:(id)arg1 application:(id)arg2 assetManagerProvider:(id)arg3 monogrammerProvider:(id)arg4 maxHeight:(double *)arg5;
 @end
@@ -180,6 +183,7 @@
 @interface SBApplicationShortcutMenu : UIView {
 	SBApplicationShortcutMenuContentView* _contentView;
 }
++ (void)cancelPrepareForPotentialPresentationWithReason:(id)arg1;
 @property(retain, nonatomic) SBApplicationShortcutMenuContentView *contentView; 
 @property(retain, nonatomic) SBApplication *application; 
 @property(retain ,nonatomic) id <SBApplicationShortcutMenuDelegate> applicationShortcutMenuDelegate; 
@@ -194,7 +198,8 @@
 - (void)_dismissAnimated:(_Bool)arg1 finishPeeking:(_Bool)arg2 ignorePresentState:(_Bool)arg3 completionHandler:(id)arg4;
 - (void)applicationShortcutMenuDidDismiss:(id)arg1;
 - (void) onBioProtectSuccessWithMenuContentView:(id)arg1 activateShortcutItem:(id)arg2 index:(long long)arg3;
-
+- (void)interactionProgressDidUpdate:(UIPreviewForceInteractionProgress *)arg1;
+- (void)interactionProgress:(id)arg1 didEnd:(_Bool)arg2;
 @end
 
 
@@ -268,7 +273,9 @@
 - (void)dismissShortcutMenuWithCompletionHandler:(id)arg1;
 - (void)applicationShortcutMenuDidDismiss:(id)arg1;
 - (SBRootFolder *)rootFolder;
-
+- (void)_cleanupForDismissingShortcutMenu:(id)arg1;
+- (void)_dismissShortcutMenuAnimated:(_Bool)arg1 completionHandler:(id)arg2;
+- (void)dismissShortcutMenuWithCompletionHandler:(id)arg1;
 
 - (SBRootIconListView*)currentFolderIconList;
 - (SBRootIconListView*)dockListView;
@@ -340,6 +347,7 @@
 - (void)scrollToTopOfPage:(unsigned long long)arg1 animated:(_Bool)arg2;
 - (void)scrollToFirstGapAnimated:(_Bool)arg1;
 - (void)scrollToTopOfFirstPageAnimated:(_Bool)arg1;
+
 
 
 - (void)folder:(id)arg1 didAddList:(id)arg2;

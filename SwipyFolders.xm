@@ -260,11 +260,25 @@ static UIImageView *customImageView;
 %end
 
 
+
+%hook SBFolderIconView
+- (void)setIcon:(id)arg1 {
+	%orig;
+	self.shortcutMenuPeekGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:[%c(SBIconController) sharedInstance] action:@selector(_handleShortcutMenuPeek:)];
+	self.shortcutMenuPresentProgress = [[UIPreviewForceInteractionProgress alloc] initWithGestureRecognizer:self.shortcutMenuPeekGesture];
+	[self cancelLongPressTimer];
+}
+
+%end
+
+
+
+
 static SBIcon *firstIcon;
 static SBIconView *tappedIcon;
 static NSDate *lastTouchedTime;
 static NSDate *lastTappedTime;
-static NSDate *forceTouchOpenedTime;
+//static NSDate *forceTouchOpenedTime;
 static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
 
@@ -387,6 +401,7 @@ CPDistributedMessagingCenter *messagingCenter;
  */
 
 //A method for 3D Touch actions
+static BOOL interactionProgressDidComplete = NO;
 - (void)_handleShortcutMenuPeek:(UILongPressGestureRecognizer *)recognizer {
 	SBIconView *iconView = (SBIconView*)recognizer.view;
 
@@ -399,22 +414,34 @@ CPDistributedMessagingCenter *messagingCenter;
 	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
 	firstIcon = [folder getFirstIcon];
 	if (!self.isEditing && iconView.isFolderIconView && forceTouchMethod != 0 && firstIcon && enabled) {
+		//HBLogDebug(@"OK SEEMS NORMAL");
 		NSDictionary *methodDict = [iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
 		NSInteger method = [methodDict[@"method"] intValue];
 		switch (recognizer.state) {
 			case UIGestureRecognizerStateBegan: {
-
 				[iconView cancelLongPressTimer];
 
-				[iconView sf_method:methodDict withForceTouch:YES];
 				forceTouchRecognized = YES;
+				interactionProgressDidComplete = false;
+				
+				self.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:iconView interactionProgress:iconView.shortcutMenuPresentProgress orientation:1];
+				self.presentedShortcutMenu.applicationShortcutMenuDelegate = self;
+				UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+				[rootView.view addSubview:self.presentedShortcutMenu];
+				//[self.presentedShortcutMenu presentAnimated:YES];
+
+
+				[iconView setLabelHidden:true];
+				SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self.presentedShortcutMenu, "_proxyIconView");
+				forceTouchIconView.labelView.hidden = YES;
+
 
 			}break;
 
 			case UIGestureRecognizerStateChanged: {
-				if (forceTouchMethod == 4) {
-					[self.presentedShortcutMenu updateFromPressGestureRecognizer:recognizer];
-				}
+				[iconView cancelLongPressTimer];
+				if (method == 4) [self.presentedShortcutMenu updateFromPressGestureRecognizer:recognizer];
+				//if (!interactionProgressDidComplete) [self.presentedShortcutMenu interactionProgressDidUpdate:iconView.shortcutMenuPresentProgress];
 			}break;
 
 			case UIGestureRecognizerStateEnded: {
@@ -428,6 +455,8 @@ CPDistributedMessagingCenter *messagingCenter;
 							break;
 						}
 					}
+				} else if(method != 4) {
+					[self.presentedShortcutMenu dismissAnimated:true completionHandler:nil];
 				}
 
 			}break;
@@ -439,6 +468,13 @@ CPDistributedMessagingCenter *messagingCenter;
 		iconView.highlighted = NO;
 	} else {
 		%orig;
+	}
+}
+
+- (void)setIsEditing:(_Bool)editing {
+	%orig; 
+	if(editing && [self respondsToSelector:@selector(_cleanupForDismissingShortcutMenu:)]) {
+		[self _cleanupForDismissingShortcutMenu:self.presentedShortcutMenu];
 	}
 }
 
@@ -465,7 +501,7 @@ CPDistributedMessagingCenter *messagingCenter;
 
 				[iconView sf_method:[iconView getFolderSetting:@"ShortHoldMethod" withDefaultSetting:shortHoldMethod withDefaultCustomAppIndex:shortHoldMethodCustomAppIndex] withForceTouch:NO];
 				lastTouchedTime = nil;
-				
+				iconView.highlighted = NO;
 				return;
 			} else if(!forceTouchRecognized && doubleTapMethod != 0) {
 				if (iconView == tappedIcon) {
@@ -620,15 +656,14 @@ static BOOL isProtected = NO;
 }
 
 - (void)setIsEditing:(_Bool)editing animated:(_Bool)arg2 {
-
 	%orig;
 
 	//Maybe a check that we're only disabeling our own gesture recognizers?
-
 	if(editing && self.isFolderIconView) {
 		for (UIGestureRecognizer *recognizer in self.gestureRecognizers) {
 			recognizer.enabled = NO;
 		}
+
 	} else  if (!editing && self.isFolderIconView) {
 		for (UIGestureRecognizer *recognizer in self.gestureRecognizers) {
 			recognizer.enabled = YES;
@@ -669,14 +704,14 @@ static BOOL isProtected = NO;
 
 	SBFolder * folder = ((SBIconView *)self).icon.folder;
 
-
+	
 	SBIconController* iconController = [%c(SBIconController) sharedInstance];
-	if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
+	/*if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
 		SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
 		if(shortcutMenu.isPresented) {
 			return;
 		}
-	}
+	}*/
 
 	if(enabled && !iconController.isEditing) {
 
@@ -726,7 +761,9 @@ static BOOL isProtected = NO;
 
 			case 4: {
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-					
+					//[iconController.presentedShortcutMenu interactionProgress:self.shortcutMenuPresentProgress didEnd:YES];
+					[iconController.presentedShortcutMenu presentAnimated:YES];
+					/*
 					[iconController.presentedShortcutMenu dismissAnimated:NO completionHandler:nil];
 					SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
 
@@ -750,7 +787,7 @@ static BOOL isProtected = NO;
 						//[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil]; //HIERMEE LAAT JE DE STATUSBAR WEER ZIEN!
 
 						forceTouchOpenedTime = nowTime;
-					}
+					}*/
 				}
 			}break;
 
@@ -1186,6 +1223,71 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 	
 }
 	
+
+%end
+
+
+
+
+%hook SBApplicationShortcutMenu 
+- (void)_peekWithContentFraction:(double)arg1 smoothedBlurFraction:(double)arg2 {
+	%orig;
+
+	/*if (arg1 > 1 && self.iconView.isFolderIconView) {
+		HBLogDebug(@"Daar gaan we!");
+		interactionProgressDidComplete = true;
+		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
+		NSInteger method = [methodDict[@"method"] intValue];
+		if (method != 4) [self dismissAnimated:false completionHandler:nil];
+		[self.iconView sf_method:methodDict withForceTouch:YES];
+	}*/
+}
+
+-(void)interactionProgressDidUpdate:(UIPreviewForceInteractionProgress *)arg1 {
+	//Dit zorgt voor _peekWithContentFraction en die zorgt weer dat  _updateBackgroundForBlurFraction
+
+	//%log;
+
+
+
+	%orig;
+}
+
+
+- (void)interactionProgress:(id)arg1 didEnd:(_Bool)arg2 {
+	
+
+	if (enabled && arg2 && self.iconView.isFolderIconView) {
+		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
+		NSInteger method = [methodDict[@"method"] intValue];
+		if(method != 4 && method != 0){
+			[self dismissAnimated:false completionHandler:nil];
+			[self.iconView sf_method:methodDict withForceTouch:YES];
+			return;
+		}
+	} 
+
+	%orig;
+	
+	
+} 
+
+- (id)_shortcutItemsToDisplay {
+	NSMutableArray *items = %orig;
+
+	if (enabled) {
+		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
+		NSInteger method = [methodDict[@"method"] intValue];
+
+		if ([items count] == 0 && self.iconView.isFolderIconView && method != 4 && method != 0) {
+			SBSApplicationShortcutItem *action = [[%c(SBSApplicationShortcutItem) alloc] init];
+			[action setLocalizedTitle:@"Fake Action"];
+
+			[items addObject:action];
+		}
+	}
+	return items;
+}
 
 %end
 
