@@ -108,6 +108,13 @@ static void loadPreferences() {
 }
 
 
+static UIColor *colorShiftedBy(UIColor *color, CGFloat shift) {
+	CGFloat red, green, blue, alpha;
+	[color getRed:&red green:&green blue:&blue alpha:&alpha];
+	return [UIColor colorWithRed:red + shift green:green + shift blue:blue + shift alpha:alpha];
+}
+
+
 
 /**
  * Setting the folder preview
@@ -411,7 +418,8 @@ static BOOL interactionProgressDidComplete = NO;
 		return;
 	}
 
-	SBFolder* folder = ((SBFolderIconView *)iconView).folderIcon.folder;
+	SBFolderIcon *folderIcon = ((SBFolderIconView *)iconView).folderIcon;
+	SBFolder* folder = folderIcon.folder;
 	firstIcon = [folder getFirstIcon];
 	NSDictionary *methodDict = [iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
 	NSInteger method = [methodDict[@"method"] intValue];
@@ -430,21 +438,32 @@ static BOOL interactionProgressDidComplete = NO;
 				UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
 				[rootView.view addSubview:self.presentedShortcutMenu];
 
-				[iconView setLabelHidden:true];
 				SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self.presentedShortcutMenu, "_proxyIconView");
-				forceTouchIconView.labelView.hidden = YES;
+				SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
 
-				if (method == 4) {
-					SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
-					UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+				UIView* folderBackgroundView = MSHookIvar<UIView *>(folderIconImageView, "_backgroundView");
+				SBWallpaperController *wallpaperCont = [%c(SBWallpaperController) sharedInstance];
+				UIColor *dominantColor = [wallpaperCont averageColorForVariant:1];
+				folderBackgroundView.backgroundColor = colorShiftedBy(dominantColor, 0.15);
+				
+				folderBackgroundView.alpha = 0;
+				UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 
-					[UIView transitionWithView:folderImageView
-                  	duration:0.5f
-                	options:UIViewAnimationOptionTransitionCrossDissolve
-                	animations:^{
-                  		folderImageView.image = [firstIcon getIconImage:2];
-                	} completion:nil];
+				SBIcon *forceTouchIcon = forceTouchIconView.icon;
+				if(forceTouchIcon) {
+					forceTouchIcon.forceTouchIcon = [NSNumber numberWithBool:YES];
+					[%c(SBIconBadgeView) checkoutAccessoryImagesForIcon:forceTouchIcon location:1];
 				}
+
+
+				[UIView transitionWithView:folderImageView
+				duration:0.5f
+				options:UIViewAnimationOptionTransitionCrossDissolve
+				animations:^{
+					if (method == 4) folderImageView.image = [firstIcon getIconImage:2];
+					folderBackgroundView.alpha = 1;
+				} completion:nil];
+
 
 
 			}break;
@@ -585,6 +604,78 @@ static BOOL isProtected = NO;
 	isProtected = YES;
 	[self menuContentView:arg1 activateShortcutItem:arg2 index:arg3];
 
+}
+
+/**
+ * Some methods to let 3D Touch work on folder icons, and some animations
+ *
+ */
+- (void)interactionProgress:(id)arg1 didEnd:(_Bool)arg2 {
+	
+	if (enabled && arg2 && self.iconView.isFolderIconView) {
+		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
+		NSInteger method = [methodDict[@"method"] intValue];
+		if(method != 4 && method != 0){
+			[self dismissAnimated:false completionHandler:nil];
+			[self.iconView sf_method:methodDict withForceTouch:YES];
+			return;
+		}
+	} 
+
+	%orig;
+} 
+
+
+- (void)dismissAnimated:(_Bool)arg1 completionHandler:(id)arg2{
+	if(enabled && arg1 && self.iconView.isFolderIconView) {
+		SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self, "_proxyIconView");
+		SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
+		UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+		UIView* folderBackgroundView = MSHookIvar<UIView *>(folderIconImageView, "_backgroundView");
+		[UIView beginAnimations:nil context:NULL];
+		[UIView setAnimationDuration:0.3];
+		[folderImageView setAlpha:0.0];
+		[folderBackgroundView setAlpha:0.0];
+		[UIView commitAnimations];
+	}
+	%orig;
+}
+
+- (void)_finishPeekingWithCompletionHandler:(id)arg1 {
+	if(enabled && self.iconView.isFolderIconView) {
+		SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self, "_proxyIconView");
+		SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
+		UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+		UIView* folderBackgroundView = MSHookIvar<UIView *>(folderIconImageView, "_backgroundView");
+		[UIView beginAnimations:nil context:NULL];
+		[UIView setAnimationDuration:0.5];
+		[folderImageView setAlpha:0.0];
+		[folderBackgroundView setAlpha:0.0];
+		[UIView commitAnimations];
+	}
+	%orig;
+}
+
+
+- (id)_shortcutItemsToDisplay {
+	//Sometimes the labelview of the forceTouchIconView isn't hidden, (even normal aplications) so in order to prevent that:
+	SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self, "_proxyIconView");
+	forceTouchIconView.labelView.hidden = YES;
+
+	NSMutableArray *items = %orig;
+	if (enabled) {
+		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
+		NSInteger method = [methodDict[@"method"] intValue];
+
+		//In order to set blurring on forceTouch folderIcons, where the first app doesn't support Force Touch, add a fake action
+		if ([items count] == 0 && self.iconView.isFolderIconView && method != 4 && method != 0) {
+			SBSApplicationShortcutItem *action = [[%c(SBSApplicationShortcutItem) alloc] init];
+			[action setLocalizedTitle:@"Fake Action"];
+
+			[items addObject:action];
+		}
+	}
+	return items;
 }
 
 %end
@@ -734,9 +825,13 @@ static BOOL isProtected = NO;
 				
 				SBFolderIconView *folderIconView = (SBFolderIconView*)self;
 				UIImageView *innerFolderImageView = MSHookIvar<UIImageView *>([folderIconView _folderIconImageView], "_leftWrapperView");
-				
+
+
+				SBFolderIcon *folderIcon = ((SBFolderIconView *)self).folderIcon;
+				[folderIcon setBadge:[NSNumber numberWithInt:0]];
 
 				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
+				
 				if(!classicFoldersEnabled) {
 					innerFolderImageView.hidden = YES;
 					folderIconView._folderIconImageView.customImageView.hidden = YES;
@@ -748,6 +843,11 @@ static BOOL isProtected = NO;
 				}
 
 				if(forceTouch) self.highlighted = NO;
+
+				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+					[folderIcon _updateBadgeValue];
+				});
+
 
 			}break;
 
@@ -764,6 +864,7 @@ static BOOL isProtected = NO;
 			}break;
 
 			case 4: {
+				//Currently this won't be used as it will be handled natively
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) [iconController.presentedShortcutMenu presentAnimated:YES];
 			}break;
 
@@ -835,7 +936,7 @@ static BOOL isProtected = NO;
 
 
 
-
+static NSNumber *forceTouchIcon;
 %hook SBIcon
 
 /**
@@ -903,6 +1004,20 @@ static BOOL isProtected = NO;
 	
 }
 
+
+%new(v@:@) - (void)setForceTouchIcon:(NSNumber*)isForceTouchIcon {
+	objc_setAssociatedObject(self, &forceTouchIcon, isForceTouchIcon, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+%new(@@:) - (NSNumber*)forceTouchIcon {
+	return objc_getAssociatedObject(self, &forceTouchIcon);
+}
+
+-(void)dealloc {
+	[self.forceTouchIcon release];
+	%orig;
+}
+
 %end
 
 
@@ -927,11 +1042,11 @@ static BOOL isProtected = NO;
 
 
 			[UIView transitionWithView:folderIconImageView.customImageView
-                  	duration:0.5f
-                	options:UIViewAnimationOptionTransitionCrossDissolve
-                	animations:^{
-                  		folderIconImageView.customImageView.image = firstImage;
-                	} completion:nil];
+					duration:0.5f
+					options:UIViewAnimationOptionTransitionCrossDissolve
+					animations:^{
+						folderIconImageView.customImageView.image = firstImage;
+					} completion:nil];
 
 		} else {
 			//[folderIconImageView sendSubviewToBack:folderIconImageView.backgroundView]; // The most important part
@@ -1177,82 +1292,6 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 	
 
 %end
-
-
-
-
-%hook SBApplicationShortcutMenu 
-
-- (void)interactionProgress:(id)arg1 didEnd:(_Bool)arg2 {
-	
-	if (enabled && arg2 && self.iconView.isFolderIconView) {
-		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
-		NSInteger method = [methodDict[@"method"] intValue];
-		if(method != 4 && method != 0){
-			[self dismissAnimated:false completionHandler:nil];
-			[self.iconView sf_method:methodDict withForceTouch:YES];
-			return;
-		}
-	} 
-
-	%orig;
-} 
-
-
-- (void)dismissAnimated:(_Bool)arg1 completionHandler:(id)arg2{
-	%log;
-	if(enabled && arg1 && self.iconView.isFolderIconView) {
-		SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self, "_proxyIconView");
-		SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
-		UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
-		[UIView beginAnimations:nil context:NULL];
-		[UIView setAnimationDuration:0.2];
-		[folderImageView setAlpha:0.0];
-		[UIView commitAnimations];
-	}
-	%orig;
-}
-
-- (void)_finishPeekingWithCompletionHandler:(id)arg1 {
-	if(enabled && self.iconView.isFolderIconView) {
-		SBIconView *forceTouchIconView = MSHookIvar<SBIconView *>(self, "_proxyIconView");
-		SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(forceTouchIconView, "_iconImageView");
-		UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
-		[UIView beginAnimations:nil context:NULL];
-		[UIView setAnimationDuration:0.5];
-		[folderImageView setAlpha:0.0];
-		[UIView commitAnimations];
-	}
-	%orig;
-}
-
-
-- (id)_shortcutItemsToDisplay {
-	NSMutableArray *items = %orig;
-
-	if (enabled) {
-		NSDictionary *methodDict = [self.iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
-		NSInteger method = [methodDict[@"method"] intValue];
-
-		if ([items count] == 0 && self.iconView.isFolderIconView && method != 4 && method != 0) {
-			SBSApplicationShortcutItem *action = [[%c(SBSApplicationShortcutItem) alloc] init];
-			[action setLocalizedTitle:@"Fake Action"];
-
-			[items addObject:action];
-		}
-	}
-	return items;
-}
-
-+ (void)cancelPrepareForPotentialPresentationWithReason:(id)arg1 {
-	HBLogDebug(@"JO STOP ER MAAR MEE");
-	//%orig;
-}
-
-%end
-
-
-
 
 /**
  * Finally register a listener to reload preferences on changes

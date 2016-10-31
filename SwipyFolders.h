@@ -39,6 +39,10 @@
 - (id)folder;
 - (void)openAppFromFolder:(NSString*)folder;
 - (id)getIconView;
+- (void)setBadge:(id)arg1;
+
+- (void)setForceTouchIcon:(NSNumber*)isForceTouchIcon;
+- (NSNumber*)forceTouchIcon;
 
 @end
 
@@ -200,6 +204,8 @@
 - (void) onBioProtectSuccessWithMenuContentView:(id)arg1 activateShortcutItem:(id)arg2 index:(long long)arg3;
 - (void)interactionProgressDidUpdate:(UIPreviewForceInteractionProgress *)arg1;
 - (void)interactionProgress:(id)arg1 didEnd:(_Bool)arg2;
+- (_Bool)iconViewDisplaysBadges:(id)arg1;
+
 @end
 
 
@@ -301,6 +307,8 @@
 - (SBFolder *)folder;
 - (void)iconImageDidUpdate:(SBIcon *)icon;
 - (id)miniGridCellImageForIcon:(SBIcon*)icon;
+- (void)_updateBadgeValue;
+
 @end
 
 @interface SBIconImageView : UIView
@@ -417,6 +425,19 @@
 @property (nonatomic,retain,readonly) SBFolderIconView * targetIconView; 
 @property (nonatomic,retain,readonly) SBFolderIcon * targetIcon; 
 
+@end
+
+@interface SBWallpaperController : NSObject
++ (id)sharedInstance;
+- (int)variant;
+- (UIColor *)averageColorForVariant:(int)variant;
+@end
+
+
+@interface SBIconBadgeView : UIView
++ (id)checkoutAccessoryImagesForIcon:(id)arg1 location:(int)arg2;
+- (void)configureForIcon:(id)arg1 location:(int)arg2 highlighted:(_Bool)arg3;
+- (void)configureAnimatedForIcon:(id)arg1 location:(int)arg2 highlighted:(_Bool)arg3 withPreparation:(id)arg4 animation:(id)arg5 completion:(id)arg6;
 @end
 
 @interface UIGestureRecognizerTarget : NSObject {
