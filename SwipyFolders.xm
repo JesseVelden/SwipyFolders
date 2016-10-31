@@ -114,6 +114,13 @@ static UIColor *colorShiftedBy(UIColor *color, CGFloat shift) {
 	return [UIColor colorWithRed:red + shift green:green + shift blue:blue + shift alpha:alpha];
 }
 
+static void saveFolderSettings(NSDictionary *folderSettings) {
+	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
+	[preferences synchronize];
+	customFolderSettings = [folderSettings copy];
+}
+
 
 
 /**
@@ -349,24 +356,25 @@ CPDistributedMessagingCenter *messagingCenter;
 		
 		[foldersRepresentation setObject:folderDictionary forKey:folderID]; //[NSString stringWithFormat:@"%d", i]
 
-		/*
-		//Cleanup unused folderSettings:
-		NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-		for (NSString *folderID in customFolderSettings) {
-			if(![folderArray containsObject:folderID]) {
-				HBLogDebug(@"De folder die we gaan verwijderen: %@", folderID);
-				
-				[mutableCustomFolderSettings removeObjectForKey:folderID];
-				
-			}
-		}
-
-		NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-		[preferences setObject:[mutableCustomFolderSettings copy] forKey:@"customFolderSettings"];
-		[preferences synchronize];
-		customFolderSettings = [mutableCustomFolderSettings copy];
-		*/
 	}
+
+	/*
+	//Cleanup unused folderSettings:
+	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+	for (NSString *folderID in customFolderSettings) {
+		if(![folderArray containsObject:folderID]) {
+			HBLogDebug(@"De folder die we gaan verwijderen: %@", folderID);
+			
+			[mutableCustomFolderSettings removeObjectForKey:folderID];
+			
+		}
+	}
+
+	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+	[preferences setObject:[mutableCustomFolderSettings copy] forKey:@"customFolderSettings"];
+	[preferences synchronize];
+	customFolderSettings = [mutableCustomFolderSettings copy];
+	*/
 
 	return foldersRepresentation;
 }
@@ -450,11 +458,6 @@ static BOOL interactionProgressDidComplete = NO;
 				UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 
 				SBIcon *forceTouchIcon = forceTouchIconView.icon;
-				if(forceTouchIcon) {
-					forceTouchIcon.forceTouchIcon = [NSNumber numberWithBool:YES];
-					[%c(SBIconBadgeView) checkoutAccessoryImagesForIcon:forceTouchIcon location:1];
-				}
-
 
 				[UIView transitionWithView:folderImageView
 				duration:0.5f
@@ -524,16 +527,16 @@ static BOOL interactionProgressDidComplete = NO;
 }
 
 - (void)iconTapped:(SBIconView *)iconView {
-	if (!self.isEditing && iconView.isFolderIconView && !forceTouchRecognized && enabled) {
+	if (!self.isEditing && iconView.isFolderIconView && enabled) {
 
 			NSDate *nowTime = [[NSDate date] retain];
-			if (!forceTouchRecognized && shortHoldMethod != 0 && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
+			if  (shortHoldMethod != 0 && lastTouchedTime && [nowTime timeIntervalSinceDate:lastTouchedTime] >= shortHoldTime) {
 
 				[iconView sf_method:[iconView getFolderSetting:@"ShortHoldMethod" withDefaultSetting:shortHoldMethod withDefaultCustomAppIndex:shortHoldMethodCustomAppIndex] withForceTouch:NO];
 				lastTouchedTime = nil;
 				iconView.highlighted = NO;
 				return;
-			} else if(!forceTouchRecognized && doubleTapMethod != 0) {
+			} else if (doubleTapMethod != 0) {
 				if (iconView == tappedIcon) {
 					if (doubleTapMethod != 0 && [nowTime timeIntervalSinceDate:lastTappedTime] < doubleTapTime) {
 						doubleTapRecognized = YES;
@@ -936,7 +939,6 @@ static BOOL isProtected = NO;
 
 
 
-static NSNumber *forceTouchIcon;
 %hook SBIcon
 
 /**
@@ -1002,20 +1004,6 @@ static NSNumber *forceTouchIcon;
 		[self launch];
 	}
 	
-}
-
-
-%new(v@:@) - (void)setForceTouchIcon:(NSNumber*)isForceTouchIcon {
-	objc_setAssociatedObject(self, &forceTouchIcon, isForceTouchIcon, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-%new(@@:) - (NSNumber*)forceTouchIcon {
-	return objc_getAssociatedObject(self, &forceTouchIcon);
-}
-
--(void)dealloc {
-	[self.forceTouchIcon release];
-	%orig;
 }
 
 %end
@@ -1266,7 +1254,7 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 			[folder replaceOldFolderID:folder.oldFolderID byNewFolderID:[folder folderID]];
 		}
 	}
-
+	//Remove the folders from customFolderSettings when the folder itself is removed
 	if(!editing) {
 		NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
 		for (int i=0; i<[oldFolderIDsAtBeginEditing count]; i++) {

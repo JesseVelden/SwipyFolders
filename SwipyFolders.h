@@ -40,10 +40,6 @@
 - (void)openAppFromFolder:(NSString*)folder;
 - (id)getIconView;
 - (void)setBadge:(id)arg1;
-
-- (void)setForceTouchIcon:(NSNumber*)isForceTouchIcon;
-- (NSNumber*)forceTouchIcon;
-
 @end
 
 @interface SBLeafIcon : SBIcon
@@ -237,6 +233,7 @@
 - (SBIconView*)mappedIconViewForIcon:(SBIcon*)icon;
 +(SBIconViewMap *)homescreenMap;
 @property(readonly, nonatomic) SBIconModel *iconModel;
+- (void)recycleAndPurgeAll;
 
 @end
 
