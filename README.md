@@ -1,6 +1,8 @@
 # SwipyFolders
 *The way folders on iOS meant to be*  
-[![Paypal](https://jessevandervelden.nl/donate.png)](https://www.paypal.me/JessevanderVelden)
+[![Paypal](https://jessevandervelden.nl/donate.png)](https://www.paypal.me/JessevanderVelden)  
+
+Beta repo: [megacookie.github.io](http://megacookie.github.io)
 
 Sick of the ugly folders staring at you? Ever wanted to swipe your folders open? Double tap actions? Short hold, or even 3D touch on a folder?  
 **Now you can!** With **SwipyFolders** you can customize your folder experience.  
