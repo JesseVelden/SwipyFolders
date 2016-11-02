@@ -122,6 +122,11 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 	[[UIApplication sharedApplication] openURL:url];
 }
 
+- (void)cydia {
+	NSURL *url = [NSURL URLWithString:@"cydia://url/https://cydia.saurik.com/api/share#?source=http://megacookie.github.io/"];
+	[[UIApplication sharedApplication] openURL:url];
+}
+
 
 @end
 

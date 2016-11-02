@@ -497,6 +497,16 @@ This has influence on: The folder preview, Opening the first app &amp; 3D Touch.
 			<string>Donate &lt;3</string>
 		</dict>
 		<dict>
+			<key>action</key>
+			<string>cydia</string>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>icon</key>
+			<string>cydia.png</string>
+			<key>label</key>
+			<string>Beta repo</string>
+		</dict>
+		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>

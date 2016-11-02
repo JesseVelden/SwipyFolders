@@ -116,9 +116,21 @@ static UIColor *colorShiftedBy(UIColor *color, CGFloat shift) {
 
 static void saveFolderSettings(NSDictionary *folderSettings) {
 	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
+	[preferences setObject:folderSettings forKey:@"customFolderSettings"];
 	[preferences synchronize];
 	customFolderSettings = [folderSettings copy];
+}
+
+static void setFolderSetting(NSString *folderID, NSString *key, id setting) {
+	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[folderID] mutableCopy];
+	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
+	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
+
+	[mutableFolderSettings setObject:setting forKey:key];
+	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
+
+	saveFolderSettings(mutableCustomFolderSettings);
 }
 
 
@@ -457,8 +469,6 @@ static BOOL interactionProgressDidComplete = NO;
 				folderBackgroundView.alpha = 0;
 				UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 
-				SBIcon *forceTouchIcon = forceTouchIconView.icon;
-
 				[UIView transitionWithView:folderImageView
 				duration:0.5f
 				options:UIViewAnimationOptionTransitionCrossDissolve
@@ -506,7 +516,7 @@ static BOOL interactionProgressDidComplete = NO;
 - (void)setIsEditing:(_Bool)editing {
 	%orig; 
 	if(editing && [self respondsToSelector:@selector(_cleanupForDismissingShortcutMenu:)]) {
-		[self _cleanupForDismissingShortcutMenu:self.presentedShortcutMenu];
+		if(self.presentedShortcutMenu != nil) [self _cleanupForDismissingShortcutMenu:self.presentedShortcutMenu];
 	}
 }
 
@@ -700,7 +710,6 @@ static BOOL isProtected = NO;
 %new - (NSDictionary*)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting withDefaultCustomAppIndex:(NSInteger)globalAppIndex {
 	SBFolder *folder = ((SBIconView *)self).icon.folder;
 	NSDictionary *folderSettings = customFolderSettings[folder.folderID];
-
 
 	NSNumber *sendMethod = [NSNumber numberWithInt:globalSetting];
 	NSNumber *sendAppIndex = [NSNumber numberWithInt:globalAppIndex];
@@ -981,20 +990,7 @@ static BOOL isProtected = NO;
 		lastOpenedIdentifier = leafIcon.leafIdentifier;
 	}
 
-	NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-	NSMutableDictionary *mutableFolderSettings = [customFolderSettings[folderID] mutableCopy];
-	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
-	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
-
-	[mutableFolderSettings setObject:lastOpenedIdentifier forKey:@"lastOpenedApp"];
-	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
-
-	NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
-	[preferences synchronize];
-	customFolderSettings = [mutableCustomFolderSettings copy];
-	
-
+	setFolderSetting(folderID, @"lastOpenedApp", lastOpenedIdentifier);
 
 	if([self respondsToSelector:@selector(launchFromLocation:context:)]) {
 		[self launchFromLocation:0 context:nil];
@@ -1083,27 +1079,10 @@ static NSString *oldFolderID;
 
 %new - (NSString*)createFolderIDWithDisplayName:displayName andFirstIconIdentifier:(NSString*)firstIconIdentifier {
 
-	NSString *folderID = [NSString stringWithFormat:@"%@-%@", displayName, firstIconIdentifier]; //calculateMD5(); //md5? slower :(
+	NSString *folderID = [NSString stringWithFormat:@"%@-%@", displayName, firstIconIdentifier];
 
 	return folderID;
 }
-
-%new - (void)replaceOldFolderID:(NSString*)oldFolderID byNewFolderID:(NSString*)newFolderID {
-	if(oldFolderID && ![oldFolderID isEqualToString:newFolderID]) {
-		NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-		NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
-		if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
-		[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
-		[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:newFolderID];
-
-		NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-		[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
-		[preferences synchronize];
-		customFolderSettings = [mutableCustomFolderSettings copy];
-
-	}
-}
-
 
 
 /**
@@ -1239,8 +1218,15 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 	NSArray *folderArray = [self.folder.folderIcons allObjects]; //ALL FOLDERS ^^
 	NSMutableArray *oldFolderIDsAtEndEditing;
 
+	NSMutableDictionary *mutableCustomFolderSettings;
+
 	if(editing) oldFolderIDsAtBeginEditing = [[NSMutableArray alloc] init];
-	else oldFolderIDsAtEndEditing = [[NSMutableArray alloc] init];
+	else {
+		oldFolderIDsAtEndEditing = [[NSMutableArray alloc] init];
+		mutableCustomFolderSettings = [customFolderSettings mutableCopy];
+	} 
+
+	
 
 	for (int i=0; i<[folderArray count]; i++) {
 		SBFolderIcon *folderIcon = [folderArray objectAtIndex:i];
@@ -1251,30 +1237,29 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 			[oldFolderIDsAtBeginEditing addObject:[folder folderID]];
 		} else {
 			if(folder.oldFolderID) [oldFolderIDsAtEndEditing addObject:folder.oldFolderID];
-			[folder replaceOldFolderID:folder.oldFolderID byNewFolderID:[folder folderID]];
-		}
-	}
-	//Remove the folders from customFolderSettings when the folder itself is removed
-	if(!editing) {
-		NSMutableDictionary *mutableCustomFolderSettings = [customFolderSettings mutableCopy];
-		for (int i=0; i<[oldFolderIDsAtBeginEditing count]; i++) {
-			NSString *oldFolderID = [oldFolderIDsAtBeginEditing objectAtIndex:i];
-			if(![oldFolderIDsAtEndEditing containsObject:oldFolderID] && [oldFolderIDsAtEndEditing count] > 0) {
-				
-				NSMutableDictionary *mutableFolderSettings = [customFolderSettings[oldFolderID] mutableCopy];
-				if(!mutableFolderSettings || !mutableCustomFolderSettings) return;
-				[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
-				
+			//[folder replaceOldFolderID:folder.oldFolderID byNewFolderID:[folder folderID]];
+			//Hieronder is efficienter:
+			if(![folder.oldFolderID isEqualToString:[folder folderID]] && [mutableCustomFolderSettings objectForKey:folder.oldFolderID]) {
+				[mutableCustomFolderSettings removeObjectForKey:folder.oldFolderID];
+				[mutableCustomFolderSettings setObject:customFolderSettings[folder.oldFolderID] forKey:[folder folderID]];
 			}
 		}
-		NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-		[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
-		[preferences synchronize];
-		customFolderSettings = [mutableCustomFolderSettings copy];
+	}
+
+	//Remove the folders from customFolderSettings when the folder itself is removed
+	if(!editing && mutableCustomFolderSettings) {
+		for (int i=0; i<[oldFolderIDsAtBeginEditing count]; i++) {
+			NSString *oldFolderID = [oldFolderIDsAtBeginEditing objectAtIndex:i];
+			HBLogDebug(@"oldFolder ID: %@", oldFolderID);
+			if(![oldFolderIDsAtEndEditing containsObject:oldFolderID] && [oldFolderIDsAtEndEditing count] > 0 && [customFolderSettings objectForKey:oldFolderID]) {
+				
+				[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
+			}
+		}
+		saveFolderSettings(mutableCustomFolderSettings);
 	}
 
 	%orig; 
-
 	
 }
 	
