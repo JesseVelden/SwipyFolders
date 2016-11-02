@@ -213,7 +213,7 @@ static UIImageView *customImageView;
 			
 			if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
 				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
-				iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize);
+				iconFrame = CGRectMake(8.5, 8.5, iconSize, iconSize);
 			}
 				
 			self.customImageView.frame = iconFrame;
