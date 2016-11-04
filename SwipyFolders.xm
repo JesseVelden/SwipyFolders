@@ -516,7 +516,7 @@ static BOOL interactionProgressDidComplete = NO;
 - (void)setIsEditing:(_Bool)editing {
 	%orig; 
 	if(editing && [self respondsToSelector:@selector(_cleanupForDismissingShortcutMenu:)]) {
-		if(self.presentedShortcutMenu != nil) [self _cleanupForDismissingShortcutMenu:self.presentedShortcutMenu];
+		[self _cleanupForDismissingShortcutMenu:self.presentedShortcutMenu];
 	}
 }
 
@@ -1250,7 +1250,6 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 	if(!editing && mutableCustomFolderSettings) {
 		for (int i=0; i<[oldFolderIDsAtBeginEditing count]; i++) {
 			NSString *oldFolderID = [oldFolderIDsAtBeginEditing objectAtIndex:i];
-			HBLogDebug(@"oldFolder ID: %@", oldFolderID);
 			if(![oldFolderIDsAtEndEditing containsObject:oldFolderID] && [oldFolderIDsAtEndEditing count] > 0 && [customFolderSettings objectForKey:oldFolderID]) {
 				
 				[mutableCustomFolderSettings removeObjectForKey:oldFolderID];
