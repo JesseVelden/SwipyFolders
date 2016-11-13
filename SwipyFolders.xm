@@ -469,11 +469,20 @@ static BOOL interactionProgressDidComplete = NO;
 				folderBackgroundView.alpha = 0;
 				UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
 
+				if (method == 4) {
+					[folderIconImageView bringSubviewToFront:folderIconImageView.customImageView];
+					folderIconImageView.customImageView.alpha = 0;
+				}
+
 				[UIView transitionWithView:folderImageView
 				duration:0.5f
 				options:UIViewAnimationOptionTransitionCrossDissolve
 				animations:^{
-					if (method == 4) folderImageView.image = [firstIcon getIconImage:2];
+					if (method == 4) {
+						folderIconImageView.customImageView.image = [firstIcon getIconImage:2];
+						folderIconImageView.customImageView.alpha = 1;
+						folderImageView.hidden = YES;
+					}
 					folderBackgroundView.alpha = 1;
 				} completion:nil];
 
@@ -647,7 +656,8 @@ static BOOL isProtected = NO;
 		UIView* folderBackgroundView = MSHookIvar<UIView *>(folderIconImageView, "_backgroundView");
 		[UIView beginAnimations:nil context:NULL];
 		[UIView setAnimationDuration:0.3];
-		[folderImageView setAlpha:0.0];
+		if (folderIconImageView.customImageView.image != nil) [folderIconImageView.customImageView setAlpha:0.0];
+		else [folderImageView setAlpha:0.0];
 		[folderBackgroundView setAlpha:0.0];
 		[UIView commitAnimations];
 	}
@@ -662,7 +672,8 @@ static BOOL isProtected = NO;
 		UIView* folderBackgroundView = MSHookIvar<UIView *>(folderIconImageView, "_backgroundView");
 		[UIView beginAnimations:nil context:NULL];
 		[UIView setAnimationDuration:0.5];
-		[folderImageView setAlpha:0.0];
+		if (folderIconImageView.customImageView.image != nil) [folderIconImageView.customImageView setAlpha:0.0];
+		else [folderImageView setAlpha:0.0];
 		[folderBackgroundView setAlpha:0.0];
 		[UIView commitAnimations];
 	}
@@ -840,7 +851,7 @@ static BOOL isProtected = NO;
 
 
 				SBFolderIcon *folderIcon = ((SBFolderIconView *)self).folderIcon;
-				[folderIcon setBadge:[NSNumber numberWithInt:0]];
+				if(!classicFoldersEnabled) [folderIcon setBadge:[NSNumber numberWithInt:0]];
 
 				[[%c(SBIconController) sharedInstance] openFolder:folder animated:YES]; //Open Folder
 				
@@ -851,15 +862,11 @@ static BOOL isProtected = NO;
 					dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 						if(folderIconView._folderIconImageView.customImageView.image == nil) innerFolderImageView.hidden = NO;
 						folderIconView._folderIconImageView.customImageView.hidden = NO;
+						[folderIcon _updateBadgeValue];
 					});	
 				}
 
 				if(forceTouch) self.highlighted = NO;
-
-				dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
-					[folderIcon _updateBadgeValue];
-				});
-
 
 			}break;
 
@@ -923,9 +930,11 @@ static BOOL isProtected = NO;
  */
 
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+	
 	if(!enabled) return YES;
 
 	BOOL conflictGesture = NO;
+	
 
 	NSArray *targets = MSHookIvar<NSMutableArray *>(otherGestureRecognizer, "_targets");
 	for(UIGestureRecognizerTarget *_target in targets) {
@@ -933,12 +942,15 @@ static BOOL isProtected = NO;
 		if([target isKindOfClass:%c(SBSearchScrollView)]) {
 			otherGestureRecognizer.enabled = NO;
 		}
-		/*if([target isKindOfClass:%c(SBIconScrollView)]) {
-			conflictGesture = YES;
-			otherGestureRecognizer.enabled = NO;
-			break;
-		}*/
+		if([target isKindOfClass:%c(SBIconScrollView)]) {
+			gestureRecognizer.enabled = YES;
+			otherGestureRecognizer.enabled = YES;
+		}
 	}
+
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+		otherGestureRecognizer.enabled = YES;
+	});
 
 	return !conflictGesture;
 
