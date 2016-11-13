@@ -926,31 +926,25 @@ static BOOL isProtected = NO;
 /**
  * To disable Spotlight view from showing up, if user swipes down on the icon
  *  and better swiping up support to prevent moving SpringBoard:
- *
+ *  gestureRecognizer will be the gesture with the sf_method, otherGestureRecognizer will be disabled.
  */
-
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
 	
 	if(!enabled) return YES;
 
 	BOOL conflictGesture = NO;
 	
-
 	NSArray *targets = MSHookIvar<NSMutableArray *>(otherGestureRecognizer, "_targets");
 	for(UIGestureRecognizerTarget *_target in targets) {
 		id target = MSHookIvar<id>(_target, "_target");
 		if([target isKindOfClass:%c(SBSearchScrollView)]) {
 			otherGestureRecognizer.enabled = NO;
 		}
-		if([target isKindOfClass:%c(SBIconScrollView)]) {
+		/*if([target isKindOfClass:%c(SBIconScrollView)]) {
 			gestureRecognizer.enabled = YES;
 			otherGestureRecognizer.enabled = YES;
-		}
+		}*/
 	}
-
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
-		otherGestureRecognizer.enabled = YES;
-	});
 
 	return !conflictGesture;
 
