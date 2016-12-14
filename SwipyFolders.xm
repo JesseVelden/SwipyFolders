@@ -151,12 +151,13 @@ static UIImageView *customImageView;
 	self = %orig;
 
 	if(enabled) {
-		CGSize size = [%c(SBIconView) defaultIconImageSize];
-		CGRect iconFrame = CGRectMake(0, 0, size.width, size.height);
+		//CGSize size = [%c(SBIconView) defaultIconImageSize];
+		CGRect iconFrame = self.frame;//CGRectMake(0, 0, 60, 60);
 		if(!hideGreyFolderBackground) {
-			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
-			iconFrame = CGRectMake(7.5, 7.5, iconSize, iconSize); //Full size is 60
-		}
+			CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54;
+			CGFloat offset = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 8.5 : 12; 
+			iconFrame = CGRectMake(offset, offset, iconSize, iconSize); //Full size is 60
+		} else MSHookIvar<UIView *>(self, "_backgroundView").hidden = YES;
 
 
 		self.customImageView = [[UIImageView alloc] initWithFrame:iconFrame];
@@ -212,13 +213,20 @@ static UIImageView *customImageView;
 			CGRect iconFrame = CGRectMake(0, 0, size.width, size.height);
 			
 			if((!hideGreyFolderBackground && !([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1)) || ([folderSettings[@"customFolderAppearance"] intValue] == 1 && [folderSettings[@"customFolderEnableFolderPreview"] intValue] == 1 && [folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 0)) {
-				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54; 
-				iconFrame = CGRectMake(8.5, 8.5, iconSize, iconSize);
+				CGFloat iconSize = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 45 : 54;
+				CGFloat offset = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone ? 8.5 : 12; 
+				iconFrame = CGRectMake(offset, offset, iconSize, iconSize);
 			}
 				
 			self.customImageView.frame = iconFrame;
 
 			[self bringSubviewToFront:self.customImageView];
+
+			if([folderSettings[@"customFolderHideGreyFolderBackground"] intValue] == 1) {
+				MSHookIvar<UIView *>(self, "_backgroundView").hidden = YES;
+			}
+
+
 
 		} else {
 			self.customImageView.image = nil;
@@ -928,6 +936,7 @@ static BOOL isProtected = NO;
  *  and better swiping up support to prevent moving SpringBoard:
  *  gestureRecognizer will be the gesture with the sf_method, otherGestureRecognizer will be disabled.
  */
+
 %new - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
 	
 	if(!enabled) return YES;
