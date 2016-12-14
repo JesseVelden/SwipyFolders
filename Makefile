@@ -14,7 +14,7 @@ SUBPROJECTS += swipyfoldersprefs
 
 ifeq ($(SIMULATOR),1)
 	# i386 slice is required for 32-bit iOS Simulator (iPhone 5, etc.)
-	TARGET = simulator:clang:latest:8.0
+	TARGET = simulator:clang
 	ARCHS = x86_64 i386
 else
 	SwipyFolders_FRAMEWORKS = UIKit Foundation QuartzCore CoreGraphics
