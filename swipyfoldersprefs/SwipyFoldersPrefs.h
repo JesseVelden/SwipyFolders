@@ -8,7 +8,7 @@
 @interface SwipyFoldersPrefs : PSListController
 @end
 
-@interface UITableViewLabel : UILabel 
+@interface UITableViewLabel : UILabel
 @end
 
 @interface NSArray(Private)
@@ -39,4 +39,8 @@
 -(void)registerForMessageName:(NSString*)messageName target:(id)target selector:(SEL)selector;
 -(NSDictionary*)sendMessageAndReceiveReplyName:(NSString*)name userInfo:(NSDictionary*)info;
 -(void)runServerOnCurrentThread;
+@end
+
+@interface SpringBoard : NSObject
+- (void)_relaunchSpringBoardNow;
 @end

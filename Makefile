@@ -1,4 +1,4 @@
-TARGET = iphone:clang
+TARGET = iphone:10.3:10.3
 ARCHS = armv7 armv7s arm64
 
 DEBUG = 0
@@ -8,7 +8,7 @@ PACKAGE_VERSION = $(THEOS_PACKAGE_BASE_VERSION)
 TWEAK_NAME = SwipyFolders
 SwipyFolders_FILES = SwipyFolders.xm
 SwipyFolders_CFLAGS = -fno-objc-arc -Wno-deprecated-declarations
-SwipyFolders_PRIVATE_FRAMEWORKS = AppSupport
+#SwipyFolders_PRIVATE_FRAMEWORKS = AppSupport
 SwipyFolders_LDFlags += -Wl,-segalign,4000
 SUBPROJECTS += swipyfoldersprefs
 
@@ -23,6 +23,7 @@ endif
 
 include $(THEOS)/makefiles/common.mk
 include $(THEOS_MAKE_PATH)/tweak.mk
+include $(THEOS_MAKE_PATH)/aggregate.mk
 
 simulator::
 	@make
@@ -34,5 +35,3 @@ simulator::
 
 after-install::
 	install.exec "killall -9 SpringBoard"
-
-

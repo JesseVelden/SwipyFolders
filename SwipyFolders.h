@@ -1,3 +1,8 @@
+@interface FBSystemService : NSObject
+- (id)sharedInstance;
+- (void)exitAndRelaunch:(bool)arg1;
+@end
+
 @interface _UITapticEngine : NSObject
 - (void)actuateFeedback:(NSInteger)count;
 @end
@@ -16,10 +21,16 @@
 @interface SBApplication : NSObject
 @property(copy, nonatomic) NSArray *dynamicShortcutItems;
 @property(copy, nonatomic) NSArray *staticShortcutItems;
+@property (nonatomic,copy,readonly) NSArray * staticApplicationShortcutItems;
+@property (nonatomic,copy) NSArray * dynamicApplicationShortcutItems;
 - (void)loadStaticShortcutItemsFromInfoDictionary:(id)arg1 bundle:(id)arg2;
 - (NSString*)bundleIdentifier;
 - (NSString*)displayName;
 - (NSString*)displayIdentifier;
+- (NSString*)bundleContainerPath;
+- (NSString *)sandboxPath;
+- (NSString *)path;
+- (NSString *)dataContainerPath;
 - (_Bool)statusBarHiddenForCurrentOrientation;
 - (_Bool)isRunning;
 @end;
@@ -32,9 +43,9 @@
 - (UIImage*)getIconImage:(int)arg1;
 - (_Bool)isFolderIcon;
 - (_Bool)isNewsstandIcon;
-- (void)launch; 
-- (void)launchFromLocation:(NSInteger)location; 
-- (void)launchFromLocation:(NSInteger)location context:(id)context; 
+- (void)launch;
+- (void)launchFromLocation:(NSInteger)location;
+- (void)launchFromLocation:(NSInteger)location context:(id)context;
 - (SBApplication*)application;
 - (id)folder;
 - (void)openAppFromFolder:(NSString*)folder;
@@ -56,7 +67,7 @@
 @property(readonly, nonatomic) long long _maxIconCountInLists;
 @property(copy, nonatomic) NSString *displayName;
 @property(readonly, copy, nonatomic) NSArray *lists;
-@property (assign,nonatomic) SBIcon * icon; 
+@property (assign,nonatomic) SBIcon * icon;
 @property (assign,getter=isOpen,nonatomic) BOOL open;
 @property (retain, nonatomic) NSString * oldFolderID;
 - (SBApplicationIcon *)iconAtIndexPath:(NSIndexPath *)indexPath;
@@ -78,8 +89,8 @@
 - (void)openLastApp;
 - (void)openAppAtIndex:(int)index;
 - (void)openFirstApp;
-- (void)openSecondApp; 
-- (void)quickActionOnFirstApp; 
+- (void)openSecondApp;
+- (void)quickActionOnFirstApp;
 - (int)getFirstAppIconIndex;
 - (SBIcon*)getFirstIcon;
 - (void)createOldFolderID;
@@ -87,16 +98,16 @@
 @end
 
 @interface SBIconListModel : NSObject
-@property(readonly, nonatomic) __weak SBFolder *folder; 
+@property(readonly, nonatomic) __weak SBFolder *folder;
 - (void)removeListObserver:(id)arg1;
 - (void)removeNodeObserver:(id)arg1;
 @end
 
 @interface SBFolderView : UIView
-@property(retain, nonatomic) SBFolder *folder; 
-@property(readonly, nonatomic, getter=isEditing) _Bool editing; 
-@property (nonatomic,copy,readonly) NSArray * iconListViews; 
-@property (nonatomic,readonly) long long currentPageIndex;  
+@property(retain, nonatomic) SBFolder *folder;
+@property(readonly, nonatomic, getter=isEditing) _Bool editing;
+@property (nonatomic,copy,readonly) NSArray * iconListViews;
+@property (nonatomic,readonly) long long currentPageIndex;
 - (void)_setFolderName:(id)arg1;
 - (void)setEditing:(_Bool)arg1 animated:(_Bool)arg2;
 - (void)cleanupAfterClosing;
@@ -111,11 +122,22 @@
 @property(readonly, nonatomic) long long count;
 @end
 
+@interface SBUIForceTouchGestureRecognizer : UIGestureRecognizer
+@end
+
+@interface SBIconImageView : UIView
+@property(readonly) Class superclass;
+@end
+
+
 @interface SBIconView : UIView
 @property(retain, nonatomic) SBIcon *icon;
 @property(assign, getter = isHighlighted) BOOL highlighted;
-@property(retain, nonatomic) UIPreviewForceInteractionProgress *shortcutMenuPresentProgress; 
-@property(retain, nonatomic) UILongPressGestureRecognizer *shortcutMenuPeekGesture; 
+@property(retain, nonatomic) UIPreviewForceInteractionProgress *shortcutMenuPresentProgress;
+@property(retain, nonatomic) UILongPressGestureRecognizer *shortcutMenuPeekGesture;
+@property (nonatomic,retain) SBUIForceTouchGestureRecognizer * appIconForceTouchGestureRecognizer;
+@property (assign,nonatomic) id delegate;
+
 + (id)sharedInstance;
 - (void)_handleSecondHalfLongPressTimer:(id)arg1;
 - (void)cancelLongPressTimer;
@@ -126,7 +148,7 @@
 - (UIView*)labelView;
 - (void)setLabelHidden:(BOOL)arg1 ;
 -(void)_setPreparingForPotentialShortcutMenuPresentation:(BOOL)arg1 ;
-
+-(SBIconImageView*)_iconImageView;
 //New:
 - (NSDictionary*)getFolderSetting:(NSString*)setting withDefaultSetting:(NSInteger)globalSetting withDefaultCustomAppIndex:(NSInteger)globalAppIndex;
 - (void)sf_method:(NSDictionary*)methodInfo withForceTouch:(BOOL)forceTouch;
@@ -139,20 +161,85 @@
 - (BOOL)gestureRecognizer:(UILongPressGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch;
 @end
 
+
+@interface SBSApplicationShortcutIcon : NSObject
+- (id)imagePNGData;
+- (id)templateImageName;
+@end
+@interface SBSApplicationShortcutCustomImageIcon : SBSApplicationShortcutIcon
+- (id)imageData;
+- (id)imagePNGData;
+- (id)initWithImageData:(id)arg1 dataType:(int)arg2;
+- (id)initWithImageData:(id)arg1 dataType:(int)arg2 isTemplate:(BOOL)arg3;
+- (id)initWithImagePNGData:(id)arg1;
+@end
+
 @class SBSApplicationShortcutIcon;
 @interface SBSApplicationShortcutItem : NSObject
 @property (nonatomic, copy) NSString *type;
+@property (nonatomic,copy) NSString * bundleIdentifierToLaunch;
+@property (nonatomic,copy) SBSApplicationShortcutIcon * icon;
+@property (nonatomic, copy) NSDictionary *userInfo;
+@property (nonatomic, retain) NSData *userInfoData;
+@property (nonatomic, copy) NSString *localizedTitle;
+
 - (id)icon;
-- (void)setIcon:(id)arg1;
-- (void)setLocalizedSubtitle:(id)arg1;
-- (void)setLocalizedTitle:(id)arg1;
+- (void)setIcon:(SBSApplicationShortcutIcon *)arg1;
+- (void)setLocalizedSubtitle:(NSString*)arg1;
+- (void)setLocalizedTitle:(NSString*)arg1;
 - (void)setType:(NSString *)arg1;
+-(void)setBundleIdentifierToLaunch:(NSString *)arg1 ;
 @end
 
+
+@interface SBUIIconForceTouchIconViewWrapperView : NSObject
+@property (nonatomic,readonly) SBIconView * iconView;
+@end
+
+@interface SBUIIconForceTouchViewController : UIViewController <UIGestureRecognizerDelegate> {
+	SBUIIconForceTouchIconViewWrapperView* _iconViewWrapperViewBelow;
+	SBUIIconForceTouchIconViewWrapperView* _iconViewWrapperViewAbove;
+}
+-(void)_presentAnimated:(BOOL)arg1 withCompletionHandler:(/*^block*/id)arg2 ;
+-(void)_dismissAnimated:(BOOL)arg1 withCompletionHandler:(/*^block*/id)arg2 ;
+@end
+
+
+@interface SBUIIconForceTouchController : NSObject
+@property (nonatomic,readonly) SBUIIconForceTouchViewController * iconForceTouchViewController;
+- (void)_dismissAnimated:(BOOL)arg1 withCompletionHandler:(/*^block*/id)arg2 ;
+- (void)dismissAnimated:(BOOL)arg1 withCompletionHandler:(/*^block*/id)arg2 ;
+- (void)_setupWithGestureRecognizer:(SBUIForceTouchGestureRecognizer *)recognizer;
+- (void)_presentAnimated:(BOOL)animated withCompletionHandler:(id)handler;
+@end
+
+@interface SBUIAppIconForceTouchShortcutViewController : SBUIIconForceTouchController
+@end
+
+@interface SBUIAppIconForceTouchControllerDataProvider : NSObject
+@property (nonatomic, readonly) SBUIForceTouchGestureRecognizer *gestureRecognizer;
+- (NSArray *)applicationShortcutItems;
+@end
+
+@interface SBUIAppIconForceTouchController : NSObject {
+	SBUIIconForceTouchController *_iconForceTouchController;
+}
+- (void) dismissAnimated:(BOOL)arg1 withCompletionHandler:(id)arg2 ;
+- (void) _dismissAnimated:(BOOL)arg1 withCompletionHandler:(id)arg2 ;
+- (void)appIconForceTouchShortcutViewController:(SBUIAppIconForceTouchShortcutViewController *)controller activateApplicationShortcutItem:(SBSApplicationShortcutItem *)item;
+- (SBSApplicationShortcutItem *)_shareApplicationShortcutItemForDataProvider:(SBUIAppIconForceTouchControllerDataProvider *)provider;
+
+@end
+
+@interface WGWidgetViewController : NSObject
+@end
+
+
+
 @interface SBApplicationShortcutMenuItemView : UIView
-@property(readonly, nonatomic) long long menuPosition; 
-@property(retain, nonatomic) SBSApplicationShortcutItem *shortcutItem; 
-@property(nonatomic) _Bool highlighted; 
+@property(readonly, nonatomic) long long menuPosition;
+@property(retain, nonatomic) SBSApplicationShortcutItem *shortcutItem;
+@property(nonatomic) _Bool highlighted;
 
 
 + (id)_imageForShortcutItem:(id)arg1 application:(id)arg2 assetManagerProvider:(id)arg3 monogrammerProvider:(id)arg4 maxHeight:(double *)arg5;
@@ -184,9 +271,9 @@
 	SBApplicationShortcutMenuContentView* _contentView;
 }
 + (void)cancelPrepareForPotentialPresentationWithReason:(id)arg1;
-@property(retain, nonatomic) SBApplicationShortcutMenuContentView *contentView; 
-@property(retain, nonatomic) SBApplication *application; 
-@property(retain ,nonatomic) id <SBApplicationShortcutMenuDelegate> applicationShortcutMenuDelegate; 
+@property(retain, nonatomic) SBApplicationShortcutMenuContentView *contentView;
+@property(retain, nonatomic) SBApplication *application;
+@property(retain ,nonatomic) id <SBApplicationShortcutMenuDelegate> applicationShortcutMenuDelegate;
 @property(readonly, nonatomic) _Bool isPresented;
 @property(retain, nonatomic) SBIconView *iconView;
 
@@ -241,13 +328,15 @@
 @end
 
 @interface SBRootFolderView : SBFolderView
-@property (nonatomic,retain) SBRootFolder * folder; 
+@property (nonatomic,retain) SBRootFolder * folder;
 @end
 
 
 @interface SBIconController : UIViewController <SBApplicationShortcutMenuDelegate>
 @property(retain, nonatomic) SBApplicationShortcutMenu *presentedShortcutMenu;
 @property(readonly, nonatomic) SBIconViewMap *homescreenIconViewMap;
+@property (nonatomic,retain) SBIcon * lastTouchedIcon;
+@property (nonatomic,retain) id LETITCRASH;
 + (id)sharedInstance;
 - (void)_revealMenuForIconView:(id)arg1 presentImmediately:(BOOL)arg2;
 - (BOOL)_canRevealShortcutMenu;
@@ -279,13 +368,18 @@
 - (void)_cleanupForDismissingShortcutMenu:(id)arg1;
 - (void)_dismissShortcutMenuAnimated:(_Bool)arg1 completionHandler:(id)arg2;
 - (void)dismissShortcutMenuWithCompletionHandler:(id)arg1;
-
+- (void)openFolderIcon:(id)arg1 animated:(_Bool)arg2 withCompletion:(id)arg3;
 - (SBRootIconListView*)currentFolderIconList;
 - (SBRootIconListView*)dockListView;
 - (SBRootIconListView*)currentRootIconList;
+- (void)_dismissAppIconForceTouchControllerIfNecessaryAnimated:(_Bool)arg1 withCompletionHandler:(id)arg2;
+-(BOOL)appIconForceTouchController:(id)arg1 shouldActivateApplicationShortcutItem:(id)arg2 atIndex:(unsigned long long)arg3 forGestureRecognizer:(id)arg4 ;
+-(BOOL)_isAppIconForceTouchControllerPeekingOrShowing;
+
 
 - (BOOL)isFolderIconView:(SBIconView *)view;
 - (void)launchFirstApp:(SBIconView *)iconView;
+- (void)revealMenuForIconView:(SBIconView *)iconView;
 
 
 -(id)_currentFolderController;
@@ -294,8 +388,8 @@
 
 @interface SBFolderController : NSObject
 -(void)prepareToClose;
-@property (nonatomic,retain) SBFolder * folder; 
-@property (nonatomic,readonly) SBFolderView * contentView; 
+@property (nonatomic,retain) SBFolder * folder;
+@property (nonatomic,readonly) SBFolderView * contentView;
 @end
 
 
@@ -308,8 +402,6 @@
 
 @end
 
-@interface SBIconImageView : UIView
-@end
 
 @interface SBIconBlurryBackgroundView : UIView
 - (void)dealloc;
@@ -419,8 +511,8 @@
 
 
 @interface SBFolderIconZoomAnimator : NSObject
-@property (nonatomic,retain,readonly) SBFolderIconView * targetIconView; 
-@property (nonatomic,retain,readonly) SBFolderIcon * targetIcon; 
+@property (nonatomic,retain,readonly) SBFolderIconView * targetIconView;
+@property (nonatomic,retain,readonly) SBFolderIcon * targetIcon;
 
 @end
 
@@ -450,9 +542,9 @@
 - (void)biometricEventMonitor:(SBUIBiometricEventMonitor*)arg1 handleBiometricEvent:(int)arg2;
 - (void)showAlert;
 - (void)launchApplicationWithIdentifier:(id)arg1;
--(BOOL)requiresAuthenticationForOpeningFolder:(SBFolder *)folder;
--(void)authenticateForOpeningFolder:(SBFolder *)folder;
--(BOOL)requiresAuthenticationForIdentifier:(id)identifier;
+- (BOOL)requiresAuthenticationForOpeningFolder:(SBFolder *)folder;
+- (void)authenticateForOpeningFolder:(SBFolder *)folder;
+- (BOOL)requiresAuthenticationForIdentifier:(id)identifier;
 - (void)authenticateForIdentifier:(id)arg1 object:(id)arg2 selector:(SEL)arg3 arrayOfArgumentsAsNSValuePointers:(id)arg4;
 @end
 

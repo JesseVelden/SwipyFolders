@@ -29,6 +29,18 @@
 			<string>Enabled</string>
 		</dict>
 		<dict>
+		 	<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SFFolderListController</string>
+			<key>label</key>
+			<string>Set per Folder settings</string>
+			<key>isController</key>
+			<true/>
+			<key>id</key>
+			<string>customFolderSettings</string>
+		</dict>
+		<dict>
 			<key>action</key>
 			<string>respring</string>
 			<key>cell</key>
@@ -38,12 +50,16 @@
 			<key>label</key>
 			<string>Respring</string>
 		</dict>
+
+
+
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>APPEARANCE</string>
 		</dict>
+
 		<dict>
 			<key>PostNotification</key>
 			<string>nl.jessevandervelden.swipyfoldersprefs/respring</string>
@@ -124,6 +140,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on folder</string>
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
@@ -135,12 +152,15 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>8</integer>
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
 				<integer>7</integer>
 				<integer>0</integer>
 			</array>
+			<key>staticTextMessage</key>
+			<string>'Quick action on folder' only works on iOS 10 and up</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
@@ -164,6 +184,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on folder</string>
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
@@ -175,12 +196,15 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>8</integer>
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
 				<integer>7</integer>
 				<integer>0</integer>
 			</array>
+			<key>staticTextMessage</key>
+			<string>'Quick action on folder' only works on iOS 10 and up</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
@@ -204,6 +228,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on folder</string>
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
@@ -215,12 +240,15 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>8</integer>
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
 				<integer>7</integer>
 				<integer>0</integer>
 			</array>
+			<key>staticTextMessage</key>
+			<string>'Quick action on folder' only works on iOS 10 and up</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
@@ -244,6 +272,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on folder</string>
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
@@ -255,12 +284,15 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>8</integer>
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
 				<integer>7</integer>
 				<integer>0</integer>
 			</array>
+			<key>staticTextMessage</key>
+			<string>When enabled, this will slow down the Single Tap action as it waits for the Double Tap Timeout.  | 'Quick action on folder' only works on iOS 10 and up</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
@@ -284,6 +316,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on folder</string>
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
@@ -295,12 +328,15 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>8</integer>
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
 				<integer>7</integer>
 				<integer>0</integer>
 			</array>
+			<key>staticTextMessage</key>
+			<string>In order to be able to move icons on a long hold, for a short hold you just need to hold icons for a short time and release your finger in time. Otherwise, it will go into edit (jiggle) mode instead.  | 'Quick action on folder' only works on iOS 10 and up</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
@@ -324,6 +360,7 @@
 				<string>Open folder</string>
 				<string>Open first app</string>
 				<string>Open second app</string>
+				<string>Quick action on folder</string>
 				<string>Quick action on first app</string>
 				<string>Custom: open x'th app</string>
 				<string>Open last app</string>
@@ -335,6 +372,7 @@
 				<integer>1</integer>
 				<integer>2</integer>
 				<integer>3</integer>
+				<integer>8</integer>
 				<integer>4</integer>
 				<integer>5</integer>
 				<integer>6</integer>
@@ -342,27 +380,7 @@
 				<integer>0</integer>
 			</array>
 			<key>staticTextMessage</key>
-			<string>If you are facing issues with Appendix, try Manila instead</string>
-		</dict>
-
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>CUSTOM FOLDER SETTINGS</string>
-		</dict>
-
-		<dict>
-		 	<key>cell</key>
-			<string>PSLinkCell</string>
-			<key>detail</key>
-			<string>SFFolderListController</string>
-			<key>label</key>
-			<string>Set per Folder settings</string>
-			<key>isController</key>
-			<true/>
-			<key>id</key>
-			<string>customFolderSettings</string>
+			<string>If you are facing issues with the tweak Appendix, try Manila instead. | 'Quick action on folder' only works on iOS 10 and up</string>
 		</dict>
 
 		<dict>
@@ -510,7 +528,7 @@ This has influence on: The folder preview, Opening the first app &amp; 3D Touch.
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>footerText</key>
-			<string>© 2016 - Jesse van der Velden - Made in Holland</string>
+			<string>© 2016 - Jesse van der Velden - MegaCookie</string>
 		</dict>
 	</array>
 	<key>title</key>

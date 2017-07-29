@@ -15,6 +15,8 @@ static NSDictionary *folderSettings;
 static NSString *folderName;
 static NSString *folderID;
 
+static int customAppMethod = 5;
+
 
 static NSString * addSuffixToNumber(int number) {
     NSString *suffix;
@@ -43,7 +45,7 @@ static NSString * addSuffixToNumber(int number) {
 }
 
 static NSString * setCustomAppIndexTextForIndex(int number) {
-	return [NSString stringWithFormat:@"Custom: open %@ app", addSuffixToNumber(number)]; 
+	return [NSString stringWithFormat:@"Custom: open %@ app", addSuffixToNumber(number)];
 }
 
 
@@ -54,10 +56,10 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 	if(!mutableFolderSettings) mutableFolderSettings = [NSMutableDictionary new];
 	if(!mutableCustomFolderSettings) mutableCustomFolderSettings = [NSMutableDictionary new];
 
-	
+
 	[mutableFolderSettings setObject:value forKey:specifierID];
 	[mutableCustomFolderSettings setObject:mutableFolderSettings forKey:folderID];
-	
+
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
 	[preferences setObject:mutableCustomFolderSettings forKey:@"customFolderSettings"];
 	[preferences synchronize];
@@ -68,7 +70,7 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 
 	customFolderSettings = [mutableCustomFolderSettings copy];
 	folderSettings = [mutableFolderSettings copy];
-	
+
 }
 
 @implementation SFCustomFolderSettingsController
@@ -87,12 +89,12 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 	if (!_specifiers) {
 		_specifiers = [[self loadSpecifiersFromPlistName:@"CustomFolderSettings" target:self] retain];
 	}
-	
+
 	/*for(int i=0; i<[_specifiers count]; i++) {
 		PSSpecifier *specifier = _specifiers[i];
 		[specifier setProperty:[self.specifier name] forKey:@"folderName"];
 	}*/
-	
+
 	return _specifiers;
 }
 
@@ -112,11 +114,11 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 
 	if(![specifier.identifier isEqualToString:@"customFolderEnabled"]) {
 		int method  = [folderSettings[specifier.identifier] intValue];
-		if(method == 5) {
+		if(method == customAppMethod) {
 			//NSString *customAppIndexString = [NSString stringWithFormat:@"%@CustomAppIndex", specifier.identifier];
 
 			int customAppIndex  = [folderSettings[[NSString stringWithFormat:@"%@CustomAppIndex", specifier.identifier]] intValue];
-			cell.detailTextLabel.text = setCustomAppIndexTextForIndex(customAppIndex); 
+			cell.detailTextLabel.text = setCustomAppIndexTextForIndex(customAppIndex);
 		}
 	}
 
@@ -143,32 +145,40 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 
 - (PSTableCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	PSTableCell *cell = (PSTableCell*)[super tableView:tableView cellForRowAtIndexPath:indexPath];
+  PSSpecifier *specifier = cell.specifier;
 
-	if(indexPath.row == 4) {
+  NSInteger method = [specifier.values[0] intValue];
+
+	if(method == customAppMethod) {
 		int customAppIndex  = [folderSettings[[NSString stringWithFormat:@"%@CustomAppIndex", [self.specifier identifier]]] intValue];
 		cell.textLabel.text = setCustomAppIndexTextForIndex(customAppIndex);
 	}
 
-		
+
 	return cell;
 }
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[super tableView:tableView didSelectRowAtIndexPath:indexPath];
-	
-	if(indexPath.row == 4) { 
+
+  PSTableCell *cell = (PSTableCell*)[super tableView:tableView cellForRowAtIndexPath:indexPath];
+  PSSpecifier *specifier = cell.specifier;
+
+  NSInteger method = [specifier.values[0] intValue];
+
+	if(method == customAppMethod) {
 
 		UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"SwipyFolders"
 			message:@"Enter an app's position in the folder. Example: the third app will be: 3"
 			preferredStyle:UIAlertControllerStyleAlert];
 
-		UIAlertAction *cancelAction = [UIAlertAction 
+		UIAlertAction *cancelAction = [UIAlertAction
 			actionWithTitle:@"Cancel"
 			style:UIAlertActionStyleCancel
 			handler:nil];
 
-		UIAlertAction *okAction = [UIAlertAction 
+		UIAlertAction *okAction = [UIAlertAction
 			actionWithTitle:@"Enter"
 			style:UIAlertActionStyleDefault
 			handler:^(UIAlertAction *action) {
@@ -184,14 +194,14 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 					return;
 				}
 
-				NSIndexPath *ip = [NSIndexPath indexPathForRow:4 inSection:0];
+				NSIndexPath *ip = [NSIndexPath indexPathForRow:customAppMethod inSection:0];
 				UITableViewCell *cell = [tableView cellForRowAtIndexPath:ip];
 
 				cell.textLabel.text = setCustomAppIndexTextForIndex([appIndex intValue]);
 
 				NSString *specifierID = [NSString stringWithFormat:@"%@CustomAppIndex", [self.specifier identifier]];
 
-				setSetting(appIndexText, folderID, specifierID); 
+				setSetting(appIndexText, folderID, specifierID);
 				setSetting(@"5", folderID, [self.specifier identifier]);
 
 
@@ -211,6 +221,6 @@ static void setSetting(id value, NSString * folderID, NSString * specifierID) {
 		[self presentViewController:alertController animated:YES completion:nil];
 
 	}
-	
+
 }
 @end

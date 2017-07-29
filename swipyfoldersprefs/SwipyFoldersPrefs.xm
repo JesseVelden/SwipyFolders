@@ -6,7 +6,7 @@
 
 
 static NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
-
+static int customAppMethod = 5;
 
 static NSString * addSuffixToNumber(int number) {
     NSString *suffix;
@@ -35,7 +35,7 @@ static NSString * addSuffixToNumber(int number) {
 }
 
 static NSString * setCustomAppIndexTextForIndex(int number) {
-	return [NSString stringWithFormat:@"Custom: open %@ app", addSuffixToNumber(number)]; 
+	return [NSString stringWithFormat:@"Custom: open %@ app", addSuffixToNumber(number)];
 }
 
 
@@ -51,7 +51,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 			DisplayController = %c(DisplayController);
 		}
 	}
-	
+
 	return _specifiers;
 }
 
@@ -71,13 +71,13 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 			cell.indentationLevel = 1;
 			cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", [preferences doubleForKey:@"doubleTapTime"]];
 		} else if ([identifier isEqualToString:@"singleTapMethod"] || [identifier isEqualToString:@"swipeUpMethod"] || [identifier isEqualToString:@"swipeDownMethod"] || [identifier isEqualToString:@"doubleTapMethod"] || [identifier isEqualToString:@"shortHoldMethod"] || [identifier isEqualToString:@"forceTouchMethod"]) {
-			
+
 			int method  = [preferences integerForKey:identifier];
 			if(method == 5) {
 				int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", identifier]];
-				cell.detailTextLabel.text = setCustomAppIndexTextForIndex(customAppIndex); 
+				cell.detailTextLabel.text = setCustomAppIndexTextForIndex(customAppIndex);
 			}
-		} 
+		}
 
 	}
 	return cell;
@@ -96,35 +96,36 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 }
 
 - (void)respring {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-	system("killall -9 SpringBoard");
-#pragma GCC diagnostic pop
+  CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                                    CFSTR("nl.jessevandervelden.swipyfoldersprefs/respring"),
+                                    nil,
+                                    nil,
+                                    true);
 }
 
 - (void)github {
 	NSURL *githubURL = [NSURL URLWithString:@"https://github.com/megacookie/SwipyFolders"];
-	[[UIApplication sharedApplication] openURL:githubURL];
+	[[UIApplication sharedApplication] openURL:githubURL options:@{} completionHandler:nil];
 }
 
 - (void)contact {
 	NSURL *url = [NSURL URLWithString:@"mailto:mail@jessevandervelden.nl?subject=SwipyFolders"];
-	[[UIApplication sharedApplication] openURL:url];
+	[[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
 }
 
 - (void)paypal {
 	NSURL *url = [NSURL URLWithString:@"https://paypal.me/JessevanderVelden"];
-	[[UIApplication sharedApplication] openURL:url];
+	[[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
 }
 
 - (void)twitter {
 	NSURL *url = [NSURL URLWithString:@"https://twitter.com/JesseVelden"];
-	[[UIApplication sharedApplication] openURL:url];
+	[[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
 }
 
 - (void)cydia {
 	NSURL *url = [NSURL URLWithString:@"cydia://url/https://cydia.saurik.com/api/share#?source=http://megacookie.github.io/"];
-	[[UIApplication sharedApplication] openURL:url];
+	[[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
 }
 
 
@@ -135,8 +136,12 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 - (PSTableCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	PSTableCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
+  PSSpecifier *specifier = cell.specifier;
 
-	if(indexPath.row == 4) {
+  NSInteger method = [specifier.values[0] intValue];
+
+
+	if(method == customAppMethod) {
 		int customAppIndex  = [preferences integerForKey:[NSString stringWithFormat:@"%@CustomAppIndex", self.specifier.identifier]];
 		cell.textLabel.text = setCustomAppIndexTextForIndex(customAppIndex);
 	}
@@ -146,20 +151,24 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[super tableView:tableView didSelectRowAtIndexPath:indexPath]; //Instead of %orig();
-	
-	NSInteger selectedRow = indexPath.row;
-	if(selectedRow == 4) {
+  PSTableCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
+  PSSpecifier *specifier = cell.specifier;
+
+  NSInteger method = [specifier.values[0] intValue];
+
+	//NSInteger selectedRow = indexPath.row;
+	if(method == customAppMethod) {
 
 		UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"SwipyFolders"
 			message:@"Enter an app's position in the folder. Example: the third app will be: 3"
 			preferredStyle:UIAlertControllerStyleAlert];
 
-		UIAlertAction *cancelAction = [UIAlertAction 
+		UIAlertAction *cancelAction = [UIAlertAction
 			actionWithTitle:@"Cancel"
 			style:UIAlertActionStyleCancel
 			handler:nil];
 
-		UIAlertAction *okAction = [UIAlertAction 
+		UIAlertAction *okAction = [UIAlertAction
 			actionWithTitle:@"Enter"
 			style:UIAlertActionStyleDefault
 			handler:^(UIAlertAction *action) {
@@ -175,7 +184,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 					return;
 				}
 
-				NSIndexPath *ip = [NSIndexPath indexPathForRow:4 inSection:0];
+				NSIndexPath *ip = [NSIndexPath indexPathForRow:customAppMethod inSection:0];
 				UITableViewCell *cell = [tableView cellForRowAtIndexPath:ip];
 
 				cell.textLabel.text = setCustomAppIndexTextForIndex([appIndex intValue]);
@@ -189,7 +198,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 						CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (__bridge CFStringRef)[self.specifier propertyForKey:@"PostNotification"], NULL, NULL, YES);
 				});
 
-				
+
 
 			}];
 
@@ -207,7 +216,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 		[self presentViewController:alertController animated:YES completion:nil];
 
 	}
-	
+
 }
 @end
 
@@ -216,7 +225,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 @implementation SFFolderListController
 
 - (NSArray *)specifiers {
-	
+
 	if (!_specifiers) {
 
 		CPDistributedMessagingCenter *messagingCenter = [CPDistributedMessagingCenter centerNamed:@"nl.jessevandervelden.swipyfolders.center"];
@@ -226,7 +235,8 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 		PSSpecifier *header = [PSSpecifier emptyGroupSpecifier];
 		[header setProperty:@"Folders" forKey:@"label"];
-		[header setProperty:@"Folders" forKey:@"footerText"];
+    header.name = @"Folders";
+		//[header setProperty:@"Coming soon: megacookie/libFolders for other developers" forKey:@"footerText"];
 		[specs insertObject:header atIndex:0];
 
 		NSArray * sortedFolderKeys = [[foldersDictionary allKeys] sortedArrayUsingSelector: @selector(caseInsensitiveCompare:)];
@@ -241,7 +251,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 				NSArray *applicationBundleIDs = currentFolder[@"applicationBundleIDs"];
 				[spec setProperty:[self createFolderIconImageWithIdentifiers:applicationBundleIDs] forKey:@"iconImage"];
 			}
-			
+
 
 			[spec setProperty:@"1" forKey:@"isController"];
 			[spec setProperty:currentFolder[@"folderID"] forKey:@"folderID"];
@@ -256,7 +266,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 			DisplayController = %c(DisplayController);
 		}
 	}
-	
+
 	return _specifiers;
 }
 
@@ -320,4 +330,3 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 }
 
 @end
-
