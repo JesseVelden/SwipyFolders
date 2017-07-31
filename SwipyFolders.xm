@@ -31,10 +31,6 @@ static NSInteger forceTouchMethodCustomAppIndex;
 
 static NSInteger nestedFolderBehaviour;
 
-static UISwipeGestureRecognizer *swipeUp;
-static UISwipeGestureRecognizer *swipeDown;
-static UILongPressGestureRecognizer *shortHold;
-
 static NSDictionary *customFolderSettings;
 
 static bool classicFoldersEnabled;
@@ -101,11 +97,6 @@ static void loadPreferences() {
 	customFolderSettings = [preferences dictionaryForKey:@"customFolderSettings"];
 
 	[preferences release];
-	if(enabled) {
-		swipeUp.enabled 	= (swipeUpMethod != 0) ? YES : NO;
-		swipeDown.enabled 	= (swipeDownMethod != 0) ? YES : NO;
-		shortHold.enabled 	= (shortHoldMethod != 0 && !longHoldInvokesEditMode) ? YES : NO;
-	}
 }
 
 
@@ -936,6 +927,8 @@ static BOOL isProtected = NO;
  *
  */
 
+%property (nonatomic, assign) id swipeUp;
+%property (nonatomic, assign) id swipeDown;
 
 %new - (BOOL)isFolderIconView {
 	return self.icon.isFolderIcon && !([self.icon respondsToSelector:@selector(isNewsstandIcon)] && self.icon.isNewsstandIcon);
@@ -981,15 +974,19 @@ static BOOL isProtected = NO;
 
 	if (self.isFolderIconView) {
 
-		swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeUp:)];
-		swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
-		swipeUp.delegate = (id <UIGestureRecognizerDelegate>)self;
-		[self addGestureRecognizer:swipeUp];
+		if(!self.swipeUp) {
+			self.swipeUp = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeUp:)];
+			self.swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
+			self.swipeUp.delegate = (id <UIGestureRecognizerDelegate>)self;
+			[self addGestureRecognizer:self.swipeUp];
+		}
 
-		swipeDown = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeDown:)];
-		swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
-		swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
-		[self addGestureRecognizer:swipeDown];
+		if(!self.swipeDown) {
+			self.swipeDown = [[%c(UISwipeGestureRecognizer) alloc] initWithTarget:self action:@selector(sf_swipeDown:)];
+			self.swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
+			self.swipeDown.delegate = (id <UIGestureRecognizerDelegate>)self;
+			[self addGestureRecognizer:self.swipeDown];
+		}
 
 	}
 }

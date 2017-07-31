@@ -131,6 +131,8 @@
 
 
 @interface SBIconView : UIView
+@property (nonatomic, assign) UISwipeGestureRecognizer* swipeUp;
+@property (nonatomic, assign) UISwipeGestureRecognizer* swipeDown;
 @property(retain, nonatomic) SBIcon *icon;
 @property(assign, getter = isHighlighted) BOOL highlighted;
 @property(retain, nonatomic) UIPreviewForceInteractionProgress *shortcutMenuPresentProgress;
