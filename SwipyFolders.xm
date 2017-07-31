@@ -285,7 +285,7 @@ static UIImageView *customImageView;
 
 	} else if(self.targetIcon.folder.open) {
 		folderIconImageView.customImageView.hidden = YES;
-		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 			folderIconImageView.customImageView.hidden = NO;
 		});
 	}
@@ -1095,7 +1095,7 @@ static BOOL isProtected = NO;
 					innerFolderImageView.hidden = YES;
 					folderIconView._folderIconImageView.customImageView.hidden = YES;
 
-					dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
+					dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void) {
 						if(folderIconView._folderIconImageView.customImageView.image == nil) innerFolderImageView.hidden = NO;
 						folderIconView._folderIconImageView.customImageView.hidden = NO;
 						[folderIcon _updateBadgeValue];
