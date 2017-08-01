@@ -7,7 +7,7 @@
     if (self) {
         UISlider *slider = (UISlider *)[self control];
         [slider addTarget:specifier.target action:@selector(sliderMoved:) forControlEvents:UIControlEventAllTouchEvents];
-   		
+
     }
     return self;
 }

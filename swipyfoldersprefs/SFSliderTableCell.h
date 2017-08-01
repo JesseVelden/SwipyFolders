@@ -4,3 +4,11 @@
 
 @interface SFSliderTableCell : PSSliderTableCell
 @end
+
+@interface UISpecifierSlider : UISlider {
+    id userData;
+}
+
+@property (nonatomic, readwrite, retain) id userData;
+
+@end

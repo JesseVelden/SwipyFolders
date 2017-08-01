@@ -18,7 +18,9 @@ static NSInteger swipeUpMethod;
 static NSInteger swipeDownMethod;
 static NSInteger doubleTapMethod;
 static NSInteger shortHoldMethod;
+static NSInteger longHoldMethod;
 static CGFloat shortHoldTime;
+static CGFloat longHoldTime;
 static CGFloat doubleTapTime;
 static NSInteger forceTouchMethod;
 
@@ -27,6 +29,8 @@ static NSInteger swipeUpMethodCustomAppIndex;
 static NSInteger swipeDownMethodCustomAppIndex;
 static NSInteger doubleTapMethodCustomAppIndex;
 static NSInteger shortHoldMethodCustomAppIndex;
+static NSInteger longHoldMethodCustomAppIndex;
+
 static NSInteger forceTouchMethodCustomAppIndex;
 
 static NSInteger nestedFolderBehaviour;
@@ -59,6 +63,8 @@ static void loadPreferences() {
 		@"doubleTapTime": [NSNumber numberWithFloat:0.2],
 		@"shortHoldMethod": [NSNumber numberWithInteger:0],
 		@"shortHoldTime": 	[NSNumber numberWithFloat:0.2],
+		@"longHoldMethod": 	[NSNumber numberWithInteger:0],
+		@"longHoldTime": 	[NSNumber numberWithFloat:0.2],
 		@"forceTouchMethod": [NSNumber numberWithInteger:4],
 
 		@"singleTapMethodCustomAppIndex": [NSNumber numberWithInteger:3],
@@ -66,6 +72,7 @@ static void loadPreferences() {
 		@"swipeDownMethodCustomAppIndex": [NSNumber numberWithInteger:3],
 		@"doubleTapMethodCustomAppIndex": [NSNumber numberWithInteger:3],
 		@"shortHoldMethodCustomAppIndex": [NSNumber numberWithInteger:3],
+		@"longHoldMethodCustomAppIndex": [NSNumber numberWithInteger:3],
 		@"forceTouchMethodCustomAppIndex": [NSNumber numberWithInteger:3],
 
 		@"nestedFolderBehaviour": [NSNumber numberWithInteger:0],
@@ -83,6 +90,8 @@ static void loadPreferences() {
 	doubleTapTime	 		= [preferences floatForKey:@"doubleTapTime"];
 	shortHoldMethod 		= [preferences integerForKey:@"shortHoldMethod"];
 	shortHoldTime 			= [preferences floatForKey:@"shortHoldTime"];
+	longHoldMethod 			= [preferences integerForKey:@"longHoldMethod"];
+	longHoldTime 			= [preferences floatForKey:@"longHoldTime"];
 	forceTouchMethod 		= [preferences integerForKey:@"forceTouchMethod"];
 
 	singleTapMethodCustomAppIndex 	= [preferences integerForKey:@"singleTapMethodCustomAppIndex"];
@@ -90,6 +99,7 @@ static void loadPreferences() {
 	swipeDownMethodCustomAppIndex 	= [preferences integerForKey:@"swipeDownMethodCustomAppIndex"];
 	doubleTapMethodCustomAppIndex 	= [preferences integerForKey:@"doubleTapMethodCustomAppIndex"];
 	shortHoldMethodCustomAppIndex 	= [preferences integerForKey:@"shortHoldMethodCustomAppIndex"];
+	longHoldMethodCustomAppIndex 	= [preferences integerForKey:@"longHoldMethodCustomAppIndex"];
 	forceTouchMethodCustomAppIndex 	= [preferences integerForKey:@"forceTouchMethodCustomAppIndex"];
 
 	nestedFolderBehaviour 	= [preferences integerForKey:@"nestedFolderBehaviour"];
@@ -929,6 +939,8 @@ static BOOL isProtected = NO;
 
 %property (nonatomic, assign) id swipeUp;
 %property (nonatomic, assign) id swipeDown;
+%property (nonatomic, assign) id longHold;
+
 
 %new - (BOOL)isFolderIconView {
 	return self.icon.isFolderIcon && !([self.icon respondsToSelector:@selector(isNewsstandIcon)] && self.icon.isNewsstandIcon);
@@ -988,6 +1000,16 @@ static BOOL isProtected = NO;
 			[self addGestureRecognizer:self.swipeDown];
 		}
 
+		NSDictionary *methodDict = [self getFolderSetting:@"LongHoldMethod" withDefaultSetting:longHoldMethod withDefaultCustomAppIndex:longHoldMethodCustomAppIndex];
+		NSInteger longHoldMethod = [methodDict[@"method"] intValue];
+
+		if(!self.longHold && longHoldMethod != 0) {
+			self.longHold = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(sf_longHold:)];
+			self.longHold.minimumPressDuration = longHoldTime;
+			[self addGestureRecognizer:self.longHold];
+
+		}
+
 	}
 }
 
@@ -1008,9 +1030,9 @@ static BOOL isProtected = NO;
 
 }
 
-%new - (void)sf_shortHold:(UILongPressGestureRecognizer *)gesture {
+%new - (void)sf_longHold:(UILongPressGestureRecognizer *)gesture {
 	if (gesture.state == UIGestureRecognizerStateBegan) {
-		[self sf_method:[self getFolderSetting:@"ShortHoldMethod" withDefaultSetting:shortHoldMethod withDefaultCustomAppIndex:shortHoldMethodCustomAppIndex] withForceTouch:NO];
+		[self sf_method:[self getFolderSetting:@"LongHoldMethod" withDefaultSetting:longHoldMethod withDefaultCustomAppIndex:longHoldMethodCustomAppIndex] withForceTouch:NO];
 	}
 }
 

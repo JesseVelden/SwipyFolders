@@ -64,13 +64,21 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 		PSSpecifier *specifier = ((PSTableCell *) cell).specifier;
 		NSString *identifier = specifier.identifier;
 
-		if ([identifier isEqualToString:@"doubleTapTimeText"] ) {
+		if ([identifier isEqualToString:@"doubleTapTimeText"]) {
 			CGFloat inset = cell.bounds.size.width * 10;
 			cell.separatorInset = UIEdgeInsetsMake(0, inset, 0, 0);
 			cell.indentationWidth = -inset;
 			cell.indentationLevel = 1;
 			cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", [preferences doubleForKey:@"doubleTapTime"]];
-		} else if ([identifier isEqualToString:@"singleTapMethod"] || [identifier isEqualToString:@"swipeUpMethod"] || [identifier isEqualToString:@"swipeDownMethod"] || [identifier isEqualToString:@"doubleTapMethod"] || [identifier isEqualToString:@"shortHoldMethod"] || [identifier isEqualToString:@"forceTouchMethod"]) {
+
+        } else if ([identifier isEqualToString:@"longHoldTimeText"]) {
+            CGFloat inset = cell.bounds.size.width * 10;
+			cell.separatorInset = UIEdgeInsetsMake(0, inset, 0, 0);
+			cell.indentationWidth = -inset;
+			cell.indentationLevel = 1;
+			cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", [preferences doubleForKey:@"longHoldTime"]];
+
+		} else if ([identifier isEqualToString:@"singleTapMethod"] || [identifier isEqualToString:@"swipeUpMethod"] || [identifier isEqualToString:@"swipeDownMethod"] || [identifier isEqualToString:@"doubleTapMethod"] || [identifier isEqualToString:@"shortHoldMethod"] || [identifier isEqualToString:@"longHoldMethod"] || [identifier isEqualToString:@"forceTouchMethod"]) {
 
 			int method  = [preferences integerForKey:identifier];
 			if(method == 5) {
@@ -90,8 +98,17 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 }
 
 -(void)sliderMoved:(UISlider *)slider {
-	UITableViewCell *doubleTapTextCell = (UITableViewCell *)[self cachedCellForSpecifierID:@"doubleTapTimeText"];
-	doubleTapTextCell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", slider.value];
+    UITableView *tableView = MSHookIvar<UITableView*>(self, "_table");
+
+    CGPoint oiginInTableView = [slider convertPoint:CGPointZero toView:tableView];
+    NSIndexPath *indexPath = [tableView indexPathForRowAtPoint:oiginInTableView];
+    PSTableCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
+    PSSpecifier *specifier = cell.specifier;
+
+    NSString *specifierId = [NSString stringWithFormat:@"%@Text", specifier.identifier];
+
+	UITableViewCell *textCell = (UITableViewCell *)[self cachedCellForSpecifierID:specifierId];
+	textCell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", slider.value];
 
 }
 
@@ -136,9 +153,9 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 - (PSTableCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	PSTableCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
-  PSSpecifier *specifier = cell.specifier;
+    PSSpecifier *specifier = cell.specifier;
 
-  NSInteger method = [specifier.values[0] intValue];
+    NSInteger method = [specifier.values[0] intValue];
 
 
 	if(method == customAppMethod) {
@@ -151,10 +168,10 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[super tableView:tableView didSelectRowAtIndexPath:indexPath]; //Instead of %orig();
-  PSTableCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
-  PSSpecifier *specifier = cell.specifier;
+    PSTableCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
+    PSSpecifier *specifier = cell.specifier;
 
-  NSInteger method = [specifier.values[0] intValue];
+    NSInteger method = [specifier.values[0] intValue];
 
 	//NSInteger selectedRow = indexPath.row;
 	if(method == customAppMethod) {
@@ -235,7 +252,7 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 		PSSpecifier *header = [PSSpecifier emptyGroupSpecifier];
 		[header setProperty:@"Folders" forKey:@"label"];
-    header.name = @"Folders";
+        header.name = @"Folders";
 		//[header setProperty:@"Coming soon: megacookie/libFolders for other developers" forKey:@"footerText"];
 		[specs insertObject:header atIndex:0];
 

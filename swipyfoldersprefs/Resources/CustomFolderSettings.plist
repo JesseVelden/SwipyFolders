@@ -293,7 +293,7 @@
 			<key>id</key>
 			<string>customFolderShortHoldMethod</string>
 			<key>label</key>
-			<string>Short hold</string>
+			<string>Short press</string>
 			<key>validTitles</key>
 			<array>
 				<string>Open folder</string>
@@ -320,6 +320,54 @@
 			</array>
 			<key>set</key>
 			<string>setValuePreference:forSpecifier:</string>
+			<key>staticTextMessage</key>
+			<string>In order to be able to move icons on a long press, for a short press you just need to hold icons for a short time and release your finger in time. Otherwise, it will go into edit (jiggle) mode instead.  | 'Quick action on folder' only works on iOS 10 and up</string>
+		</dict>
+		<dict>
+			<key>PostNotification</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs/prefsChanged</string>
+			<key>cell</key>
+			<string>PSLinkListCell</string>
+			<key>default</key>
+			<string>0</string>
+			<key>defaults</key>
+			<string>nl.jessevandervelden.swipyfoldersprefs</string>
+			<key>detail</key>
+			<string>SFCustomFolderSettingsListItemsController</string>
+			<key>key</key>
+			<string>customFolderLongHoldMethod</string>
+			<key>id</key>
+			<string>customFolderLongHoldMethod</string>
+			<key>label</key>
+			<string>Long press</string>
+			<key>validTitles</key>
+			<array>
+				<string>Open folder</string>
+				<string>Open first app</string>
+				<string>Open second app</string>
+				<string>Quick action on folder</string>
+				<string>Quick action on first app</string>
+				<string>Custom: open x'th app</string>
+				<string>Open last app</string>
+				<string>Open last opened app</string>
+				<string>Nothing</string>
+			</array>
+			<key>validValues</key>
+			<array>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>8</integer>
+				<integer>4</integer>
+				<integer>5</integer>
+				<integer>6</integer>
+				<integer>7</integer>
+				<integer>0</integer>
+			</array>
+			<key>set</key>
+			<string>setValuePreference:forSpecifier:</string>
+			<key>staticTextMessage</key>
+			<string>This will override the icon editing (jiggle) mode for folders. If you still want to use icon editing mode on folders too, use the 'Short press' method | 'Quick action on folder' only works on iOS 10 and up</string>
 		</dict>
 		<dict>
 			<key>PostNotification</key>
