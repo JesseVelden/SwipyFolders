@@ -12,16 +12,11 @@ SwipyFolders_CFLAGS = -fno-objc-arc -Wno-deprecated-declarations
 SwipyFolders_LDFlags += -Wl,-segalign,4000
 SUBPROJECTS += swipyfoldersprefs
 
-#So in order to use the simulator: export SIMULATOR = 1 && make simulator
+#So in order to use the simulator: export SIMULATOR=1 && make simulator
 ifeq ($(SIMULATOR),1)
 	# i386 slice is required for 32-bit iOS Simulator (iPhone 5, etc.)
 	TARGET = simulator:clang
 	ARCHS = x86_64 i386
-
-	PL_SIMULATOR_VERSION = 11.0
-	PL_SIMULATOR_ROOT = /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ $(PL_SIMULATOR_VERSION).simruntime/Contents/Resources/RuntimeRoot
-	PL_SIMULATOR_BUNDLES_PATH = $(PL_SIMULATOR_ROOT)/Library/PreferenceBundles
-	PL_SIMULATOR_PLISTS_PATH = $(PL_SIMULATOR_ROOT)/Library/PreferenceLoader/Preferences
 else
 	SwipyFolders_FRAMEWORKS = UIKit Foundation QuartzCore CoreGraphics
 endif
@@ -36,8 +31,8 @@ simulator::
 	@echo Copying files to simject directory
 	@cp $(THEOS_OBJ_DIR)/*.dylib /opt/simject
 	@cp *.plist /opt/simject
-	@sudo cp -v $(PWD)/swipyfoldersprefs/entry.plist $(PL_SIMULATOR_PLISTS_PATH)/SwipyFoldersPrefs.plist
-	@sudo cp -vR $(THEOS_OBJ_DIR)/SwipyFoldersPrefs.bundle $(PL_SIMULATOR_BUNDLES_PATH)/
+	@find /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ *.simruntime/Contents/Resources/RuntimeRoot/Library/PreferenceLoader/Preferences -type d -print0 | sudo xargs -0 -n 1 cp -v $(PWD)/swipyfoldersprefs/entry.plist
+	@find /Library/Developer/CoreSimulator/Profiles/Runtimes/iOS\ *.simruntime/Contents/Resources/RuntimeRoot/Library/PreferenceBundles -type d -print0 | sudo xargs -0 -n 1 cp -vR $(THEOS_OBJ_DIR)/SwipyFoldersPrefs.bundle
 	@echo Respringing simulator…
 	@~/git/simject/bin/respring_simulator
 
