@@ -326,7 +326,7 @@ static SBIcon *firstIcon;
 static SBIconView *tappedIcon;
 static NSDate *lastTouchedTime;
 static NSDate *lastTappedTime;
-//static NSDate *forceTouchOpenedTime;
+static NSDate *forceTouchOpenedTime;
 static BOOL doubleTapRecognized;
 static BOOL forceTouchRecognized;
 static BOOL showFirstIconShortcuts;
@@ -1144,8 +1144,30 @@ static BOOL isProtected = NO;
 			case 4: {
 				//Currently this won't be used as it will be handled natively
 				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
-					[iconController.presentedShortcutMenu presentAnimated:YES];
-					return;
+					[iconController.presentedShortcutMenu interactionProgress:self.shortcutMenuPresentProgress didEnd:YES];
+					//[iconController.presentedShortcutMenu presentAnimated:YES];
+
+					[iconController.presentedShortcutMenu dismissAnimated:NO completionHandler:nil];
+					SBApplicationShortcutMenu *shortcutMenu = MSHookIvar<SBApplicationShortcutMenu*>(iconController, "_presentedShortcutMenu");
+					NSDate *nowTime = [[NSDate date] retain];
+
+					if(!shortcutMenu.isPresented && (forceTouchOpenedTime == nil || [nowTime timeIntervalSinceDate:forceTouchOpenedTime] > 1)) {
+
+						firstIcon = [folder iconAtIndexPath:[NSIndexPath indexPathForRow:folder.getFirstAppIconIndex inSection:0]];
+						iconController.presentedShortcutMenu = [[%c(SBApplicationShortcutMenu) alloc] initWithFrame:[UIScreen mainScreen].bounds application:firstIcon.application iconView:self interactionProgress:nil orientation:1];
+						iconController.presentedShortcutMenu.applicationShortcutMenuDelegate = iconController;
+						UIViewController *rootView = [[UIApplication sharedApplication].keyWindow rootViewController];
+						[rootView.view addSubview:iconController.presentedShortcutMenu];
+
+						[iconController.presentedShortcutMenu presentAnimated:YES];
+						SBIconView *editedIconView = MSHookIvar<SBIconView *>(iconController.presentedShortcutMenu, "_proxyIconView");
+						editedIconView.labelView.hidden = YES;
+						SBFolderIconImageView *folderIconImageView = MSHookIvar<SBFolderIconImageView *>(editedIconView, "_iconImageView");
+						UIImageView *folderImageView = MSHookIvar<UIImageView *>(folderIconImageView, "_leftWrapperView");
+						folderImageView.image = [firstIcon getIconImage:2];
+						//[iconController _dismissShortcutMenuAnimated:YES completionHandler:nil]; //HIERMEE LAAT JE DE STATUSBAR WEER ZIEN!
+						forceTouchOpenedTime = nowTime;
+					}
 				}
 				if([self respondsToSelector:@selector(appIconForceTouchGestureRecognizer)]) {
 
