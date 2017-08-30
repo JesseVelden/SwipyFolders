@@ -9,6 +9,7 @@
 
 static NSUserDefaults *preferences;
 static bool enabled;
+static bool showedFirstTimeMessage;
 static bool enableFolderPreview;
 static bool hideGreyFolderBackground;
 static bool closeFolderOnOpen;
@@ -52,6 +53,7 @@ static void loadPreferences() {
 
 	[preferences registerDefaults:@{
 		@"enabled": @YES,
+		@"showedFirstTimeMessage": @NO,
 		@"enableFolderPreview": @YES,
 		@"hideGreyFolderBackground": @NO,
 		@"closeFolderOnOpen": @YES,
@@ -79,6 +81,7 @@ static void loadPreferences() {
 	}];
 
 	enabled 				= [preferences boolForKey:@"enabled"];
+	showedFirstTimeMessage	= [preferences boolForKey:@"showedFirstTimeMessage"];
 	enableFolderPreview		= [preferences boolForKey:@"enableFolderPreview"];
 	hideGreyFolderBackground = [preferences boolForKey:@"hideGreyFolderBackground"];
 	closeFolderOnOpen		= [preferences boolForKey:@"closeFolderOnOpen"];
@@ -1565,6 +1568,26 @@ static NSMutableArray *oldFolderIDsAtBeginEditing;
 }
 
 
+%end
+
+%hook SBLockScreenViewControllerBase
+-(void)deactivate {
+	%orig;
+	if(!showedFirstTimeMessage) {
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"SwipyFolders"
+			message:@"Thanks for installing SwipyFolders! Default settings:\n First icon as folder preview\nSingle tap: opens the first app\nSwipe up: opens the folder\nThis all can be changed in the settings."
+			delegate:nil
+			cancelButtonTitle:@"Cool!"
+			otherButtonTitles:nil];
+		[alert show];
+		[alert release];
+
+		NSUserDefaults *preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
+		[preferences setBool:YES forKey:@"showedFirstTimeMessage"];
+		[preferences synchronize];
+		showedFirstTimeMessage = YES;
+	}
+}
 %end
 
 /**
