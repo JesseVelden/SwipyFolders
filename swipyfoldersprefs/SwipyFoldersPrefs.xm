@@ -65,18 +65,21 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
         NSString *identifier = specifier.identifier;
 
         if ([identifier isEqualToString:@"doubleTapTimeText"]) {
+            NSLog(@"SwipyFolders: %lf", [preferences doubleForKey:@"doubleTapTime"]);
+            double doubleTapTime = ([preferences doubleForKey:@"doubleTapTime"] == 0)? 0.2 : [preferences doubleForKey:@"doubleTapTime"];
             CGFloat inset = cell.bounds.size.width * 10;
             cell.separatorInset = UIEdgeInsetsMake(0, inset, 0, 0);
             cell.indentationWidth = -inset;
             cell.indentationLevel = 1;
-            cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", [preferences doubleForKey:@"doubleTapTime"]];
+            cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", doubleTapTime];
 
         } else if ([identifier isEqualToString:@"longHoldTimeText"]) {
+            double longHoldTime = ([preferences doubleForKey:@"longHoldTime"] == 0)? 0.2 : [preferences doubleForKey:@"longHoldTime"];
             CGFloat inset = cell.bounds.size.width * 10;
             cell.separatorInset = UIEdgeInsetsMake(0, inset, 0, 0);
             cell.indentationWidth = -inset;
             cell.indentationLevel = 1;
-            cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", [preferences doubleForKey:@"longHoldTime"]];
+            cell.detailTextLabel.text = [NSString stringWithFormat:@"%.2lf", longHoldTime];
 
         } else if ([identifier isEqualToString:@"singleTapMethod"] || [identifier isEqualToString:@"swipeUpMethod"] || [identifier isEqualToString:@"swipeDownMethod"] || [identifier isEqualToString:@"doubleTapMethod"] || [identifier isEqualToString:@"shortHoldMethod"] || [identifier isEqualToString:@"longHoldMethod"] || [identifier isEqualToString:@"forceTouchMethod"]) {
 
