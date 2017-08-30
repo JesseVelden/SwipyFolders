@@ -63,8 +63,8 @@
 
 
 @interface SBFolder : NSObject
-@property(readonly, nonatomic) long long listCount;
-@property(readonly, nonatomic) long long _maxIconCountInLists;
+@property(readonly, nonatomic) long  listCount;
+@property(readonly, nonatomic) long maxIconCountInLists;
 @property(copy, nonatomic) NSString *displayName;
 @property(readonly, copy, nonatomic) NSArray *lists;
 @property (assign,nonatomic) SBIcon * icon;
@@ -107,7 +107,7 @@
 @property(retain, nonatomic) SBFolder *folder;
 @property(readonly, nonatomic, getter=isEditing) _Bool editing;
 @property (nonatomic,copy,readonly) NSArray * iconListViews;
-@property (nonatomic,readonly) long long currentPageIndex;
+@property (nonatomic,readonly) long currentPageIndex;
 - (void)_setFolderName:(id)arg1;
 - (void)setEditing:(_Bool)arg1 animated:(_Bool)arg2;
 - (void)cleanupAfterClosing;
@@ -119,7 +119,7 @@
 @end
 
 @interface SBIconIndexMutableList : NSObject
-@property(readonly, nonatomic) long long count;
+@property(readonly, nonatomic) long count;
 @end
 
 @interface SBUIForceTouchGestureRecognizer : UIGestureRecognizer
@@ -309,7 +309,7 @@
 @interface SBRootIconListView : SBIconListView
 - (SBFolder*)folder;
 - (NSArray *)icons;
-- (unsigned long long)indexOfIcon:(id)icon;
+- (unsigned long)indexOfIcon:(id)icon;
 @end
 
 @interface SBIconModel : NSObject
@@ -444,8 +444,8 @@
 - (SBFolderIcon*)folderIcon;
 - (SBFolderIconImageView*)_folderIconImageView;
 
-- (void)scrollToGapOrTopIfFullOfPage:(unsigned long long)arg1 animated:(_Bool)arg2;
-- (void)scrollToTopOfPage:(unsigned long long)arg1 animated:(_Bool)arg2;
+- (void)scrollToGapOrTopIfFullOfPage:(unsigned long)arg1 animated:(_Bool)arg2;
+- (void)scrollToTopOfPage:(unsigned long)arg1 animated:(_Bool)arg2;
 - (void)scrollToFirstGapAnimated:(_Bool)arg1;
 - (void)scrollToTopOfFirstPageAnimated:(_Bool)arg1;
 

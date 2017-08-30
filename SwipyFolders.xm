@@ -540,51 +540,51 @@ static BOOL interactionProgressDidComplete = NO;
 
 
 
-/* Dit werkt eigenlijk:
+/* This works basically
 static id itemz2;
 -(id)appIconForceTouchController:(id)controller applicationShortcutItemsForGestureRecognizer:(UIGestureRecognizer *)recognizer { //iOS 10
 
-id selfie = %orig;
-if(!itemz2) itemz2 = [selfie retain];
+	id selfie = %orig;
+	if(!itemz2) itemz2 = [selfie retain];
 
-return itemz2;
+	return itemz2;
 
-SBIconView *iconView = (SBIconView*)recognizer.view;
-if(iconView.isFolderIconView) {
-NSDictionary *methodDict = [iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
-NSInteger method = [methodDict[@"method"] intValue];
+	SBIconView *iconView = (SBIconView*)recognizer.view;
+	if(iconView.isFolderIconView) {
+		NSDictionary *methodDict = [iconView getFolderSetting:@"ForceTouchMethod" withDefaultSetting:forceTouchMethod withDefaultCustomAppIndex:forceTouchMethodCustomAppIndex];
+		NSInteger method = [methodDict[@"method"] intValue];
 
-if(method == 4) {
-SBFolderIcon *folderIcon = ((SBFolderIconView *)iconView).folderIcon;
-SBFolder* folder = folderIcon.folder;
-SBApplicationIcon *firstIcon = (SBApplicationIcon*)[folder getFirstIcon];
+		if(method == 4) {
+			SBFolderIcon *folderIcon = ((SBFolderIconView *)iconView).folderIcon;
+			SBFolder* folder = folderIcon.folder;
+			SBApplicationIcon *firstIcon = (SBApplicationIcon*)[folder getFirstIcon];
 
-NSMutableArray *newItems = [NSMutableArray array];
-[newItems addObjectsFromArray:firstIcon.application.dynamicApplicationShortcutItems];
-[newItems addObjectsFromArray:firstIcon.application.staticApplicationShortcutItems];
-for (SBSApplicationShortcutItem *item in newItems) {
-//[item setBundleIdentifierToLaunh: firstIcon.application.bundleIdentifier];
-//UIApplicationShortcutIcon *fakeShortcutIcon = [[%c(UIApplicationShortcutIcon) alloc] initWithSBSApplicationShortcutIcon: [[%c(SBSApplicationShortcutSystemIcon) alloc] initWithType:UIApplicationShortcutIconTypeCompose];
-//NSLog(@"swipyfolders: check deze %@", [SBSApplicationShortcutItem ])
-
-
-//UIImage *appImage = [UIImage _applicationIconImageForBundleIdentifier:firstIcon.application.bundleIdentifier format:1 scale:[UIScreen mainScreen].scale];
-//UIImage *iconImage = [UIImage imageWithData:item.icon.imagePNGData];
-
-NSLog(@"swipyfodlers: %@", item.icon);
-if([item.icon isKindOfClass:%c(SBSApplicationShortcutTemplateIcon)]) {
-NSLog(@"swipyfodlers: %@", item.icon.templateImageName);
-}
-//SBSApplicationShortcutIcon *shortcutIcon = [[%c(SBSApplicationShortcutCustomImageIcon) alloc] initWithImagePNGData:UIImagePNGRepresentation(iconImage)];
-//[item setIcon:shortcutIcon];
-
-}
-return newItems;
-}
+			NSMutableArray *newItems = [NSMutableArray array];
+			[newItems addObjectsFromArray:firstIcon.application.dynamicApplicationShortcutItems];
+			[newItems addObjectsFromArray:firstIcon.application.staticApplicationShortcutItems];
+			for (SBSApplicationShortcutItem *item in newItems) {
+				//[item setBundleIdentifierToLaunh: firstIcon.application.bundleIdentifier];
+				//UIApplicationShortcutIcon *fakeShortcutIcon = [[%c(UIApplicationShortcutIcon) alloc] initWithSBSApplicationShortcutIcon: [[%c(SBSApplicationShortcutSystemIcon) alloc] initWithType:UIApplicationShortcutIconTypeCompose];
+				//NSLog(@"swipyfolders: check deze %@", [SBSApplicationShortcutItem ])
 
 
-}
-return %orig;
+				//UIImage *appImage = [UIImage _applicationIconImageForBundleIdentifier:firstIcon.application.bundleIdentifier format:1 scale:[UIScreen mainScreen].scale];
+				//UIImage *iconImage = [UIImage imageWithData:item.icon.imagePNGData];
+
+				NSLog(@"swipyfodlers: %@", item.icon);
+				if([item.icon isKindOfClass:%c(SBSApplicationShortcutTemplateIcon)]) {
+					NSLog(@"swipyfodlers: %@", item.icon.templateImageName);
+				}
+				//SBSApplicationShortcutIcon *shortcutIcon = [[%c(SBSApplicationShortcutCustomImageIcon) alloc] initWithImagePNGData:UIImagePNGRepresentation(iconImage)];
+				//[item setIcon:shortcutIcon];
+
+			}
+			return newItems;
+		}
+
+
+	}
+	return %orig;
 
 
 }*/
@@ -823,7 +823,7 @@ return %orig;
 
 %end
 
-/**
+/*
 * Protecting folders for those with BioProtect
 *   even fixing security breach introduced by BioProtect (to open apps by force touch)
 */
@@ -1143,7 +1143,7 @@ static BOOL isProtected = NO;
 			case 8:
 			case 4: {
 				//Currently this won't be used as it will be handled natively
-				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) {
+				if([iconController respondsToSelector:@selector(presentedShortcutMenu)]) { //iOS 9
 					[iconController.presentedShortcutMenu interactionProgress:self.shortcutMenuPresentProgress didEnd:YES];
 					//[iconController.presentedShortcutMenu presentAnimated:YES];
 
@@ -1169,7 +1169,7 @@ static BOOL isProtected = NO;
 						forceTouchOpenedTime = nowTime;
 					}
 				}
-				if([self respondsToSelector:@selector(appIconForceTouchGestureRecognizer)]) {
+				if([self respondsToSelector:@selector(appIconForceTouchGestureRecognizer)]) { //iOS 10
 
 
 					SBUIForceTouchGestureRecognizer *forceGesture = [self appIconForceTouchGestureRecognizer];
@@ -1239,9 +1239,9 @@ static BOOL isProtected = NO;
 			otherGestureRecognizer.enabled = NO;
 		}
 		/*if([target isKindOfClass:%c(SBIconScrollView)]) {
-		gestureRecognizer.enabled = YES;
-		otherGestureRecognizer.enabled = YES;
-	}*/
+			gestureRecognizer.enabled = YES;
+			otherGestureRecognizer.enabled = YES;
+		}*/
 }
 
 return !conflictGesture;
@@ -1406,11 +1406,8 @@ static NSString *oldFolderID;
 
 //For the stupids who want nested folder support. I should get paid for it ;(
 %new - (int)getFirstAppIconIndex {
-	SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
-	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists"); //9
-
 	int i = 0;
-	while(i <= (iconList.count * maxIconCountInList)) {
+	while(i <= (self.listCount * self.maxIconCountInLists)) {
 		NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
 		//SBApplicationIcon *icon = [self iconAtIndexPath:indexPath];
 		SBIcon *icon = (SBApplicationIcon*)[self iconAtIndexPath:indexPath];
