@@ -1401,7 +1401,7 @@ static NSString *oldFolderID;
 
 
 %new - (NSIndexPath*)getFolderIndexPathForIndex:(int)index { //The beauty of long method names :P
-	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists");
+	long maxIconCountInList = MSHookIvar<long>(self, "_maxIconCountInLists");
 	int indexInList = index % maxIconCountInList;
 	int section = floor(index/maxIconCountInList);
 	return [NSIndexPath indexPathForRow:indexInList inSection:section];
@@ -1409,8 +1409,9 @@ static NSString *oldFolderID;
 
 //For the stupids who want nested folder support. I should get paid for it ;(
 %new - (int)getFirstAppIconIndex {
+	long maxIconCountInList = MSHookIvar<long>(self, "_maxIconCountInLists");
 	int i = 0;
-	while(i <= (self.listCount * self.maxIconCountInLists)) {
+	while(i <= (self.listCount * maxIconCountInLists)) {
 		NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
 		//SBApplicationIcon *icon = [self iconAtIndexPath:indexPath];
 		SBIcon *icon = (SBApplicationIcon*)[self iconAtIndexPath:indexPath];
@@ -1456,7 +1457,7 @@ static NSString *oldFolderID;
 
 %new - (void)openLastApp {
 	SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
-	long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists"); //9
+	long maxIconCountInList = MSHookIvar<long>(self, "_maxIconCountInLists"); //9
 
 	int i = (iconList.count * maxIconCountInList) - maxIconCountInList; //Begin at the last page index
 	NSIndexPath *indexPath = [self getFolderIndexPathForIndex:0];
@@ -1487,7 +1488,7 @@ static NSString *oldFolderID;
 	if (!iconController.isEditing) {
 
 		SBIconIndexMutableList *iconList = MSHookIvar<SBIconIndexMutableList *>(self, "_lists");
-		long long maxIconCountInList = MSHookIvar<long long>(self, "_maxIconCountInLists"); //9
+		long maxIconCountInList = MSHookIvar<long>(self, "_maxIconCountInLists"); //9
 		int i = [self getFirstAppIconIndex]+index;
 
 		while (i <= (maxIconCountInList * iconList.count)) {
