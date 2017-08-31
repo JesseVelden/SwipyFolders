@@ -1409,7 +1409,7 @@ static NSString *oldFolderID;
 
 //For the stupids who want nested folder support. I should get paid for it ;(
 %new - (int)getFirstAppIconIndex {
-	long maxIconCountInList = MSHookIvar<long>(self, "_maxIconCountInLists");
+	long maxIconCountInLists = MSHookIvar<long>(self, "_maxIconCountInLists");
 	int i = 0;
 	while(i <= (self.listCount * maxIconCountInLists)) {
 		NSIndexPath *indexPath = [self getFolderIndexPathForIndex:i];
