@@ -125,27 +125,27 @@ static NSString * setCustomAppIndexTextForIndex(int number) {
 
 - (void)github {
     NSURL *githubURL = [NSURL URLWithString:@"https://github.com/megacookie/SwipyFolders"];
-    [[UIApplication sharedApplication] openURL:githubURL options:@{} completionHandler:nil];
+    [[UIApplication sharedApplication] openURL:githubURL];
 }
 
 - (void)contact {
     NSURL *url = [NSURL URLWithString:@"mailto:mail@jessevandervelden.nl?subject=SwipyFolders"];
-    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+    [[UIApplication sharedApplication] openURL:url];
 }
 
 - (void)paypal {
     NSURL *url = [NSURL URLWithString:@"https://paypal.me/JessevanderVelden"];
-    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+    [[UIApplication sharedApplication] openURL:url];
 }
 
 - (void)twitter {
     NSURL *url = [NSURL URLWithString:@"https://twitter.com/JesseVelden"];
-    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+    [[UIApplication sharedApplication] openURL:url];
 }
 
 - (void)cydia {
     NSURL *url = [NSURL URLWithString:@"cydia://url/https://cydia.saurik.com/api/share#?source=http://megacookie.github.io/"];
-    [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
+    [[UIApplication sharedApplication] openURL:url];
 }
 
 

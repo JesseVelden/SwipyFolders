@@ -40,7 +40,7 @@ static NSDictionary *customFolderSettings;
 
 static bool classicFoldersEnabled;
 
-#define HAS_BIOPROTECT (%c(BioProtectController) != nil)
+static bool HAS_BIOPROTECT;
 
 static void loadPreferences() {
 	preferences = [[NSUserDefaults alloc] initWithSuiteName:@"nl.jessevandervelden.swipyfoldersprefs"];
@@ -50,6 +50,13 @@ static void loadPreferences() {
 		NSUserDefaults *classicFolderPreferences = [[NSUserDefaults alloc] initWithSuiteName:@"org.coolstar.classicfolders"];
 		classicFoldersEnabled = ([classicFolderPreferences boolForKey:@"enabled"]) ? YES : NO;
 	}
+
+	if([NSFileManager.defaultManager fileExistsAtPath:@"/private/var/mobile/Library/Preferences/net.limneos.bioprotect.plist"] && [NSFileManager.defaultManager fileExistsAtPath:@"/Library/MobileSubstrate/DynamicLibraries/BioProtect.dylib"]) {
+		NSUserDefaults *bioProtectPreferences = [[NSUserDefaults alloc] initWithSuiteName:@"net.limneos.bioprotect"];
+		HAS_BIOPROTECT = ([bioProtectPreferences boolForKey:@"Enabled"]) ? YES : NO;
+	}
+
+
 
 	[preferences registerDefaults:@{
 		@"enabled": @YES,
